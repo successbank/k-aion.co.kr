@@ -2,8 +2,8 @@
   "/_app": "pages/_app.js",
   "/_error": "pages/_error.js",
   "/_document": "pages/_document.js",
-  "/brand": "pages/brand.js",
-  "/products/[slug]": "pages/products/[slug].js",
   "/support/faq": "pages/support/faq.js",
-  "/stores": "pages/stores.js"
+  "/brand/intro": "pages/brand/intro.js",
+  "/franchise/consultation": "pages/franchise/consultation.js",
+  "/brand": "pages/brand.js"
 }

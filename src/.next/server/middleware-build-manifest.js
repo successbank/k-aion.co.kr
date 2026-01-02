@@ -19,15 +19,15 @@ self.__BUILD_MANIFEST = {
       "static/chunks/main.js",
       "static/chunks/pages/_error.js"
     ],
-    "/brand": [
+    "/brand/intro": [
       "static/chunks/webpack.js",
       "static/chunks/main.js",
-      "static/chunks/pages/brand.js"
+      "static/chunks/pages/brand/intro.js"
     ],
-    "/products/[slug]": [
+    "/franchise/consultation": [
       "static/chunks/webpack.js",
       "static/chunks/main.js",
-      "static/chunks/pages/products/[slug].js"
+      "static/chunks/pages/franchise/consultation.js"
     ],
     "/support/faq": [
       "static/chunks/webpack.js",
