@@ -9,6 +9,16 @@ self.__BUILD_MANIFEST = {
   "lowPriorityFiles": [],
   "rootMainFiles": [],
   "pages": {
+    "/": [
+      "static/chunks/webpack.js",
+      "static/chunks/main.js",
+      "static/chunks/pages/index.js"
+    ],
+    "/404": [
+      "static/chunks/webpack.js",
+      "static/chunks/main.js",
+      "static/chunks/pages/404.js"
+    ],
     "/_app": [
       "static/chunks/webpack.js",
       "static/chunks/main.js",
@@ -19,20 +29,35 @@ self.__BUILD_MANIFEST = {
       "static/chunks/main.js",
       "static/chunks/pages/_error.js"
     ],
-    "/brand/intro": [
+    "/about/company": [
       "static/chunks/webpack.js",
       "static/chunks/main.js",
-      "static/chunks/pages/brand/intro.js"
+      "static/chunks/pages/about/company.js"
     ],
-    "/franchise/consultation": [
+    "/franchise": [
       "static/chunks/webpack.js",
       "static/chunks/main.js",
-      "static/chunks/pages/franchise/consultation.js"
+      "static/chunks/pages/franchise.js"
     ],
-    "/support/faq": [
+    "/franchise/cost": [
       "static/chunks/webpack.js",
       "static/chunks/main.js",
-      "static/chunks/pages/support/faq.js"
+      "static/chunks/pages/franchise/cost.js"
+    ],
+    "/franchise/model": [
+      "static/chunks/webpack.js",
+      "static/chunks/main.js",
+      "static/chunks/pages/franchise/model.js"
+    ],
+    "/products/[slug]": [
+      "static/chunks/webpack.js",
+      "static/chunks/main.js",
+      "static/chunks/pages/products/[slug].js"
+    ],
+    "/stores": [
+      "static/chunks/webpack.js",
+      "static/chunks/main.js",
+      "static/chunks/pages/stores.js"
     ]
   },
   "ampFirstPages": []

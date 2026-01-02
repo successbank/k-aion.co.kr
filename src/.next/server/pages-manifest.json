@@ -2,8 +2,12 @@
   "/_app": "pages/_app.js",
   "/_error": "pages/_error.js",
   "/_document": "pages/_document.js",
-  "/support/faq": "pages/support/faq.js",
-  "/brand/intro": "pages/brand/intro.js",
-  "/franchise/consultation": "pages/franchise/consultation.js",
-  "/brand": "pages/brand.js"
+  "/": "pages/index.js",
+  "/404": "pages/404.js",
+  "/franchise/model": "pages/franchise/model.js",
+  "/stores": "pages/stores.js",
+  "/about/company": "pages/about/company.js",
+  "/franchise": "pages/franchise.js",
+  "/products/[slug]": "pages/products/[slug].js",
+  "/franchise/cost": "pages/franchise/cost.js"
 }
