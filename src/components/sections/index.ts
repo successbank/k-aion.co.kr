@@ -1,0 +1,5 @@
+export { HeroSection } from './HeroSection'
+export { BrandValueSection } from './BrandValueSection'
+export { FranchiseHighlightSection } from './FranchiseHighlightSection'
+export { ProductPreviewSection } from './ProductPreviewSection'
+export { CTASection } from './CTASection'
