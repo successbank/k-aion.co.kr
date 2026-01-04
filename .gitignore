@@ -40,3 +40,10 @@ yarn-error.log*
 # Misc
 *.log
 .vercel
+src/.next/cache/webpack/client-development/3.pack.gz
+src/.next/cache/webpack/client-development/6.pack.gz
+src/.next/cache/webpack/client-development/index.pack.gz
+src/.next/cache/webpack/client-development/index.pack.gz.old
+src/.next/cache/webpack/server-development/4.pack.gz
+src/.next/cache/webpack/server-development/index.pack.gz
+src/.next/cache/webpack/server-development/index.pack.gz.old
