@@ -4,9 +4,9 @@
 
 // 브랜드 컬러
 export const BRAND_COLORS = {
-  primary: '#7CB342',
-  primaryLight: '#AED581',
-  primaryDark: '#558B2F',
+  primary: '#E53935',
+  primaryLight: '#EF5350',
+  primaryDark: '#C62828',
   textPrimary: '#212121',
   textSecondary: '#757575',
   background: '#F5F5F5',

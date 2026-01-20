@@ -508,7 +508,7 @@ export default function RecognizedSalesTab({ recognitionType }: RecognizedSalesT
           {selectedMember && (
             <Card
               size="small"
-              style={{ marginBottom: 16, background: '#f0f5ff', borderColor: '#7CB342' }}
+              style={{ marginBottom: 16, background: '#f0f5ff', borderColor: '#E53935' }}
             >
               <Descriptions column={2} size="small" title="선택된 회원 정보">
                 <Descriptions.Item label="이름">{selectedMember.name}</Descriptions.Item>

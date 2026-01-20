@@ -142,7 +142,7 @@ export default function BonusesPage() {
       dataIndex: 'amount',
       key: 'amount',
       render: (amount: number) => (
-        <span style={{ fontWeight: 600, color: '#7CB342' }}>
+        <span style={{ fontWeight: 600, color: '#E53935' }}>
           {amount.toLocaleString()}원
         </span>
       ),
@@ -205,7 +205,7 @@ export default function BonusesPage() {
               value={stats.total}
               prefix={<DollarOutlined />}
               suffix="원"
-              valueStyle={{ color: '#7CB342' }}
+              valueStyle={{ color: '#E53935' }}
             />
           </Card>
         </Col>

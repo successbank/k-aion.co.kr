@@ -246,7 +246,7 @@ export default function SaleSimulationTab({ selectedMember }: SaleSimulationTabP
               loading={loading}
               className="w-full mt-4"
               disabled={!selectedMember || !selectedProduct}
-              style={{ backgroundColor: '#7CB342' }}
+              style={{ backgroundColor: '#E53935' }}
             >
               보너스 계산
             </Button>
@@ -271,7 +271,7 @@ export default function SaleSimulationTab({ selectedMember }: SaleSimulationTabP
                     title="총 PV"
                     value={selectedProduct.pv * quantity}
                     suffix="PV"
-                    valueStyle={{ fontSize: 16, color: '#7CB342' }}
+                    valueStyle={{ fontSize: 16, color: '#E53935' }}
                   />
                 </Col>
               </Row>
@@ -294,13 +294,13 @@ export default function SaleSimulationTab({ selectedMember }: SaleSimulationTabP
         <Card
           title={
             <Space>
-              <DollarOutlined style={{ color: '#7CB342' }} />
+              <DollarOutlined style={{ color: '#E53935' }} />
               보너스 시뮬레이션 결과
             </Space>
           }
           className="mt-4"
           extra={
-            <div style={{ fontSize: 20, fontWeight: 700, color: '#7CB342' }}>
+            <div style={{ fontSize: 20, fontWeight: 700, color: '#E53935' }}>
               총 예상 보너스: {simulationResult.totalBonus.toLocaleString()}원
             </div>
           }

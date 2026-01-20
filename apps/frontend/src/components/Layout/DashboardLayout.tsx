@@ -82,7 +82,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
             padding: collapsed ? '0' : '0 24px',
             cursor: 'pointer',
             borderBottom: '1px solid rgba(255, 255, 255, 0.06)',
-            background: 'rgba(124, 179, 66, 0.08)',
+            background: 'rgba(229, 57, 53, 0.08)',
           }}
           onClick={() => router.push('/admin/dashboard')}
         >
@@ -92,11 +92,11 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                 width: 44,
                 height: 44,
                 borderRadius: 12,
-                background: 'linear-gradient(135deg, #7CB342 0%, #558B2F 100%)',
+                background: 'linear-gradient(135deg, #E53935 0%, #C62828 100%)',
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
-                boxShadow: '0 4px 12px rgba(124, 179, 66, 0.4)',
+                boxShadow: '0 4px 12px rgba(229, 57, 53, 0.4)',
               }}
             >
               <span style={{ color: '#fff', fontWeight: 800, fontSize: 20 }}>K</span>
@@ -108,11 +108,11 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                   width: 44,
                   height: 44,
                   borderRadius: 12,
-                  background: 'linear-gradient(135deg, #7CB342 0%, #558B2F 100%)',
+                  background: 'linear-gradient(135deg, #E53935 0%, #C62828 100%)',
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
-                  boxShadow: '0 4px 12px rgba(124, 179, 66, 0.4)',
+                  boxShadow: '0 4px 12px rgba(229, 57, 53, 0.4)',
                 }}
               >
                 <span style={{ color: '#fff', fontWeight: 800, fontSize: 20 }}>K</span>
@@ -152,8 +152,8 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
               <Avatar
                 size={40}
                 style={{
-                  background: 'linear-gradient(135deg, #7CB342 0%, #558B2F 100%)',
-                  boxShadow: '0 2px 8px rgba(124, 179, 66, 0.3)',
+                  background: 'linear-gradient(135deg, #E53935 0%, #C62828 100%)',
+                  boxShadow: '0 2px 8px rgba(229, 57, 53, 0.3)',
                 }}
                 icon={<UserOutlined />}
               />
@@ -271,7 +271,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
               }}
               onMouseEnter={(e) => {
                 e.currentTarget.style.background = '#e8e8e8';
-                e.currentTarget.style.color = '#7CB342';
+                e.currentTarget.style.color = '#E53935';
               }}
               onMouseLeave={(e) => {
                 e.currentTarget.style.background = '#f5f5f5';
@@ -332,7 +332,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                 <Avatar
                   size={32}
                   style={{
-                    background: 'linear-gradient(135deg, #7CB342 0%, #558B2F 100%)',
+                    background: 'linear-gradient(135deg, #E53935 0%, #C62828 100%)',
                   }}
                   icon={<UserOutlined />}
                 />

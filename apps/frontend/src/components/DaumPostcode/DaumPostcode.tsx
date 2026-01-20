@@ -76,7 +76,7 @@ export default function DaumPostcode({
           icon={<SearchOutlined />}
           onClick={handleSearch}
           style={{
-            background: 'linear-gradient(135deg, #7CB342 0%, #558B2F 100%)',
+            background: 'linear-gradient(135deg, #E53935 0%, #C62828 100%)',
             border: 'none',
           }}
         >

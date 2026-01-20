@@ -447,7 +447,7 @@ export default function BackupPage() {
             onClick={handleCreateBackup}
             loading={creating}
             size="large"
-            style={{ backgroundColor: '#7CB342', borderColor: '#7CB342' }}
+            style={{ backgroundColor: '#E53935', borderColor: '#E53935' }}
           >
             백업 생성
           </Button>

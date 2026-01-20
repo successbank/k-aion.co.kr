@@ -214,7 +214,7 @@ function MemberDashboard({ stats, user }: { stats: DashboardStats; user: any }) 
       <Card
         style={{
           marginBottom: 24,
-          background: 'linear-gradient(135deg, #7CB342 0%, #558B2F 100%)',
+          background: 'linear-gradient(135deg, #E53935 0%, #C62828 100%)',
         }}
       >
         <div style={{ color: '#fff' }}>
@@ -249,7 +249,7 @@ function MemberDashboard({ stats, user }: { stats: DashboardStats; user: any }) 
               title="누적 PV"
               value={stats.cumulativePv}
               prefix={<TrophyOutlined />}
-              valueStyle={{ color: '#7CB342' }}
+              valueStyle={{ color: '#E53935' }}
             />
           </Card>
         </Col>
@@ -340,7 +340,7 @@ function AgentDashboard({ stats, user }: { stats: DashboardStats; user: any }) {
               title="누적 PV"
               value={stats.cumulativePv}
               prefix={<TrophyOutlined />}
-              valueStyle={{ color: '#7CB342' }}
+              valueStyle={{ color: '#E53935' }}
             />
           </Card>
         </Col>
@@ -457,7 +457,7 @@ function ManagerDashboard({ stats, user }: { stats: DashboardStats; user: any })
               value={stats.teamMembers}
               prefix={<TeamOutlined />}
               suffix="명"
-              valueStyle={{ color: '#7CB342' }}
+              valueStyle={{ color: '#E53935' }}
             />
           </Card>
         </Col>
@@ -550,7 +550,7 @@ function BranchChiefDashboard({ stats, user }: { stats: DashboardStats; user: an
               value={stats.teamMembers}
               prefix={<TeamOutlined />}
               suffix="명"
-              valueStyle={{ color: '#7CB342' }}
+              valueStyle={{ color: '#E53935' }}
             />
           </Card>
         </Col>
@@ -660,7 +660,7 @@ function DivisionChiefDashboard({ stats, user }: { stats: DashboardStats; user: 
               value={stats.teamMembers}
               prefix={<TeamOutlined />}
               suffix="명"
-              valueStyle={{ color: '#7CB342' }}
+              valueStyle={{ color: '#E53935' }}
             />
           </Card>
         </Col>
@@ -854,7 +854,7 @@ function AdminDashboard({ stats, user }: { stats: DashboardStats; user: any }) {
   }, [salesData]);
 
   const COLORS = {
-    SALES: '#7CB342',
+    SALES: '#E53935',
     SALES_MANAGEMENT: '#1890ff',
     LICENSE: '#722ed1',
     LICENSE_MANAGEMENT: '#eb2f96',
@@ -880,7 +880,7 @@ function AdminDashboard({ stats, user }: { stats: DashboardStats; user: any }) {
               value={adminStats?.totalMembers ?? 0}
               prefix={<TeamOutlined />}
               suffix="명"
-              valueStyle={{ color: '#7CB342' }}
+              valueStyle={{ color: '#E53935' }}
             />
           </Card>
         </Col>
@@ -928,7 +928,7 @@ function AdminDashboard({ stats, user }: { stats: DashboardStats; user: any }) {
           <Card
             title={
               <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                <PieChartOutlined style={{ color: '#7CB342' }} />
+                <PieChartOutlined style={{ color: '#E53935' }} />
                 <span>보너스 유형별 분포</span>
               </div>
             }
@@ -1003,9 +1003,9 @@ function AdminDashboard({ stats, user }: { stats: DashboardStats; user: any }) {
                   type="monotone"
                   dataKey="sales"
                   name="매출"
-                  stroke="#7CB342"
+                  stroke="#E53935"
                   strokeWidth={3}
-                  dot={{ fill: '#7CB342', r: 4 }}
+                  dot={{ fill: '#E53935', r: 4 }}
                   activeDot={{ r: 6 }}
                 />
                 <Line
@@ -1030,7 +1030,7 @@ function AdminDashboard({ stats, user }: { stats: DashboardStats; user: any }) {
           <Card
             title={
               <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                <AreaChartOutlined style={{ color: '#7CB342' }} />
+                <AreaChartOutlined style={{ color: '#E53935' }} />
                 <span>일자별 매출 현황</span>
               </div>
             }
@@ -1040,8 +1040,8 @@ function AdminDashboard({ stats, user }: { stats: DashboardStats; user: any }) {
               <AreaChart data={dailySalesData}>
                 <defs>
                   <linearGradient id="colorSalesDashboard" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor="#7CB342" stopOpacity={0.8} />
-                    <stop offset="95%" stopColor="#7CB342" stopOpacity={0.1} />
+                    <stop offset="5%" stopColor="#E53935" stopOpacity={0.8} />
+                    <stop offset="95%" stopColor="#E53935" stopOpacity={0.1} />
                   </linearGradient>
                 </defs>
                 <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
@@ -1068,7 +1068,7 @@ function AdminDashboard({ stats, user }: { stats: DashboardStats; user: any }) {
                   type="monotone"
                   dataKey="amount"
                   name="매출"
-                  stroke="#7CB342"
+                  stroke="#E53935"
                   strokeWidth={3}
                   fillOpacity={1}
                   fill="url(#colorSalesDashboard)"

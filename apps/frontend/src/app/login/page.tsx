@@ -73,7 +73,7 @@ export default function LoginPage() {
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
-        background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+        background: 'linear-gradient(135deg, #e35d5b 0%, #a23b72 100%)',
         padding: '20px',
       }}
     >
@@ -91,7 +91,7 @@ export default function LoginPage() {
               width: 80,
               height: 80,
               borderRadius: '50%',
-              background: 'linear-gradient(135deg, #7CB342 0%, #558B2F 100%)',
+              background: 'linear-gradient(135deg, #E53935 0%, #C62828 100%)',
               margin: '0 auto 16px',
               display: 'flex',
               alignItems: 'center',
@@ -121,7 +121,7 @@ export default function LoginPage() {
             ]}
           >
             <Input
-              prefix={<UserOutlined style={{ color: '#7CB342' }} />}
+              prefix={<UserOutlined style={{ color: '#E53935' }} />}
               placeholder="아이디 (예: admin, test)"
               autoComplete="username"
             />
@@ -132,7 +132,7 @@ export default function LoginPage() {
             rules={[{ required: true, message: '비밀번호를 입력해주세요' }]}
           >
             <Input.Password
-              prefix={<LockOutlined style={{ color: '#7CB342' }} />}
+              prefix={<LockOutlined style={{ color: '#E53935' }} />}
               placeholder="비밀번호"
               autoComplete="current-password"
             />
@@ -140,7 +140,7 @@ export default function LoginPage() {
 
           <Form.Item style={{ marginBottom: 12 }}>
             <div style={{ display: 'flex', justifyContent: 'flex-end', alignItems: 'center' }}>
-              <Link href="/forgot-password" style={{ fontSize: 13, color: '#7CB342' }}>
+              <Link href="/forgot-password" style={{ fontSize: 13, color: '#E53935' }}>
                 비밀번호를 잊으셨나요?
               </Link>
             </div>
@@ -156,7 +156,7 @@ export default function LoginPage() {
                 height: 48,
                 fontSize: 16,
                 fontWeight: 600,
-                background: 'linear-gradient(135deg, #7CB342 0%, #558B2F 100%)',
+                background: 'linear-gradient(135deg, #E53935 0%, #C62828 100%)',
                 border: 'none',
               }}
             >
@@ -173,7 +173,7 @@ export default function LoginPage() {
           <div style={{ textAlign: 'center', marginTop: 16 }}>
             <Text type="secondary">
               계정이 없으신가요?{' '}
-              <Link href="/register" style={{ color: '#7CB342', fontWeight: 600 }}>
+              <Link href="/register" style={{ color: '#E53935', fontWeight: 600 }}>
                 회원가입
               </Link>
             </Text>
@@ -188,7 +188,7 @@ export default function LoginPage() {
         >
           <Text type="secondary" style={{ fontSize: 13 }}>
             센터/관리자이신가요?{' '}
-            <a href="/admin/login" style={{ color: '#7CB342', fontWeight: 600 }}>
+            <a href="/admin/login" style={{ color: '#E53935', fontWeight: 600 }}>
               관리자 로그인
             </a>
           </Text>

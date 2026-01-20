@@ -27,7 +27,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             locale={koKR}
             theme={{
               token: {
-                colorPrimary: '#7CB342',
+                colorPrimary: '#E53935',
                 colorSuccess: '#43A047',
                 colorError: '#E53935',
                 fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',

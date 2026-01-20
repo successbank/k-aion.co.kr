@@ -45,11 +45,11 @@
   font-style: normal;
 }
 
-/* 브랜드 컬러 적용 (#7CB342) */
+/* 브랜드 컬러 적용 (#E53935) */
 .rich-text-editor .ql-toolbar button:hover,
 .rich-text-editor .ql-toolbar button:focus,
 .rich-text-editor .ql-toolbar button.ql-active {
-  color: #7cb342;
+  color: #e53935;
 }
 
 .rich-text-editor .ql-toolbar .ql-stroke {
@@ -59,7 +59,7 @@
 .rich-text-editor .ql-toolbar button:hover .ql-stroke,
 .rich-text-editor .ql-toolbar button:focus .ql-stroke,
 .rich-text-editor .ql-toolbar button.ql-active .ql-stroke {
-  stroke: #7cb342;
+  stroke: #e53935;
 }
 
 .rich-text-editor .ql-toolbar .ql-fill {
@@ -69,17 +69,17 @@
 .rich-text-editor .ql-toolbar button:hover .ql-fill,
 .rich-text-editor .ql-toolbar button:focus .ql-fill,
 .rich-text-editor .ql-toolbar button.ql-active .ql-fill {
-  fill: #7cb342;
+  fill: #e53935;
 }
 
 .rich-text-editor .ql-toolbar .ql-picker-label:hover,
 .rich-text-editor .ql-toolbar .ql-picker-label.ql-active {
-  color: #7cb342;
+  color: #e53935;
 }
 
 .rich-text-editor .ql-toolbar .ql-picker-label:hover .ql-stroke,
 .rich-text-editor .ql-toolbar .ql-picker-label.ql-active .ql-stroke {
-  stroke: #7cb342;
+  stroke: #e53935;
 }
 
 /* 드롭다운 메뉴 */
@@ -91,7 +91,7 @@
 }
 
 .ql-picker-item:hover {
-  color: #7cb342;
+  color: #e53935;
 }
 
 /* 에디터 컨텐츠 스타일 */
@@ -111,7 +111,7 @@
 }
 
 .rich-text-editor .ql-editor blockquote {
-  border-left: 4px solid #7cb342;
+  border-left: 4px solid #e53935;
   padding-left: 16px;
   margin: 8px 0;
   color: #666;

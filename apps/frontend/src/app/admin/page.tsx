@@ -369,7 +369,7 @@ export default function AdminDashboardPage() {
   }, [salesData]);
 
   const COLORS = {
-    SALES: '#7CB342',
+    SALES: '#E53935',
     SALES_MANAGEMENT: '#1890ff',
     LICENSE: '#722ed1',
     LICENSE_MANAGEMENT: '#eb2f96',
@@ -517,7 +517,7 @@ export default function AdminDashboardPage() {
                   title="판매 보너스"
                   value={bonusTypeStats.SALES}
                   suffix="원"
-                  valueStyle={{ color: '#7CB342' }}
+                  valueStyle={{ color: '#E53935' }}
                 />
               </Card>
             </Col>
@@ -667,7 +667,7 @@ export default function AdminDashboardPage() {
         style={{
           marginBottom: 28,
           padding: '24px 28px',
-          background: 'linear-gradient(135deg, #7CB342 0%, #558B2F 100%)',
+          background: 'linear-gradient(135deg, #E53935 0%, #C62828 100%)',
           borderRadius: 16,
           color: '#fff',
           display: 'flex',
@@ -704,7 +704,7 @@ export default function AdminDashboardPage() {
             value={stats.totalUsers}
             suffix="명"
             icon={<UserOutlined />}
-            iconBg="linear-gradient(135deg, #7CB342 0%, #558B2F 100%)"
+            iconBg="linear-gradient(135deg, #E53935 0%, #C62828 100%)"
             trend="up"
             trendValue={stats.userGrowthRate}
             subText={`이번 달 +${stats.newUsersThisMonth}명`}
@@ -750,7 +750,7 @@ export default function AdminDashboardPage() {
           <Card
             title={
               <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                <PieChartOutlined style={{ color: '#7CB342' }} />
+                <PieChartOutlined style={{ color: '#E53935' }} />
                 <span>보너스 유형별 분포</span>
               </div>
             }
@@ -825,9 +825,9 @@ export default function AdminDashboardPage() {
                   type="monotone"
                   dataKey="sales"
                   name="매출"
-                  stroke="#7CB342"
+                  stroke="#E53935"
                   strokeWidth={3}
-                  dot={{ fill: '#7CB342', r: 4 }}
+                  dot={{ fill: '#E53935', r: 4 }}
                   activeDot={{ r: 6 }}
                 />
                 <Line
@@ -852,7 +852,7 @@ export default function AdminDashboardPage() {
           <Card
             title={
               <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                <AreaChartOutlined style={{ color: '#7CB342' }} />
+                <AreaChartOutlined style={{ color: '#E53935' }} />
                 <span>일자별 매출 현황</span>
               </div>
             }
@@ -861,8 +861,8 @@ export default function AdminDashboardPage() {
               <AreaChart data={dailySalesData}>
                 <defs>
                   <linearGradient id="colorSales" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor="#7CB342" stopOpacity={0.8} />
-                    <stop offset="95%" stopColor="#7CB342" stopOpacity={0.1} />
+                    <stop offset="5%" stopColor="#E53935" stopOpacity={0.8} />
+                    <stop offset="95%" stopColor="#E53935" stopOpacity={0.1} />
                   </linearGradient>
                 </defs>
                 <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
@@ -889,7 +889,7 @@ export default function AdminDashboardPage() {
                   type="monotone"
                   dataKey="amount"
                   name="매출"
-                  stroke="#7CB342"
+                  stroke="#E53935"
                   strokeWidth={3}
                   fillOpacity={1}
                   fill="url(#colorSales)"
@@ -985,7 +985,7 @@ export default function AdminDashboardPage() {
                   label: '매니저',
                   value: gradeStats.MANAGER,
                   total: stats.totalUsers,
-                  color: '#7CB342',
+                  color: '#E53935',
                 },
                 {
                   label: '에이전트',

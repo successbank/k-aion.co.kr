@@ -81,7 +81,7 @@ export default function AdminLoginPage() {
               width: 80,
               height: 80,
               borderRadius: '50%',
-              background: 'linear-gradient(135deg, #ffd700 0%, #ff8c00 100%)',
+              background: 'linear-gradient(135deg, #E53935 0%, #C62828 100%)',
               margin: '0 auto 16px',
               display: 'flex',
               alignItems: 'center',
@@ -109,7 +109,7 @@ export default function AdminLoginPage() {
             rules={[{ required: true, message: '아이디를 입력해주세요' }]}
           >
             <Input
-              prefix={<UserOutlined style={{ color: '#ffd700' }} />}
+              prefix={<UserOutlined style={{ color: '#E53935' }} />}
               placeholder="관리자 아이디"
               autoComplete="username"
             />
@@ -120,7 +120,7 @@ export default function AdminLoginPage() {
             rules={[{ required: true, message: '비밀번호를 입력해주세요' }]}
           >
             <Input.Password
-              prefix={<LockOutlined style={{ color: '#ffd700' }} />}
+              prefix={<LockOutlined style={{ color: '#E53935' }} />}
               placeholder="비밀번호"
               autoComplete="current-password"
             />
@@ -136,9 +136,9 @@ export default function AdminLoginPage() {
                 height: 48,
                 fontSize: 16,
                 fontWeight: 600,
-                background: 'linear-gradient(135deg, #ffd700 0%, #ff8c00 100%)',
+                background: 'linear-gradient(135deg, #E53935 0%, #C62828 100%)',
                 border: 'none',
-                color: '#1a1a2e',
+                color: '#fff',
               }}
             >
               관리자 로그인
@@ -154,7 +154,7 @@ export default function AdminLoginPage() {
         >
           <Text type="secondary" style={{ fontSize: 13 }}>
             일반 회원이신가요?{' '}
-            <a href="/login" style={{ color: '#ffd700', fontWeight: 600 }}>
+            <a href="/login" style={{ color: '#E53935', fontWeight: 600 }}>
               회원 로그인
             </a>
           </Text>

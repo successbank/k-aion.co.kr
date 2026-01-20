@@ -240,7 +240,7 @@ export default function OverviewTab() {
             value={totalSales}
             suffix="원"
             icon={<DollarOutlined />}
-            iconBg="linear-gradient(135deg, #7CB342 0%, #558B2F 100%)"
+            iconBg="linear-gradient(135deg, #E53935 0%, #C62828 100%)"
             loading={loading}
           />
         </Col>
@@ -282,7 +282,7 @@ export default function OverviewTab() {
           <Card
             title={
               <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                <LineChartOutlined style={{ color: '#7CB342' }} />
+                <LineChartOutlined style={{ color: '#E53935' }} />
                 <span>주차별 매출/보너스 추이</span>
               </div>
             }
@@ -314,9 +314,9 @@ export default function OverviewTab() {
                   type="monotone"
                   dataKey="sales"
                   name="매출"
-                  stroke="#7CB342"
+                  stroke="#E53935"
                   strokeWidth={3}
-                  dot={{ fill: '#7CB342', r: 4 }}
+                  dot={{ fill: '#E53935', r: 4 }}
                   activeDot={{ r: 6 }}
                 />
                 <Line
@@ -396,7 +396,7 @@ export default function OverviewTab() {
           <Card
             title={
               <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                <AreaChartOutlined style={{ color: '#7CB342' }} />
+                <AreaChartOutlined style={{ color: '#E53935' }} />
                 <span>일자별 매출 현황</span>
               </div>
             }
@@ -406,8 +406,8 @@ export default function OverviewTab() {
               <AreaChart data={dailySalesData}>
                 <defs>
                   <linearGradient id="colorSalesOverview" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor="#7CB342" stopOpacity={0.8} />
-                    <stop offset="95%" stopColor="#7CB342" stopOpacity={0.1} />
+                    <stop offset="5%" stopColor="#E53935" stopOpacity={0.8} />
+                    <stop offset="95%" stopColor="#E53935" stopOpacity={0.1} />
                   </linearGradient>
                 </defs>
                 <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
@@ -434,7 +434,7 @@ export default function OverviewTab() {
                   type="monotone"
                   dataKey="amount"
                   name="매출"
-                  stroke="#7CB342"
+                  stroke="#E53935"
                   strokeWidth={3}
                   fillOpacity={1}
                   fill="url(#colorSalesOverview)"

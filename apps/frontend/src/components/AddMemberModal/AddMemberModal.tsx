@@ -313,7 +313,7 @@ export function AddMemberModal({ visible, onCancel, onSuccess }: AddMemberModalP
               ]}
             >
               <Input
-                prefix={<UserOutlined style={{ color: '#7CB342' }} />}
+                prefix={<UserOutlined style={{ color: '#E53935' }} />}
                 placeholder="아이디 (예: hong123)"
                 onChange={(e) => setUsername(e.target.value.toLowerCase())}
                 autoComplete="off"
@@ -330,7 +330,7 @@ export function AddMemberModal({ visible, onCancel, onSuccess }: AddMemberModalP
               ]}
             >
               <Input
-                prefix={<UserOutlined style={{ color: '#7CB342' }} />}
+                prefix={<UserOutlined style={{ color: '#E53935' }} />}
                 placeholder="홍길동"
                 autoComplete="off"
               />
@@ -350,7 +350,7 @@ export function AddMemberModal({ visible, onCancel, onSuccess }: AddMemberModalP
               hasFeedback
             >
               <Input.Password
-                prefix={<LockOutlined style={{ color: '#7CB342' }} />}
+                prefix={<LockOutlined style={{ color: '#E53935' }} />}
                 placeholder="4자 이상"
                 autoComplete="new-password"
               />
@@ -375,7 +375,7 @@ export function AddMemberModal({ visible, onCancel, onSuccess }: AddMemberModalP
               ]}
             >
               <Input.Password
-                prefix={<LockOutlined style={{ color: '#7CB342' }} />}
+                prefix={<LockOutlined style={{ color: '#E53935' }} />}
                 placeholder="비밀번호 재입력"
                 autoComplete="new-password"
               />
@@ -395,7 +395,7 @@ export function AddMemberModal({ visible, onCancel, onSuccess }: AddMemberModalP
           ]}
         >
           <Input
-            prefix={<PhoneOutlined style={{ color: '#7CB342' }} />}
+            prefix={<PhoneOutlined style={{ color: '#E53935' }} />}
             placeholder="010-1234-5678 또는 01012345678"
             autoComplete="off"
           />
@@ -455,7 +455,7 @@ export function AddMemberModal({ visible, onCancel, onSuccess }: AddMemberModalP
           rules={[{ required: false }]}
         >
           <Input
-            prefix={<TeamOutlined style={{ color: '#7CB342' }} />}
+            prefix={<TeamOutlined style={{ color: '#E53935' }} />}
             placeholder="소속 센터명"
             autoComplete="off"
           />
@@ -510,7 +510,7 @@ export function AddMemberModal({ visible, onCancel, onSuccess }: AddMemberModalP
               ]}
             >
               <Input
-                prefix={<BankOutlined style={{ color: '#7CB342' }} />}
+                prefix={<BankOutlined style={{ color: '#E53935' }} />}
                 placeholder="123-456-789012"
                 autoComplete="off"
               />

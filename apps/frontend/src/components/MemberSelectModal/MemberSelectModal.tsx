@@ -72,7 +72,7 @@ export function MemberSelectModal({
               }}
               onMouseEnter={(e) => {
                 e.currentTarget.style.backgroundColor = '#f5f5f5';
-                e.currentTarget.style.borderColor = '#7CB342';
+                e.currentTarget.style.borderColor = '#E53935';
               }}
               onMouseLeave={(e) => {
                 e.currentTarget.style.backgroundColor = 'transparent';

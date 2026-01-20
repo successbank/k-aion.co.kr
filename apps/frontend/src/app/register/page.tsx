@@ -265,7 +265,7 @@ export default function RegisterPage() {
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
-        background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+        background: 'linear-gradient(135deg, #e35d5b 0%, #a23b72 100%)',
         padding: '20px',
       }}
     >
@@ -283,7 +283,7 @@ export default function RegisterPage() {
               width: 80,
               height: 80,
               borderRadius: '50%',
-              background: 'linear-gradient(135deg, #7CB342 0%, #558B2F 100%)',
+              background: 'linear-gradient(135deg, #E53935 0%, #C62828 100%)',
               margin: '0 auto 16px',
               display: 'flex',
               alignItems: 'center',
@@ -347,7 +347,7 @@ export default function RegisterPage() {
               ]}
             >
               <Input
-                prefix={<UserOutlined style={{ color: '#7CB342' }} />}
+                prefix={<UserOutlined style={{ color: '#E53935' }} />}
                 placeholder="아이디 (예: admin, test123)"
                 onChange={(e) => setUsername(e.target.value.toLowerCase())}
                 autoComplete="username"
@@ -364,7 +364,7 @@ export default function RegisterPage() {
               hasFeedback
             >
               <Input.Password
-                prefix={<LockOutlined style={{ color: '#7CB342' }} />}
+                prefix={<LockOutlined style={{ color: '#E53935' }} />}
                 placeholder="4자 이상"
               />
             </Form.Item>
@@ -387,7 +387,7 @@ export default function RegisterPage() {
               ]}
             >
               <Input.Password
-                prefix={<LockOutlined style={{ color: '#7CB342' }} />}
+                prefix={<LockOutlined style={{ color: '#E53935' }} />}
                 placeholder="비밀번호 재입력"
               />
             </Form.Item>
@@ -397,7 +397,7 @@ export default function RegisterPage() {
               label="이름"
               rules={[{ required: true, message: '이름을 입력해주세요' }]}
             >
-              <Input prefix={<UserOutlined style={{ color: '#7CB342' }} />} placeholder="홍길동" />
+              <Input prefix={<UserOutlined style={{ color: '#E53935' }} />} placeholder="홍길동" />
             </Form.Item>
 
             <Form.Item
@@ -412,7 +412,7 @@ export default function RegisterPage() {
               ]}
             >
               <Input
-                prefix={<PhoneOutlined style={{ color: '#7CB342' }} />}
+                prefix={<PhoneOutlined style={{ color: '#E53935' }} />}
                 placeholder="010-1234-5678 또는 01012345678"
               />
             </Form.Item>
@@ -508,7 +508,7 @@ export default function RegisterPage() {
 
             <Form.Item name="addressDetail" label="상세 주소">
               <Input
-                prefix={<HomeOutlined style={{ color: '#7CB342' }} />}
+                prefix={<HomeOutlined style={{ color: '#E53935' }} />}
                 placeholder="동/호수 등 상세 주소 입력"
               />
             </Form.Item>
@@ -528,7 +528,7 @@ export default function RegisterPage() {
                 onClick={nextStep}
                 style={{
                   flex: 1,
-                  background: 'linear-gradient(135deg, #7CB342 0%, #558B2F 100%)',
+                  background: 'linear-gradient(135deg, #E53935 0%, #C62828 100%)',
                   border: 'none',
                 }}
               >
@@ -543,7 +543,7 @@ export default function RegisterPage() {
                 loading={loading}
                 style={{
                   flex: 1,
-                  background: 'linear-gradient(135deg, #7CB342 0%, #558B2F 100%)',
+                  background: 'linear-gradient(135deg, #E53935 0%, #C62828 100%)',
                   border: 'none',
                 }}
               >
@@ -556,7 +556,7 @@ export default function RegisterPage() {
         <div style={{ textAlign: 'center', marginTop: 24 }}>
           <Text type="secondary">
             이미 계정이 있으신가요?{' '}
-            <Link href="/login" style={{ color: '#7CB342', fontWeight: 600 }}>
+            <Link href="/login" style={{ color: '#E53935', fontWeight: 600 }}>
               로그인
             </Link>
           </Text>

@@ -196,7 +196,7 @@ export default function BonusHistoryPage() {
       align: 'right',
       width: 120,
       render: (amount: number) => (
-        <Text strong style={{ color: '#7CB342', fontSize: '14px' }}>
+        <Text strong style={{ color: '#E53935', fontSize: '14px' }}>
           {amount.toLocaleString()}원
         </Text>
       ),
@@ -231,7 +231,7 @@ export default function BonusHistoryPage() {
         {/* 헤더 */}
         <div style={{ marginBottom: 24 }}>
           <Title level={2}>
-            <DollarOutlined style={{ color: '#7CB342' }} /> 보너스 이력 조회
+            <DollarOutlined style={{ color: '#E53935' }} /> 보너스 이력 조회
           </Title>
           <Text type="secondary">내 보너스 지급 내역을 확인하세요</Text>
         </div>
@@ -246,7 +246,7 @@ export default function BonusHistoryPage() {
                   value={summary.totalAmount}
                   precision={0}
                   suffix="원"
-                  valueStyle={{ color: '#7CB342' }}
+                  valueStyle={{ color: '#E53935' }}
                   prefix={<DollarOutlined />}
                 />
               </Card>

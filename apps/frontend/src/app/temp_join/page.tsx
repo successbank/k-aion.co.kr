@@ -85,7 +85,7 @@ export default function TempJoinPage() {
     <div
       style={{
         minHeight: '100vh',
-        background: 'linear-gradient(135deg, #7CB342 0%, #558B2F 100%)',
+        background: 'linear-gradient(135deg, #E53935 0%, #C62828 100%)',
         padding: '40px 20px',
         display: 'flex',
         justifyContent: 'center',
@@ -102,7 +102,7 @@ export default function TempJoinPage() {
         }}
       >
         <div style={{ textAlign: 'center', marginBottom: 32 }}>
-          <Title level={2} style={{ color: '#7CB342', marginBottom: 8 }}>
+          <Title level={2} style={{ color: '#E53935', marginBottom: 8 }}>
             임시 회원가입
           </Title>
           <Paragraph type="secondary">
@@ -245,8 +245,8 @@ export default function TempJoinPage() {
               style={{
                 height: 48,
                 fontSize: 16,
-                background: '#7CB342',
-                borderColor: '#7CB342',
+                background: '#E53935',
+                borderColor: '#E53935',
               }}
             >
               가입하기
@@ -256,7 +256,7 @@ export default function TempJoinPage() {
           <div style={{ textAlign: 'center' }}>
             <Text type="secondary">
               이미 계정이 있으신가요?{' '}
-              <a href="/login" style={{ color: '#7CB342' }}>
+              <a href="/login" style={{ color: '#E53935' }}>
                 로그인
               </a>
             </Text>

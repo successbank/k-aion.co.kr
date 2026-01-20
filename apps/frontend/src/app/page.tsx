@@ -7,11 +7,11 @@ const { Title, Paragraph } = Typography;
 
 export default function Home() {
   return (
-    <main className="min-h-screen flex items-center justify-center bg-gradient-to-br from-green-50 to-green-100">
+    <main className="min-h-screen flex items-center justify-center bg-gradient-to-br from-red-50 to-red-100">
       <div className="text-center">
         <Space direction="vertical" size="large" align="center">
-          <RocketOutlined style={{ fontSize: 72, color: '#7CB342' }} />
-          <Title level={1} style={{ color: '#7CB342' }}>
+          <RocketOutlined style={{ fontSize: 72, color: '#E53935' }} />
+          <Title level={1} style={{ color: '#E53935' }}>
             케이아이온 통합관리시스템
           </Title>
           <Paragraph style={{ fontSize: 18, color: '#757575' }}>

@@ -246,7 +246,7 @@ export default function MemberAnalyticsTab() {
               value={totalMembers}
               prefix={<TeamOutlined />}
               suffix="명"
-              valueStyle={{ color: '#7CB342' }}
+              valueStyle={{ color: '#E53935' }}
             />
           </Card>
         </Col>
@@ -368,7 +368,7 @@ export default function MemberAnalyticsTab() {
           <Card
             title={
               <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                <AreaChartOutlined style={{ color: '#7CB342' }} />
+                <AreaChartOutlined style={{ color: '#E53935' }} />
                 <span>월별 가입 추이 (최근 12개월)</span>
               </div>
             }
@@ -378,8 +378,8 @@ export default function MemberAnalyticsTab() {
               <AreaChart data={monthlyJoinData}>
                 <defs>
                   <linearGradient id="colorMemberJoin" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor="#7CB342" stopOpacity={0.8} />
-                    <stop offset="95%" stopColor="#7CB342" stopOpacity={0.1} />
+                    <stop offset="5%" stopColor="#E53935" stopOpacity={0.8} />
+                    <stop offset="95%" stopColor="#E53935" stopOpacity={0.1} />
                   </linearGradient>
                 </defs>
                 <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
@@ -402,7 +402,7 @@ export default function MemberAnalyticsTab() {
                   type="monotone"
                   dataKey="count"
                   name="가입자 수"
-                  stroke="#7CB342"
+                  stroke="#E53935"
                   strokeWidth={3}
                   fillOpacity={1}
                   fill="url(#colorMemberJoin)"

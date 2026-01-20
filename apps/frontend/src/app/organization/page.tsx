@@ -446,7 +446,7 @@ export default function OrganizationPage() {
                 icon={<RollbackOutlined />}
                 onClick={handleBackToMyOrg}
                 size="large"
-                style={{ width: '100%', backgroundColor: '#7CB342', borderColor: '#7CB342' }}
+                style={{ width: '100%', backgroundColor: '#E53935', borderColor: '#E53935' }}
               >
                 내 조직도로 돌아가기
               </Button>
@@ -455,7 +455,7 @@ export default function OrganizationPage() {
         </Row>
         {viewingSearchedMember && (
           <div style={{ marginTop: 12 }}>
-            <Tag color="#7CB342" style={{ fontSize: 14, padding: '4px 12px' }}>
+            <Tag color="#E53935" style={{ fontSize: 14, padding: '4px 12px' }}>
               현재 보기: {viewingMemberName}님의 조직도
             </Tag>
           </div>

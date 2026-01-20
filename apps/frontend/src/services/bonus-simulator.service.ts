@@ -139,7 +139,7 @@ export const GRADE_LABELS: Record<MemberGrade, string> = {
 
 // 보너스 타입별 색상
 export const BONUS_TYPE_COLORS: Record<BonusType, string> = {
-  SALES: '#7CB342',
+  SALES: '#E53935',
   SALES_MANAGEMENT: '#1890ff',
   LICENSE: '#722ed1',
   LICENSE_MANAGEMENT: '#eb2f96',

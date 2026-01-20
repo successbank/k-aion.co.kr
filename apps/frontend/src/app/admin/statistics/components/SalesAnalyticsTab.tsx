@@ -372,7 +372,7 @@ export default function SalesAnalyticsTab() {
               value={totalAmount}
               prefix={<DollarOutlined />}
               suffix="원"
-              valueStyle={{ color: '#7CB342' }}
+              valueStyle={{ color: '#E53935' }}
             />
           </Card>
         </Col>
@@ -405,7 +405,7 @@ export default function SalesAnalyticsTab() {
           <Card
             title={
               <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                <AreaChartOutlined style={{ color: '#7CB342' }} />
+                <AreaChartOutlined style={{ color: '#E53935' }} />
                 <span>일별 매출 추이</span>
               </div>
             }
@@ -415,8 +415,8 @@ export default function SalesAnalyticsTab() {
               <AreaChart data={dailySalesData}>
                 <defs>
                   <linearGradient id="colorSalesAnalytics" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor="#7CB342" stopOpacity={0.8} />
-                    <stop offset="95%" stopColor="#7CB342" stopOpacity={0.1} />
+                    <stop offset="5%" stopColor="#E53935" stopOpacity={0.8} />
+                    <stop offset="95%" stopColor="#E53935" stopOpacity={0.1} />
                   </linearGradient>
                 </defs>
                 <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
@@ -445,7 +445,7 @@ export default function SalesAnalyticsTab() {
                   type="monotone"
                   dataKey="amount"
                   name="매출"
-                  stroke="#7CB342"
+                  stroke="#E53935"
                   strokeWidth={2}
                   fillOpacity={1}
                   fill="url(#colorSalesAnalytics)"

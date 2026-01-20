@@ -510,7 +510,7 @@ export default function MyPage() {
       <Card style={{ marginBottom: '24px' }}>
         <Row gutter={24} align="middle">
           <Col>
-            <Avatar size={80} icon={<UserOutlined />} style={{ backgroundColor: '#7CB342' }} />
+            <Avatar size={80} icon={<UserOutlined />} style={{ backgroundColor: '#E53935' }} />
           </Col>
           <Col flex={1}>
             <Space direction="vertical" size={4}>
@@ -529,7 +529,7 @@ export default function MyPage() {
           <Col>
             <Space direction="vertical">
               <Text strong>누적 PV</Text>
-              <Text style={{ fontSize: '18px', color: '#7CB342' }}>
+              <Text style={{ fontSize: '18px', color: '#E53935' }}>
                 {profile.cumulativePv.toLocaleString()}
               </Text>
             </Space>

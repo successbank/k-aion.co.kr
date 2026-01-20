@@ -75,7 +75,7 @@ const BONUS_TYPE_LABELS: Record<string, string> = {
 };
 
 const BONUS_COLORS: Record<string, string> = {
-  SALES: '#7CB342',
+  SALES: '#E53935',
   SALES_MANAGEMENT: '#1890ff',
   LICENSE: '#722ed1',
   LICENSE_MANAGEMENT: '#eb2f96',

@@ -237,7 +237,7 @@ export default function AdminBonusesPage() {
       width: 150,
       align: 'right',
       render: (amount: number) => (
-        <span style={{ fontWeight: 600, color: '#7CB342', fontSize: 15 }}>
+        <span style={{ fontWeight: 600, color: '#E53935', fontSize: 15 }}>
           {(amount || 0).toLocaleString()}원
         </span>
       ),
@@ -315,7 +315,7 @@ export default function AdminBonusesPage() {
               value={stats.total}
               prefix={<DollarOutlined />}
               suffix="원"
-              valueStyle={{ color: '#7CB342' }}
+              valueStyle={{ color: '#E53935' }}
               formatter={(value) => Number(value).toLocaleString()}
             />
           </Card>
@@ -368,7 +368,7 @@ export default function AdminBonusesPage() {
                   title={BonusTypeLabels[type as BonusType]}
                   value={amount}
                   suffix="원"
-                  valueStyle={{ color: '#7CB342', fontSize: 16 }}
+                  valueStyle={{ color: '#E53935', fontSize: 16 }}
                   formatter={(value) => Number(value).toLocaleString()}
                 />
               </Card>
@@ -473,7 +473,7 @@ export default function AdminBonusesPage() {
               </Tag>
             </Descriptions.Item>
             <Descriptions.Item label="금액">
-              <span style={{ fontWeight: 'bold', color: '#7CB342', fontSize: 18 }}>
+              <span style={{ fontWeight: 'bold', color: '#E53935', fontSize: 18 }}>
                 {(selectedBonus.amount || 0).toLocaleString()}원
               </span>
             </Descriptions.Item>

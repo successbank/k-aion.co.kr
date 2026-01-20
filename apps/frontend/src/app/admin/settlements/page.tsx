@@ -209,7 +209,7 @@ export default function SettlementsPage() {
                 value={stats.totalSettlements}
                 suffix="건"
                 prefix={<FileTextOutlined />}
-                valueStyle={{ color: '#7CB342' }}
+                valueStyle={{ color: '#E53935' }}
               />
             </Card>
           </Col>

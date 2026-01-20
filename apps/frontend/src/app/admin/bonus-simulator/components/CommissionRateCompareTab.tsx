@@ -83,7 +83,7 @@ export default function CommissionRateCompareTab() {
           );
         }
         return (
-          <span style={{ fontWeight: 600, color: '#7CB342' }}>
+          <span style={{ fontWeight: 600, color: '#E53935' }}>
             {amount?.toLocaleString() || '-'}원
           </span>
         );
@@ -116,7 +116,7 @@ export default function CommissionRateCompareTab() {
         dataIndex: 'amount',
         key: 'amount',
         render: (amount: number) => (
-          <span style={{ fontWeight: 600, color: '#7CB342' }}>
+          <span style={{ fontWeight: 600, color: '#E53935' }}>
             {amount.toLocaleString()}원
           </span>
         ),
@@ -198,9 +198,9 @@ export default function CommissionRateCompareTab() {
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div
             className="p-3 rounded"
-            style={{ backgroundColor: '#f6ffed', borderLeft: '4px solid #7CB342' }}
+            style={{ backgroundColor: '#f6ffed', borderLeft: '4px solid #E53935' }}
           >
-            <div className="font-semibold" style={{ color: '#7CB342' }}>
+            <div className="font-semibold" style={{ color: '#E53935' }}>
               판매 보너스 (SALES)
             </div>
             <div className="text-sm text-gray-600 mt-1">

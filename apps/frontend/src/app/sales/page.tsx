@@ -192,7 +192,7 @@ export default function SalesPage() {
                     </Text>
                     <Text
                       strong
-                      style={{ fontSize: 20, color: '#7CB342' }}
+                      style={{ fontSize: 20, color: '#E53935' }}
                     >
                       {bonusPreview.totalBonus.toLocaleString()}원
                     </Text>
@@ -221,7 +221,7 @@ export default function SalesPage() {
                           {bonus.description}
                         </Text>
                       </Space>
-                      <Text strong style={{ color: '#7CB342' }}>
+                      <Text strong style={{ color: '#E53935' }}>
                         {bonus.amount.toLocaleString()}원
                       </Text>
                     </div>

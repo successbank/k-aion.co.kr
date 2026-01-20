@@ -107,7 +107,7 @@ export default function CompensationPlanPage() {
       key: 'name',
       render: (text: string, record: any) => (
         <Space>
-          <DollarOutlined style={{ color: '#7CB342', fontSize: 20 }} />
+          <DollarOutlined style={{ color: '#E53935', fontSize: 20 }} />
           <strong>{text}</strong>
         </Space>
       ),
@@ -288,7 +288,7 @@ export default function CompensationPlanPage() {
         <Panel
           header={
             <Space>
-              <DollarOutlined style={{ color: '#7CB342' }} />
+              <DollarOutlined style={{ color: '#E53935' }} />
               <strong>{bonus.name}</strong>
               <Tag color="green">{bonus.amount}</Tag>
             </Space>
@@ -506,7 +506,7 @@ export default function CompensationPlanPage() {
       <div style={{ padding: '24px' }}>
         <div style={{ marginBottom: 24 }}>
           <Title level={2}>
-            <TrophyOutlined style={{ color: '#7CB342' }} /> 보상플랜
+            <TrophyOutlined style={{ color: '#E53935' }} /> 보상플랜
           </Title>
           <Paragraph type="secondary">
             케이아이온 네트워크 마케팅 보상 체계를 확인하세요

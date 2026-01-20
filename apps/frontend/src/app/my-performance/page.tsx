@@ -222,8 +222,8 @@ export default function MyPerformancePage() {
             <Statistic
               title="누적 PV"
               value={performance?.member.cumulativePv || 0}
-              prefix={<RiseOutlined style={{ color: '#7CB342' }} />}
-              valueStyle={{ color: '#7CB342', fontSize: '28px' }}
+              prefix={<RiseOutlined style={{ color: '#E53935' }} />}
+              valueStyle={{ color: '#E53935', fontSize: '28px' }}
             />
           </Col>
           <Col xs={24} sm={12}>

@@ -136,7 +136,7 @@ export default function DashboardPage() {
       <Card
         style={{
           marginBottom: '24px',
-          background: 'linear-gradient(135deg, #7CB342 0%, #558B2F 100%)',
+          background: 'linear-gradient(135deg, #E53935 0%, #C62828 100%)',
         }}
       >
         <Row align="middle" justify="space-between">
@@ -161,8 +161,8 @@ export default function DashboardPage() {
             <Statistic
               title="누적 PV"
               value={profile?.cumulativePv || 0}
-              prefix={<RiseOutlined style={{ color: '#7CB342' }} />}
-              valueStyle={{ color: '#7CB342' }}
+              prefix={<RiseOutlined style={{ color: '#E53935' }} />}
+              valueStyle={{ color: '#E53935' }}
             />
           </Card>
         </Col>
@@ -215,8 +215,8 @@ export default function DashboardPage() {
               <Progress
                 percent={promotionProgress.percent}
                 strokeColor={{
-                  '0%': '#7CB342',
-                  '100%': '#558B2F',
+                  '0%': '#E53935',
+                  '100%': '#C62828',
                 }}
               />
               <Text type="secondary">{promotionProgress.text}</Text>

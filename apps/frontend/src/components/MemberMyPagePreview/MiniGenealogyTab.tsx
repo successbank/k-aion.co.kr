@@ -37,7 +37,7 @@ const MemberCard = ({
       size="small"
       style={{
         width: isTarget ? 200 : 160,
-        border: isTarget ? '2px solid #7CB342' : '1px solid #d9d9d9',
+        border: isTarget ? '2px solid #E53935' : '1px solid #d9d9d9',
         background: isTarget ? '#f6ffed' : '#fff',
         textAlign: 'center',
       }}

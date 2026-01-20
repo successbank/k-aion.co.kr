@@ -65,9 +65,9 @@ a {
 }
 
 .ant-layout-sider-dark .ant-menu-dark .ant-menu-item-selected {
-  background: linear-gradient(135deg, #7CB342 0%, #558B2F 100%) !important;
+  background: linear-gradient(135deg, #E53935 0%, #C62828 100%) !important;
   color: #fff !important;
-  box-shadow: 0 4px 12px rgba(124, 179, 66, 0.35) !important;
+  box-shadow: 0 4px 12px rgba(229, 57, 53, 0.35) !important;
 }
 
 .ant-layout-sider-dark .ant-menu-dark .ant-menu-item-selected::after {
@@ -113,14 +113,14 @@ a {
 
 /* Button Styling */
 .ant-btn-primary {
-  background: linear-gradient(135deg, #7CB342 0%, #558B2F 100%) !important;
+  background: linear-gradient(135deg, #E53935 0%, #C62828 100%) !important;
   border: none !important;
-  box-shadow: 0 2px 8px rgba(124, 179, 66, 0.3) !important;
+  box-shadow: 0 2px 8px rgba(229, 57, 53, 0.3) !important;
 }
 
 .ant-btn-primary:hover {
-  background: linear-gradient(135deg, #8BC34A 0%, #689F38 100%) !important;
-  box-shadow: 0 4px 12px rgba(124, 179, 66, 0.4) !important;
+  background: linear-gradient(135deg, #F44336 0%, #D32F2F 100%) !important;
+  box-shadow: 0 4px 12px rgba(229, 57, 53, 0.4) !important;
 }
 
 /* Input Styling */
@@ -132,8 +132,8 @@ a {
 .ant-input:focus,
 .ant-input-affix-wrapper:focus,
 .ant-input-affix-wrapper-focused {
-  border-color: #7CB342 !important;
-  box-shadow: 0 0 0 2px rgba(124, 179, 66, 0.15) !important;
+  border-color: #E53935 !important;
+  box-shadow: 0 0 0 2px rgba(229, 57, 53, 0.15) !important;
 }
 
 /* Tabs Styling */
@@ -146,7 +146,7 @@ a {
 }
 
 .ant-tabs-ink-bar {
-  background: #7CB342 !important;
+  background: #E53935 !important;
 }
 
 /* Tag Styling */

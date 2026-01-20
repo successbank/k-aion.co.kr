@@ -128,7 +128,7 @@ export default function MemberLayout({ children }: MemberLayoutProps) {
                   width: 32,
                   height: 32,
                   borderRadius: '50%',
-                  background: 'linear-gradient(135deg, #7CB342 0%, #558B2F 100%)',
+                  background: 'linear-gradient(135deg, #E53935 0%, #C62828 100%)',
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
@@ -137,7 +137,7 @@ export default function MemberLayout({ children }: MemberLayoutProps) {
                 <UserOutlined style={{ color: '#fff', fontSize: 16 }} />
               </div>
               {!collapsed && (
-                <Text strong style={{ color: '#7CB342', fontSize: 16 }}>
+                <Text strong style={{ color: '#E53935', fontSize: 16 }}>
                   케이아이온
                 </Text>
               )}
@@ -174,7 +174,7 @@ export default function MemberLayout({ children }: MemberLayoutProps) {
 
           <Dropdown menu={{ items: userMenuItems }} trigger={['click']}>
             <Space style={{ cursor: 'pointer' }}>
-              <Avatar size="small" icon={<UserOutlined />} style={{ backgroundColor: '#7CB342' }} />
+              <Avatar size="small" icon={<UserOutlined />} style={{ backgroundColor: '#E53935' }} />
               <Text>{user?.name}</Text>
               <Text type="secondary" style={{ fontSize: 12 }}>
                 ({MemberGradeLabels[user?.grade as keyof typeof MemberGradeLabels] || user?.grade})

@@ -452,7 +452,7 @@ export default function UsersPage() {
             type="text"
             icon={<EyeOutlined />}
             onClick={() => openMyPagePreview(record.id)}
-            style={{ color: '#7CB342' }}
+            style={{ color: '#E53935' }}
           >
             마이페이지
           </Button>

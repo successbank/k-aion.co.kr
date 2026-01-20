@@ -158,7 +158,7 @@ export default function MyOrganizationPage() {
                 나의 정보
               </Text>
               <div style={{ textAlign: 'center' }}>
-                <UserOutlined style={{ fontSize: '48px', color: '#7CB342' }} />
+                <UserOutlined style={{ fontSize: '48px', color: '#E53935' }} />
                 <Title level={4} style={{ margin: '8px 0 4px' }}>
                   {organization?.member.name}
                 </Title>
@@ -192,7 +192,7 @@ export default function MyOrganizationPage() {
                   title="누적 PV"
                   value={organization?.member.cumulativePv || 0}
                   prefix={<RiseOutlined />}
-                  valueStyle={{ color: '#7CB342' }}
+                  valueStyle={{ color: '#E53935' }}
                 />
               </Col>
             </Row>
@@ -224,7 +224,7 @@ export default function MyOrganizationPage() {
                   <Statistic
                     title="총 PV"
                     value={team.totalPv}
-                    valueStyle={{ fontSize: '16px', color: '#7CB342' }}
+                    valueStyle={{ fontSize: '16px', color: '#E53935' }}
                   />
                   <div style={{ marginTop: '8px' }}>
                     <Text type="secondary" style={{ fontSize: '12px' }}>
