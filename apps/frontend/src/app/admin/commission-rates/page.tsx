@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import {
   Card,
   Table,
@@ -23,6 +23,7 @@ import {
   Checkbox,
   Radio,
   Alert,
+  Spin,
 } from 'antd';
 import {
   PlusOutlined,
@@ -31,6 +32,7 @@ import {
   SaveOutlined,
   CopyOutlined,
   CheckCircleOutlined,
+  InfoCircleOutlined,
 } from '@ant-design/icons';
 import DashboardLayout from '@/components/Layout/DashboardLayout';
 import { api } from '@/lib/api';
@@ -56,7 +58,10 @@ type MemberGrade =
   | 'BRANCH_CHIEF'
   | 'DIVISION_CHIEF'
   | 'CENTER'
-  | 'ADMIN';
+  | 'ADMIN'
+  | 'SALESPERSON'
+  | 'TEAM_LEADER'
+  | 'BRANCH_MANAGER';
 
 // Backend QualificationType enum
 type QualificationType =
@@ -116,7 +121,222 @@ interface CommissionRate {
   updatedAt: string;
 }
 
-export default function CommissionRatesPage() {
+// 제품별 수당률 타입
+interface ProductCommissionRate {
+  productId: number;
+  productName: string;
+  productCode: string;
+  price: number;
+  rates: {
+    SALESPERSON: number | null;
+    TEAM_LEADER: number | null;
+    BRANCH_MANAGER: number | null;
+    CENTER: number | null;
+    ADMIN: number | null;
+  };
+}
+
+// ============================================
+// 제품별 수당률 탭 컴포넌트
+// ============================================
+function ProductCommissionRatesTab() {
+  const [loading, setLoading] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const [products, setProducts] = useState<ProductCommissionRate[]>([]);
+  const [editedProducts, setEditedProducts] = useState<Record<number, ProductCommissionRate>>({});
+
+  const fetchProductCommissionRates = useCallback(async () => {
+    try {
+      setLoading(true);
+      const { data } = await api.get('/v1/admin/product-commission-rates');
+      setProducts(data.data);
+      setEditedProducts({});
+    } catch (error) {
+      console.error('Failed to fetch product commission rates:', error);
+      message.error('제품별 수당률 조회에 실패했습니다');
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    fetchProductCommissionRates();
+  }, [fetchProductCommissionRates]);
+
+  const handleRateChange = (
+    productId: number,
+    grade: keyof ProductCommissionRate['rates'],
+    value: number | null
+  ) => {
+    const product = products.find((p) => p.productId === productId);
+    if (!product) return;
+
+    const edited = editedProducts[productId] || { ...product };
+    edited.rates = { ...edited.rates, [grade]: value };
+    setEditedProducts({ ...editedProducts, [productId]: edited });
+  };
+
+  const hasChanges = Object.keys(editedProducts).length > 0;
+
+  const handleSave = async () => {
+    if (!hasChanges) return;
+
+    try {
+      setSaving(true);
+      const promises = Object.entries(editedProducts).map(([productId, product]) => {
+        const rates = Object.entries(product.rates)
+          .filter(([grade, amount]) => amount !== null && grade !== 'ADMIN')
+          .map(([grade, amount]) => ({
+            grade,
+            amount,
+          }));
+
+        return api.put(`/v1/admin/product-commission-rates/${productId}`, { rates });
+      });
+
+      await Promise.all(promises);
+      message.success('수당률이 저장되었습니다');
+      fetchProductCommissionRates();
+    } catch (error) {
+      console.error('Failed to save commission rates:', error);
+      message.error('수당률 저장에 실패했습니다');
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const handleCancel = () => {
+    setEditedProducts({});
+  };
+
+  const gradeLabels: Record<string, string> = {
+    SALESPERSON: '판매원',
+    TEAM_LEADER: '팀장',
+    BRANCH_MANAGER: '지사장',
+    CENTER: '센터',
+  };
+
+  const gradeColors: Record<string, string> = {
+    SALESPERSON: '#52c41a',
+    TEAM_LEADER: '#1890ff',
+    BRANCH_MANAGER: '#722ed1',
+    CENTER: '#fa8c16',
+  };
+
+  const getDisplayValue = (productId: number, grade: keyof ProductCommissionRate['rates']) => {
+    const edited = editedProducts[productId];
+    if (edited) {
+      return edited.rates[grade];
+    }
+    const product = products.find((p) => p.productId === productId);
+    return product?.rates[grade] ?? null;
+  };
+
+  const isEdited = (productId: number, grade: keyof ProductCommissionRate['rates']) => {
+    const edited = editedProducts[productId];
+    if (!edited) return false;
+    const original = products.find((p) => p.productId === productId);
+    return edited.rates[grade] !== original?.rates[grade];
+  };
+
+  const columns = [
+    {
+      title: '제품명',
+      dataIndex: 'productName',
+      key: 'productName',
+      width: 150,
+      fixed: 'left' as const,
+      render: (name: string, record: ProductCommissionRate) => (
+        <div>
+          <div className="font-medium">{name}</div>
+          <div className="text-xs text-gray-500">{record.productCode}</div>
+        </div>
+      ),
+    },
+    {
+      title: '판매가',
+      dataIndex: 'price',
+      key: 'price',
+      width: 120,
+      render: (price: number) => (
+        <Text>{price.toLocaleString()}원</Text>
+      ),
+    },
+    ...(['SALESPERSON', 'TEAM_LEADER', 'BRANCH_MANAGER', 'CENTER'] as const).map((grade) => ({
+      title: (
+        <Tag color={gradeColors[grade]}>{gradeLabels[grade]}</Tag>
+      ),
+      key: grade,
+      width: 140,
+      render: (_: any, record: ProductCommissionRate) => {
+        const value = getDisplayValue(record.productId, grade);
+        const edited = isEdited(record.productId, grade);
+        return (
+          <InputNumber
+            value={value}
+            onChange={(val) => handleRateChange(record.productId, grade, val)}
+            formatter={(val) => (val ? `${val}`.replace(/\B(?=(\d{3})+(?!\d))/g, ',') : '')}
+            parser={(val) => (val ? Number(val.replace(/,/g, '')) : 0)}
+            min={0}
+            step={10000}
+            className={`w-full ${edited ? 'border-blue-500' : ''}`}
+            style={edited ? { borderColor: '#1890ff', boxShadow: '0 0 0 2px rgba(24,144,255,0.2)' } : {}}
+          />
+        );
+      },
+    })),
+  ];
+
+  return (
+    <div>
+      <Alert
+        message="제품별 수당률 설정"
+        description="이 설정은 보너스 계산에 직접 적용됩니다. 각 등급별로 판매 건당 지급되는 수당 금액을 설정하세요."
+        type="info"
+        showIcon
+        icon={<InfoCircleOutlined />}
+        style={{ marginBottom: 16 }}
+      />
+
+      <div className="mb-4 flex justify-between items-center">
+        <div>
+          <Text type="secondary">
+            수정된 항목: {Object.keys(editedProducts).length}개 제품
+          </Text>
+        </div>
+        <Space>
+          <Button onClick={handleCancel} disabled={!hasChanges || saving}>
+            취소
+          </Button>
+          <Button
+            type="primary"
+            icon={<SaveOutlined />}
+            onClick={handleSave}
+            loading={saving}
+            disabled={!hasChanges}
+          >
+            저장
+          </Button>
+        </Space>
+      </div>
+
+      <Table
+        columns={columns}
+        dataSource={products}
+        rowKey="productId"
+        loading={loading}
+        pagination={false}
+        scroll={{ x: 900 }}
+        size="small"
+      />
+    </div>
+  );
+}
+
+// ============================================
+// 보너스 유형별 설정 탭 컴포넌트 (기존 코드)
+// ============================================
+function BonusTypeRatesTab() {
   const [rates, setRates] = useState<CommissionRate[]>([]);
   const [loading, setLoading] = useState(false);
   const [modalVisible, setModalVisible] = useState(false);
@@ -253,6 +473,9 @@ export default function CommissionRatesPage() {
     DIVISION_CHIEF: '본부장',
     CENTER: '센터',
     ADMIN: '최고관리자',
+    SALESPERSON: '판매원',
+    TEAM_LEADER: '팀장',
+    BRANCH_MANAGER: '지사장',
   };
 
   const bonusTypeColors: Record<BonusType, string> = {
@@ -288,7 +511,6 @@ export default function CommissionRatesPage() {
         } else {
           tags.push(<Tag key="fixed" color="green">고정 금액</Tag>);
         }
-        // 센터 운영 보너스 모드 표시
         if (record.bonusType === 'BRANCH_OPERATION' && record.centerBonusMode) {
           const modeLabel = record.centerBonusMode === 'PER_SALE' ? '건별' : '월별';
           tags.push(<Tag key="mode" color="purple">{modeLabel}</Tag>);
@@ -390,17 +612,14 @@ export default function CommissionRatesPage() {
   const isCenterBonusType = selectedBonusType === 'BRANCH_OPERATION';
 
   return (
-    <DashboardLayout>
-      <div className="flex justify-between items-center mb-6">
-        <Title level={2}>수당률 설정</Title>
+    <>
+      <div className="flex justify-end mb-4">
         <Button type="primary" icon={<PlusOutlined />} onClick={handleAdd}>
           수당률 추가
         </Button>
       </div>
 
-      <Card>
-        <Table columns={columns} dataSource={rates} rowKey="id" loading={loading} />
-      </Card>
+      <Table columns={columns} dataSource={rates} rowKey="id" loading={loading} />
 
       <Modal
         title={editingRate ? '수당률 수정' : '수당률 추가'}
@@ -431,7 +650,6 @@ export default function CommissionRatesPage() {
                 </Select>
               </Form.Item>
 
-              {/* 센터 운영 보너스 설정 (BRANCH_OPERATION 선택 시) */}
               {isCenterBonusType && (
                 <>
                   <Alert
@@ -769,6 +987,37 @@ export default function CommissionRatesPage() {
           </Form.Item>
         </Form>
       </Modal>
+    </>
+  );
+}
+
+// ============================================
+// 메인 페이지 컴포넌트
+// ============================================
+export default function CommissionRatesPage() {
+  return (
+    <DashboardLayout>
+      <div className="mb-6">
+        <Title level={2}>수당 설정</Title>
+      </div>
+
+      <Card>
+        <Tabs
+          defaultActiveKey="product-rates"
+          items={[
+            {
+              key: 'product-rates',
+              label: '제품별 수당률',
+              children: <ProductCommissionRatesTab />,
+            },
+            {
+              key: 'bonus-types',
+              label: '보너스 유형별 설정',
+              children: <BonusTypeRatesTab />,
+            },
+          ]}
+        />
+      </Card>
     </DashboardLayout>
   );
 }

@@ -26,6 +26,7 @@ import {
   TeamQualificationResponse,
   QualificationCheck,
   GRADE_LABELS,
+  GRADE_COLORS,
 } from '@/services/bonus-simulator.service';
 
 interface TeamConditionTabProps {
@@ -120,6 +121,7 @@ export default function TeamConditionTab({ memberId }: TeamConditionTabProps) {
     );
   };
 
+  // 팀별 통계 컬럼 정의 (신규 등급체계: 판매원, 팀장, 지사장)
   const teamColumns = [
     {
       title: '팀',
@@ -133,51 +135,57 @@ export default function TeamConditionTab({ memberId }: TeamConditionTabProps) {
     },
     {
       title: (
-        <Tooltip title="에이전트 수">
-          <span>에이전트 <InfoCircleOutlined /></span>
+        <Tooltip title="판매원 수 (구: 에이전트)">
+          <span style={{ color: GRADE_COLORS.SALESPERSON }}>판매원 <InfoCircleOutlined /></span>
         </Tooltip>
       ),
-      dataIndex: 'agentCount',
-      key: 'agentCount',
-      render: (count: number) => (
-        <span style={{ color: count > 0 ? '#1890ff' : '#999' }}>{count}명</span>
-      ),
+      dataIndex: 'salespersonCount',
+      key: 'salespersonCount',
+      render: (count: number, record: any) => {
+        // 레거시 호환: agentCount 필드도 확인
+        const displayCount = count ?? record.agentCount ?? 0;
+        return (
+          <span style={{ color: displayCount > 0 ? GRADE_COLORS.SALESPERSON : '#999' }}>
+            {displayCount}명
+          </span>
+        );
+      },
     },
     {
       title: (
-        <Tooltip title="매니저 수">
-          <span>매니저 <InfoCircleOutlined /></span>
+        <Tooltip title="팀장 수 (구: 매니저)">
+          <span style={{ color: GRADE_COLORS.TEAM_LEADER }}>팀장 <InfoCircleOutlined /></span>
         </Tooltip>
       ),
-      dataIndex: 'managerCount',
-      key: 'managerCount',
-      render: (count: number) => (
-        <span style={{ color: count > 0 ? '#52c41a' : '#999' }}>{count}명</span>
-      ),
+      dataIndex: 'teamLeaderCount',
+      key: 'teamLeaderCount',
+      render: (count: number, record: any) => {
+        // 레거시 호환: managerCount 필드도 확인
+        const displayCount = count ?? record.managerCount ?? 0;
+        return (
+          <span style={{ color: displayCount > 0 ? GRADE_COLORS.TEAM_LEADER : '#999' }}>
+            {displayCount}명
+          </span>
+        );
+      },
     },
     {
       title: (
-        <Tooltip title="지부장 수">
-          <span>지부장 <InfoCircleOutlined /></span>
+        <Tooltip title="지사장 수 (구: 지부장/본부장)">
+          <span style={{ color: GRADE_COLORS.BRANCH_MANAGER }}>지사장 <InfoCircleOutlined /></span>
         </Tooltip>
       ),
-      dataIndex: 'branchChiefCount',
-      key: 'branchChiefCount',
-      render: (count: number) => (
-        <span style={{ color: count > 0 ? '#722ed1' : '#999' }}>{count}명</span>
-      ),
-    },
-    {
-      title: (
-        <Tooltip title="본부장 수">
-          <span>본부장 <InfoCircleOutlined /></span>
-        </Tooltip>
-      ),
-      dataIndex: 'divisionChiefCount',
-      key: 'divisionChiefCount',
-      render: (count: number) => (
-        <span style={{ color: count > 0 ? '#faad14' : '#999' }}>{count}명</span>
-      ),
+      dataIndex: 'branchManagerCount',
+      key: 'branchManagerCount',
+      render: (count: number, record: any) => {
+        // 레거시 호환: branchChiefCount + divisionChiefCount 필드도 확인
+        const displayCount = count ?? ((record.branchChiefCount ?? 0) + (record.divisionChiefCount ?? 0));
+        return (
+          <span style={{ color: displayCount > 0 ? GRADE_COLORS.BRANCH_MANAGER : '#999' }}>
+            {displayCount}명
+          </span>
+        );
+      },
     },
     {
       title: '합계',
@@ -191,6 +199,27 @@ export default function TeamConditionTab({ memberId }: TeamConditionTabProps) {
   const calculateProgress = (current: number, target: number) => {
     return Math.min(Math.round((current / target) * 100), 100);
   };
+
+  // 레거시 호환 헬퍼 함수: 신규/레거시 필드 모두 지원
+  const getTeamCount = (
+    totals: typeof data.teamStats.totals,
+    newField: string,
+    legacyField: string,
+    legacyField2?: string
+  ) => {
+    const totalsAny = totals as any;
+    if (totalsAny[newField] !== undefined) {
+      return totalsAny[newField];
+    }
+    const count1 = totalsAny[legacyField] ?? 0;
+    const count2 = legacyField2 ? (totalsAny[legacyField2] ?? 0) : 0;
+    return count1 + count2;
+  };
+
+  // 각 등급별 인원수 (레거시 호환)
+  const salespersonCount = getTeamCount(data.teamStats.totals, 'salespersonCount', 'agentCount');
+  const teamLeaderCount = getTeamCount(data.teamStats.totals, 'teamLeaderCount', 'managerCount');
+  const branchManagerCount = getTeamCount(data.teamStats.totals, 'branchManagerCount', 'branchChiefCount', 'divisionChiefCount');
 
   return (
     <div>
@@ -224,18 +253,15 @@ export default function TeamConditionTab({ memberId }: TeamConditionTabProps) {
                 <Table.Summary.Row style={{ backgroundColor: '#fafafa', fontWeight: 600 }}>
                   <Table.Summary.Cell index={0}>합계</Table.Summary.Cell>
                   <Table.Summary.Cell index={1}>
-                    {data.teamStats.totals.agentCount}명
+                    <span style={{ color: GRADE_COLORS.SALESPERSON }}>{salespersonCount}명</span>
                   </Table.Summary.Cell>
                   <Table.Summary.Cell index={2}>
-                    {data.teamStats.totals.managerCount}명
+                    <span style={{ color: GRADE_COLORS.TEAM_LEADER }}>{teamLeaderCount}명</span>
                   </Table.Summary.Cell>
                   <Table.Summary.Cell index={3}>
-                    {data.teamStats.totals.branchChiefCount}명
+                    <span style={{ color: GRADE_COLORS.BRANCH_MANAGER }}>{branchManagerCount}명</span>
                   </Table.Summary.Cell>
                   <Table.Summary.Cell index={4}>
-                    {data.teamStats.totals.divisionChiefCount}명
-                  </Table.Summary.Cell>
-                  <Table.Summary.Cell index={5}>
                     {data.teamStats.totals.totalCount}명
                   </Table.Summary.Cell>
                 </Table.Summary.Row>
@@ -243,90 +269,126 @@ export default function TeamConditionTab({ memberId }: TeamConditionTabProps) {
             />
           </Card>
 
-          {/* 진행 상황 바 */}
-          <Card title="목표 달성 현황" size="small" className="mt-4">
+          {/* 진행 상황 바 - 신규 등급체계 기준 */}
+          <Card title="승급 목표 달성 현황" size="small" className="mt-4">
+            <Alert
+              message="승급 조건 안내"
+              description="현재 한시적 조건 적용 중: 판매원 3명 → 팀장, 팀장 3명 → 지사장"
+              type="info"
+              showIcon
+              style={{ marginBottom: 16, fontSize: 12 }}
+            />
             <div className="mb-4">
               <div className="flex justify-between mb-1">
-                <span>매니저 육성 (에이전트 15명)</span>
+                <span style={{ color: GRADE_COLORS.TEAM_LEADER }}>
+                  <strong>팀장 승급</strong> (판매원 3명 소개)
+                </span>
                 <span>
-                  {data.teamStats.totals.agentCount}/15명 (
-                  {calculateProgress(data.teamStats.totals.agentCount, 15)}%)
+                  {salespersonCount}/3명 (
+                  {calculateProgress(salespersonCount, 3)}%)
                 </span>
               </div>
               <Progress
-                percent={calculateProgress(data.teamStats.totals.agentCount, 15)}
-                strokeColor="#1890ff"
+                percent={calculateProgress(salespersonCount, 3)}
+                strokeColor={GRADE_COLORS.SALESPERSON}
                 showInfo={false}
               />
+              <div className="text-xs text-gray-500 mt-1">
+                정상 조건: 판매원 10명 소개
+              </div>
             </div>
 
             <div className="mb-4">
               <div className="flex justify-between mb-1">
-                <span>지부장 육성 (매니저 4명)</span>
+                <span style={{ color: GRADE_COLORS.BRANCH_MANAGER }}>
+                  <strong>지사장 승급</strong> (팀장 3명 육성)
+                </span>
                 <span>
-                  {data.teamStats.totals.managerCount}/4명 (
-                  {calculateProgress(data.teamStats.totals.managerCount, 4)}%)
+                  {teamLeaderCount}/3명 (
+                  {calculateProgress(teamLeaderCount, 3)}%)
                 </span>
               </div>
               <Progress
-                percent={calculateProgress(data.teamStats.totals.managerCount, 4)}
-                strokeColor="#52c41a"
+                percent={calculateProgress(teamLeaderCount, 3)}
+                strokeColor={GRADE_COLORS.TEAM_LEADER}
                 showInfo={false}
               />
+              <div className="text-xs text-gray-500 mt-1">
+                정상 조건: 팀장 10명 육성
+              </div>
             </div>
 
             <div>
               <div className="flex justify-between mb-1">
-                <span>본부장 육성 (지부장 5명)</span>
+                <span style={{ color: GRADE_COLORS.CENTER }}>
+                  <strong>센터 개설</strong> (지사장 조건 + 시설)
+                </span>
                 <span>
-                  {data.teamStats.totals.branchChiefCount}/5명 (
-                  {calculateProgress(data.teamStats.totals.branchChiefCount, 5)}%)
+                  {branchManagerCount}명 지사장
                 </span>
               </div>
               <Progress
-                percent={calculateProgress(data.teamStats.totals.branchChiefCount, 5)}
-                strokeColor="#722ed1"
+                percent={branchManagerCount > 0 ? 50 : 0}
+                strokeColor={GRADE_COLORS.BRANCH_MANAGER}
                 showInfo={false}
               />
+              <div className="text-xs text-gray-500 mt-1">
+                추가 조건: 사무실, 세미나실, 법인, TV 시설 구비
+              </div>
             </div>
           </Card>
         </Col>
 
-        {/* 자격 조건 체크리스트 */}
+        {/* 자격 조건 체크리스트 - 신규 등급체계 */}
         <Col xs={24} lg={10}>
-          <Card title="판권 보너스 자격 조건" size="small">
+          <Card title="승급 자격 조건" size="small">
             <div className="mb-4">
-              <div className="font-semibold mb-2" style={{ color: '#1890ff' }}>
-                <Tag color="blue">매니저 육성</Tag>
+              <div className="font-semibold mb-2" style={{ color: GRADE_COLORS.TEAM_LEADER }}>
+                <Tag style={{ backgroundColor: GRADE_COLORS.TEAM_LEADER, borderColor: GRADE_COLORS.TEAM_LEADER, color: '#fff' }}>
+                  팀장 승급
+                </Tag>
               </div>
-              {renderQualificationCard(
-                `${GRADE_LABELS.MANAGER} 육성 보너스`,
-                data.qualifications.managerCultivation,
-                '#1890ff',
-              )}
+              {/* 신규 필드명 우선, 레거시 필드명 폴백 */}
+              {((data.qualifications as any).teamLeaderPromotion || data.qualifications.managerCultivation) &&
+                renderQualificationCard(
+                  `${GRADE_LABELS.TEAM_LEADER} 승급 조건`,
+                  (data.qualifications as any).teamLeaderPromotion || data.qualifications.managerCultivation,
+                  GRADE_COLORS.TEAM_LEADER,
+                )
+              }
             </div>
 
             <div className="mb-4">
-              <div className="font-semibold mb-2" style={{ color: '#52c41a' }}>
-                <Tag color="green">지부장 육성</Tag>
+              <div className="font-semibold mb-2" style={{ color: GRADE_COLORS.BRANCH_MANAGER }}>
+                <Tag style={{ backgroundColor: GRADE_COLORS.BRANCH_MANAGER, borderColor: GRADE_COLORS.BRANCH_MANAGER, color: '#fff' }}>
+                  지사장 승급
+                </Tag>
               </div>
-              {renderQualificationCard(
-                `${GRADE_LABELS.BRANCH_CHIEF} 육성 보너스`,
-                data.qualifications.branchChiefCultivation,
-                '#52c41a',
-              )}
+              {/* 신규 필드명 우선, 레거시 필드명 폴백 */}
+              {((data.qualifications as any).branchManagerPromotion || data.qualifications.branchChiefCultivation) &&
+                renderQualificationCard(
+                  `${GRADE_LABELS.BRANCH_MANAGER} 승급 조건`,
+                  (data.qualifications as any).branchManagerPromotion || data.qualifications.branchChiefCultivation,
+                  GRADE_COLORS.BRANCH_MANAGER,
+                )
+              }
             </div>
 
-            <div>
-              <div className="font-semibold mb-2" style={{ color: '#722ed1' }}>
-                <Tag color="purple">본부장 육성</Tag>
+            {/* 센터 개설 조건 (있는 경우만 표시) */}
+            {((data.qualifications as any).centerPromotion || data.qualifications.divisionChiefCultivation) && (
+              <div>
+                <div className="font-semibold mb-2" style={{ color: GRADE_COLORS.CENTER }}>
+                  <Tag style={{ backgroundColor: GRADE_COLORS.CENTER, borderColor: GRADE_COLORS.CENTER, color: '#fff' }}>
+                    센터 개설
+                  </Tag>
+                </div>
+                {renderQualificationCard(
+                  `${GRADE_LABELS.CENTER} 개설 조건`,
+                  (data.qualifications as any).centerPromotion || data.qualifications.divisionChiefCultivation,
+                  GRADE_COLORS.CENTER,
+                )}
               </div>
-              {renderQualificationCard(
-                `${GRADE_LABELS.DIVISION_CHIEF} 육성 보너스`,
-                data.qualifications.divisionChiefCultivation,
-                '#722ed1',
-              )}
-            </div>
+            )}
           </Card>
 
           {/* 회원 정보 카드 */}
@@ -339,7 +401,9 @@ export default function TeamConditionTab({ memberId }: TeamConditionTabProps) {
                 <Statistic
                   title="등급"
                   valueRender={() => (
-                    <Tag color="green">{GRADE_LABELS[data.memberGrade]}</Tag>
+                    <Tag style={{ backgroundColor: GRADE_COLORS[data.memberGrade], borderColor: GRADE_COLORS[data.memberGrade], color: '#fff' }}>
+                      {GRADE_LABELS[data.memberGrade]}
+                    </Tag>
                   )}
                 />
               </Col>

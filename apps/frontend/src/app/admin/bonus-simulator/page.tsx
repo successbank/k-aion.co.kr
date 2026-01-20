@@ -39,24 +39,36 @@ interface Member {
   cumulativePv: number;
 }
 
+// 등급 라벨 (신규 등급체계 + 레거시 호환)
 const gradeLabels: Record<string, string> = {
+  // 신규 등급체계
+  SALESPERSON: '판매원',
+  TEAM_LEADER: '팀장',
+  BRANCH_MANAGER: '지사장',
+  CENTER: '센터',
+  ADMIN: '관리자',
+  // 레거시 호환
   MEMBER: '회원',
   AGENT: '에이전트',
   MANAGER: '매니저',
   BRANCH_CHIEF: '지부장',
   DIVISION_CHIEF: '본부장',
-  CENTER: '센터',
-  ADMIN: '관리자',
 };
 
+// 등급 색상 (신규 등급체계 + 레거시 호환)
 const gradeColors: Record<string, string> = {
+  // 신규 등급체계
+  SALESPERSON: 'green',
+  TEAM_LEADER: 'blue',
+  BRANCH_MANAGER: 'purple',
+  CENTER: 'orange',
+  ADMIN: 'red',
+  // 레거시 호환
   MEMBER: 'default',
   AGENT: 'blue',
   MANAGER: 'green',
   BRANCH_CHIEF: 'purple',
   DIVISION_CHIEF: 'gold',
-  CENTER: 'cyan',
-  ADMIN: 'red',
 };
 
 export default function BonusSimulatorPage() {
@@ -174,7 +186,10 @@ export default function BonusSimulatorPage() {
               filterOption={false}
               onSearch={searchMembers}
               onChange={handleMemberChange}
-              notFoundContent={memberSearchLoading ? <Spin size="small" /> : null}
+              loading={memberSearchLoading}
+              notFoundContent={
+                memberSearchLoading ? <Spin size="small" /> : '검색 결과가 없습니다'
+              }
               allowClear
               value={selectedMember?.id}
             >

@@ -22,6 +22,8 @@ import {
   CheckCircleOutlined,
   CloseCircleOutlined,
   DollarOutlined,
+  ArrowDownOutlined,
+  UserOutlined,
 } from '@ant-design/icons';
 import { api } from '@/lib/api';
 import {
@@ -30,6 +32,7 @@ import {
   SimulatedBonus,
   BONUS_TYPE_COLORS,
   GRADE_LABELS,
+  GRADE_COLORS,
 } from '@/services/bonus-simulator.service';
 
 const { Option } = Select;
@@ -64,6 +67,125 @@ const bonusTypeLabels: Record<string, string> = {
   SHARING: '공유 보너스',
   BRANCH_OPERATION: '센터 운영 보너스',
 };
+
+// 보너스 계보 시각화 컴포넌트
+interface BonusLineageNode {
+  name: string;
+  grade: string;
+  amount: number;
+  bonusType: string;
+  bonusTypeName: string;
+  isSeller: boolean;
+  relation?: string;
+}
+
+function BonusLineageVisualization({
+  simulationResult,
+}: {
+  simulationResult: BonusSimulationResponse;
+}) {
+  // 수당 받는 보너스만 필터링하여 계보도 생성
+  const lineageNodes: BonusLineageNode[] = [];
+
+  // 먼저 수당 있는 보너스들을 수집
+  simulationResult.bonuses.forEach((bonus) => {
+    if (bonus.qualified && bonus.amount > 0 && bonus.recipient) {
+      lineageNodes.push({
+        name: bonus.recipient.name,
+        grade: bonus.recipient.grade,
+        amount: bonus.amount,
+        bonusType: bonus.type,
+        bonusTypeName: bonus.typeName,
+        isSeller: bonus.recipient.relation === '본인',
+        relation: bonus.recipient.relation,
+      });
+    }
+  });
+
+  // 등급 순서 정의 (상위 → 하위)
+  const gradeOrder: Record<string, number> = {
+    CENTER: 1,
+    BRANCH_MANAGER: 2,
+    DIVISION_CHIEF: 2, // 레거시
+    BRANCH_CHIEF: 3,   // 레거시
+    TEAM_LEADER: 4,
+    MANAGER: 4,        // 레거시
+    SALESPERSON: 5,
+    AGENT: 5,          // 레거시
+    MEMBER: 6,         // 레거시
+    ADMIN: 0,
+  };
+
+  // 등급 순서로 정렬 (상위 등급이 위에 오도록)
+  lineageNodes.sort((a, b) => {
+    const orderA = gradeOrder[a.grade] || 99;
+    const orderB = gradeOrder[b.grade] || 99;
+    return orderA - orderB;
+  });
+
+  if (lineageNodes.length === 0) {
+    return (
+      <div style={{ textAlign: 'center', padding: 16, color: '#999' }}>
+        발생 보너스가 없습니다
+      </div>
+    );
+  }
+
+  return (
+    <div style={{ padding: '16px 0' }}>
+      <div style={{ fontSize: 14, fontWeight: 600, marginBottom: 16, color: '#333' }}>
+        💰 수당 분배 계보
+      </div>
+      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 8 }}>
+        {lineageNodes.map((node, index) => (
+          <div key={`${node.name}-${node.bonusType}`} style={{ width: '100%', maxWidth: 300 }}>
+            {/* 연결선 (첫 번째 노드 제외) */}
+            {index > 0 && (
+              <div style={{ textAlign: 'center', margin: '4px 0' }}>
+                <ArrowDownOutlined style={{ color: '#d9d9d9', fontSize: 16 }} />
+              </div>
+            )}
+            {/* 노드 카드 */}
+            <div
+              style={{
+                border: node.isSeller ? '2px solid #E53935' : '1px solid #d9d9d9',
+                borderRadius: 8,
+                padding: 12,
+                backgroundColor: node.isSeller ? '#fff1f0' : '#fff',
+                boxShadow: node.isSeller ? '0 2px 8px rgba(229, 57, 53, 0.2)' : 'none',
+              }}
+            >
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <div>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                    <UserOutlined style={{ color: GRADE_COLORS[node.grade] || '#999' }} />
+                    <span style={{ fontWeight: 600 }}>{node.name}</span>
+                    {node.isSeller && (
+                      <Tag color="red" style={{ margin: 0 }}>판매자</Tag>
+                    )}
+                  </div>
+                  <div style={{ marginTop: 4 }}>
+                    <Tag color={GRADE_COLORS[node.grade] ? undefined : 'default'} style={{ backgroundColor: GRADE_COLORS[node.grade], borderColor: GRADE_COLORS[node.grade], color: '#fff' }}>
+                      {GRADE_LABELS[node.grade] || node.grade}
+                    </Tag>
+                    <span style={{ fontSize: 11, color: '#999', marginLeft: 4 }}>
+                      {node.bonusTypeName}
+                    </span>
+                  </div>
+                </div>
+                <div style={{ textAlign: 'right' }}>
+                  <div style={{ fontSize: 18, fontWeight: 700, color: BONUS_TYPE_COLORS[node.bonusType as keyof typeof BONUS_TYPE_COLORS] || '#333' }}>
+                    {node.amount.toLocaleString()}원
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
 
 export default function SaleSimulationTab({ selectedMember }: SaleSimulationTabProps) {
   const [products, setProducts] = useState<Product[]>([]);
@@ -336,7 +458,9 @@ export default function SaleSimulationTab({ selectedMember }: SaleSimulationTabP
                     <Statistic
                       title="실제 등급"
                       valueRender={() => (
-                        <Tag>{GRADE_LABELS[simulationResult.seller.actualGrade]}</Tag>
+                        <Tag style={{ backgroundColor: GRADE_COLORS[simulationResult.seller.actualGrade], borderColor: GRADE_COLORS[simulationResult.seller.actualGrade], color: '#fff' }}>
+                          {GRADE_LABELS[simulationResult.seller.actualGrade]}
+                        </Tag>
                       )}
                     />
                   </Col>
@@ -350,6 +474,12 @@ export default function SaleSimulationTab({ selectedMember }: SaleSimulationTabP
                             simulationResult.seller.actualGrade
                               ? 'orange'
                               : 'default'
+                          }
+                          style={
+                            simulationResult.seller.effectiveGrade ===
+                            simulationResult.seller.actualGrade
+                              ? { backgroundColor: GRADE_COLORS[simulationResult.seller.effectiveGrade], borderColor: GRADE_COLORS[simulationResult.seller.effectiveGrade], color: '#fff' }
+                              : {}
                           }
                         >
                           {GRADE_LABELS[simulationResult.seller.effectiveGrade]}
@@ -368,6 +498,11 @@ export default function SaleSimulationTab({ selectedMember }: SaleSimulationTabP
                 <div className="text-xs text-gray-500 mt-2">
                   * 판매 보너스 + 공유 보너스 합계
                 </div>
+              </Card>
+
+              {/* 수당 계보 시각화 */}
+              <Card title="수당 분배 흐름" size="small" className="mt-4">
+                <BonusLineageVisualization simulationResult={simulationResult} />
               </Card>
             </Col>
           </Row>

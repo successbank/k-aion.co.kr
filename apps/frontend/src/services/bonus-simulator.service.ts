@@ -3,15 +3,19 @@
  */
 import { api } from '@/lib/api';
 
-// 회원 등급 타입
+// 회원 등급 타입 (신규 등급체계)
 export type MemberGrade =
+  | 'SALESPERSON'    // 판매원 (구: MEMBER, AGENT)
+  | 'TEAM_LEADER'    // 팀장 (구: MANAGER)
+  | 'BRANCH_MANAGER' // 지사장 (구: BRANCH_CHIEF, DIVISION_CHIEF)
+  | 'CENTER'         // 센터
+  | 'ADMIN'          // 관리자
+  // 레거시 호환 (기존 데이터 지원)
   | 'MEMBER'
   | 'AGENT'
   | 'MANAGER'
   | 'BRANCH_CHIEF'
-  | 'DIVISION_CHIEF'
-  | 'CENTER'
-  | 'ADMIN';
+  | 'DIVISION_CHIEF';
 
 // 보너스 타입
 export type BonusType =
@@ -126,15 +130,36 @@ export interface CommissionRateSummaryResponse {
   }>;
 }
 
-// 등급 한글명 매핑
-export const GRADE_LABELS: Record<MemberGrade, string> = {
+// 등급 한글명 매핑 (신규 + 레거시 호환)
+export const GRADE_LABELS: Record<string, string> = {
+  // 신규 등급체계
+  SALESPERSON: '판매원',
+  TEAM_LEADER: '팀장',
+  BRANCH_MANAGER: '지사장',
+  CENTER: '센터',
+  ADMIN: '관리자',
+  // 레거시 호환
   MEMBER: '회원',
   AGENT: '에이전트',
   MANAGER: '매니저',
   BRANCH_CHIEF: '지부장',
   DIVISION_CHIEF: '본부장',
-  CENTER: '센터',
-  ADMIN: '관리자',
+};
+
+// 등급별 색상 매핑
+export const GRADE_COLORS: Record<string, string> = {
+  // 신규 등급체계
+  SALESPERSON: '#52c41a',    // 녹색
+  TEAM_LEADER: '#1890ff',    // 파랑
+  BRANCH_MANAGER: '#722ed1', // 보라
+  CENTER: '#fa8c16',         // 주황
+  ADMIN: '#f5222d',          // 빨강
+  // 레거시 호환
+  MEMBER: '#d9d9d9',
+  AGENT: '#1890ff',
+  MANAGER: '#52c41a',
+  BRANCH_CHIEF: '#722ed1',
+  DIVISION_CHIEF: '#faad14',
 };
 
 // 보너스 타입별 색상
