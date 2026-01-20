@@ -35,6 +35,7 @@ import {
 import DashboardLayout from '@/components/Layout/DashboardLayout';
 import compensationPlanService, {
   type CompensationOverviewDto,
+  type ProductCommissionInfo,
 } from '@/services/compensation-plan.service';
 
 const { Title, Text, Paragraph } = Typography;
@@ -403,47 +404,216 @@ export default function CompensationPlanPage() {
     </Space>
   );
 
-  // ========== 탭 5: 원본 문서 ==========
-  const renderOriginalDocs = () => {
-    const imageFiles = Array.from({ length: 13 }, (_, i) => ({
-      id: i + 1,
-      src: `/보상플랜/뷰젬 보상플랜만_${i + 1}.png`,
-      alt: `보상플랜 문서 ${i + 1}페이지`,
-    }));
+  // 금액 포맷팅 헬퍼 함수
+  const formatCurrency = (amount: number): string => {
+    if (amount === 0) return '-';
+    if (amount >= 10000) {
+      const man = Math.floor(amount / 10000);
+      const rest = amount % 10000;
+      if (rest === 0) return `${man}만원`;
+      return `${man}만${rest.toLocaleString()}원`;
+    }
+    return `${amount.toLocaleString()}원`;
+  };
+
+  // ========== 탭 5: 수수료 테이블 ==========
+  const renderCommissionTable = () => {
+    const commissionColumns = [
+      {
+        title: '제품',
+        dataIndex: 'productName',
+        key: 'productName',
+        fixed: 'left' as const,
+        width: 140,
+        render: (text: string, record: ProductCommissionInfo) => (
+          <Space direction="vertical" size={0}>
+            <Text strong>{text}</Text>
+            <Tag color={record.productCategory === '의료기기' ? 'blue' : 'orange'} style={{ fontSize: '11px' }}>
+              {record.productCategory}
+            </Tag>
+          </Space>
+        ),
+      },
+      {
+        title: (
+          <div style={{ textAlign: 'center' }}>
+            <div style={{ color: '#52c41a', fontWeight: 'bold' }}>판매원</div>
+            <div style={{ fontSize: '11px', color: '#888' }}>판매 수수료</div>
+          </div>
+        ),
+        dataIndex: 'salespersonCommission',
+        key: 'salespersonCommission',
+        align: 'center' as const,
+        width: 110,
+        render: (amount: number) => (
+          <Tag color={amount > 0 ? 'green' : 'default'} style={{ fontSize: '13px', padding: '4px 8px' }}>
+            {formatCurrency(amount)}
+          </Tag>
+        ),
+      },
+      {
+        title: (
+          <div style={{ textAlign: 'center' }}>
+            <div style={{ color: '#52c41a', fontWeight: 'bold' }}>팀장</div>
+            <div style={{ fontSize: '11px', color: '#888' }}>판매 수수료</div>
+          </div>
+        ),
+        dataIndex: 'teamLeaderCommission',
+        key: 'teamLeaderCommission',
+        align: 'center' as const,
+        width: 110,
+        render: (amount: number) => (
+          <Tag color={amount > 0 ? 'green' : 'default'} style={{ fontSize: '13px', padding: '4px 8px' }}>
+            {formatCurrency(amount)}
+          </Tag>
+        ),
+      },
+      {
+        title: (
+          <div style={{ textAlign: 'center' }}>
+            <div style={{ color: '#faad14', fontWeight: 'bold' }}>지사장</div>
+            <div style={{ fontSize: '11px', color: '#888' }}>교육 관리</div>
+          </div>
+        ),
+        dataIndex: 'branchManagerCommission',
+        key: 'branchManagerCommission',
+        align: 'center' as const,
+        width: 110,
+        render: (amount: number) => (
+          <Tag color={amount > 0 ? 'gold' : 'default'} style={{ fontSize: '13px', padding: '4px 8px' }}>
+            {formatCurrency(amount)}
+          </Tag>
+        ),
+      },
+      {
+        title: (
+          <div style={{ textAlign: 'center' }}>
+            <div style={{ color: '#faad14', fontWeight: 'bold' }}>센터</div>
+            <div style={{ fontSize: '11px', color: '#888' }}>교육 관리</div>
+          </div>
+        ),
+        dataIndex: 'centerCommission',
+        key: 'centerCommission',
+        align: 'center' as const,
+        width: 110,
+        render: (amount: number) => (
+          <Tag color={amount > 0 ? 'gold' : 'default'} style={{ fontSize: '13px', padding: '4px 8px' }}>
+            {formatCurrency(amount)}
+          </Tag>
+        ),
+      },
+      {
+        title: (
+          <div style={{ textAlign: 'center' }}>
+            <div style={{ fontWeight: 'bold' }}>판매가</div>
+          </div>
+        ),
+        dataIndex: 'salePrice',
+        key: 'salePrice',
+        align: 'center' as const,
+        width: 120,
+        render: (amount: number) => (
+          <Tag color="blue" style={{ fontSize: '13px', padding: '4px 8px', fontWeight: 'bold' }}>
+            {formatCurrency(amount)}
+          </Tag>
+        ),
+      },
+    ];
 
     return (
-      <Card title="📄 보상플랜 원본 문서 (13페이지)">
-        <Alert
-          message="원본 문서를 클릭하면 확대하여 볼 수 있습니다"
-          type="info"
-          showIcon
-          style={{ marginBottom: 16 }}
-        />
-        <Row gutter={[16, 16]}>
-          {imageFiles.map((img) => (
-            <Col xs={24} sm={12} md={8} lg={6} key={img.id}>
-              <Card
-                hoverable
-                cover={
-                  <Image
-                    src={img.src}
-                    alt={img.alt}
-                    style={{ width: '100%', height: 'auto' }}
-                    preview={{
-                      mask: '확대하여 보기',
-                    }}
+      <Space direction="vertical" size="large" style={{ width: '100%' }}>
+        {/* 직급/자격 조건 카드 */}
+        <Card title="📊 직급별 자격 조건">
+          <Row gutter={[16, 16]}>
+            {overview.gradeSystem.map((grade, index) => (
+              <Col xs={24} sm={12} md={6} key={index}>
+                <Card
+                  size="small"
+                  style={{
+                    borderTop: `3px solid ${
+                      grade.grade === 'SALESPERSON' ? '#52c41a' :
+                      grade.grade === 'TEAM_LEADER' ? '#52c41a' :
+                      grade.grade === 'BRANCH_MANAGER' ? '#faad14' :
+                      '#faad14'
+                    }`,
+                    height: '100%',
+                  }}
+                >
+                  <div style={{ textAlign: 'center', marginBottom: 8 }}>
+                    <Text strong style={{ fontSize: '16px' }}>{grade.name}</Text>
+                  </div>
+                  <div style={{
+                    background: '#f5f5f5',
+                    padding: '8px',
+                    borderRadius: '4px',
+                    textAlign: 'center',
+                  }}>
+                    <Text type="secondary" style={{ fontSize: '12px' }}>
+                      {grade.requirements}
+                    </Text>
+                  </div>
+                  <Divider style={{ margin: '8px 0' }} />
+                  <div style={{ textAlign: 'center' }}>
+                    <Tag color={
+                      grade.grade === 'SALESPERSON' || grade.grade === 'TEAM_LEADER'
+                        ? 'green'
+                        : 'gold'
+                    }>
+                      {grade.grade === 'SALESPERSON' || grade.grade === 'TEAM_LEADER'
+                        ? '판매 수수료'
+                        : '교육 관리'}
+                    </Tag>
+                  </div>
+                </Card>
+              </Col>
+            ))}
+          </Row>
+        </Card>
+
+        {/* 제품별 수수료 테이블 */}
+        <Card title="💰 제품별 수수료 테이블">
+          <Alert
+            message="수수료 지급 안내"
+            description={
+              <ul style={{ margin: '8px 0 0 0', paddingLeft: 20 }}>
+                <li><Text strong style={{ color: '#52c41a' }}>판매원/팀장</Text>: 직접 판매 시 <Tag color="green">판매 수수료</Tag> 지급</li>
+                <li><Text strong style={{ color: '#faad14' }}>지사장/센터</Text>: 하위 회원 판매 시 <Tag color="gold">교육 관리 수수료</Tag> 지급</li>
+              </ul>
+            }
+            type="info"
+            showIcon
+            style={{ marginBottom: 16 }}
+          />
+          <Table
+            dataSource={overview.commissionTable}
+            columns={commissionColumns}
+            pagination={false}
+            rowKey="productName"
+            bordered
+            scroll={{ x: 700 }}
+            size="middle"
+          />
+        </Card>
+
+        {/* 제품별 판매가 요약 */}
+        <Card title="📋 제품 판매가 요약">
+          <Row gutter={[16, 16]}>
+            {overview.commissionTable
+              .filter(p => p.productCategory === '의료기기')
+              .map((product, index) => (
+                <Col xs={24} sm={8} key={index}>
+                  <Statistic
+                    title={product.productName}
+                    value={product.salePrice}
+                    suffix="원"
+                    valueStyle={{ color: '#1890ff' }}
+                    formatter={(value) => `${Number(value).toLocaleString()}`}
                   />
-                }
-              >
-                <Card.Meta
-                  title={`${img.id}페이지`}
-                  description={`보상플랜 문서 ${img.id}/13`}
-                />
-              </Card>
-            </Col>
-          ))}
-        </Row>
-      </Card>
+                </Col>
+              ))}
+          </Row>
+        </Card>
+      </Space>
     );
   };
 
@@ -490,14 +660,14 @@ export default function CompensationPlanPage() {
       children: renderImportantRules(),
     },
     {
-      key: 'docs',
+      key: 'commission',
       label: (
         <span>
-          <FileTextOutlined />
-          원본 문서
+          <DollarOutlined />
+          수수료 테이블
         </span>
       ),
-      children: renderOriginalDocs(),
+      children: renderCommissionTable(),
     },
   ];
 

@@ -203,7 +203,6 @@ export const adminMenuItems: MenuItem[] = [
     { key: '/admin/seminars', icon: <BookOutlined />, label: '세미나 관리' },
     { key: '/admin/integrity-check', icon: <SafetyOutlined />, label: '무결성 검사' },
     { key: '/admin/settings', icon: <ControlOutlined />, label: '시스템 설정' },
-    { key: '/admin/onoff', icon: <SettingOutlined />, label: '시스템 관리' },
   ]),
   createMenuGroup('내 정보', [
     { key: '/profile', icon: <UserOutlined />, label: '프로필' },

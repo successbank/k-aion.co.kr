@@ -8,6 +8,7 @@ import {
   BonusTypeInfo,
   GradeInfo,
   SettlementScheduleInfo,
+  ProductCommissionInfo,
 } from '../dto/compensation-overview.dto';
 import { BonusSimulationRequestDto } from '../dto/bonus-simulation.dto';
 import { Public } from '../../auth/decorators/public.decorator';
@@ -81,10 +82,60 @@ export class CompensationPlanController {
         '매주 일요일부터 월요일까지 정산이 마감되며, 다음 주 수요일에 보너스가 지급됩니다.',
     };
 
+    // 제품별 수수료 테이블 (이미지 기준)
+    const commissionTable: ProductCommissionInfo[] = [
+      {
+        productName: '고주파(온 체)',
+        productCategory: '의료기기',
+        salespersonCommission: 500000, // 50만원
+        teamLeaderCommission: 1000000, // 100만원
+        branchManagerCommission: 200000, // 20만원
+        centerCommission: 50000, // 5만원
+        salePrice: 2860000, // 286만원
+      },
+      {
+        productName: '펄스온(저주파)',
+        productCategory: '의료기기',
+        salespersonCommission: 400000, // 40만원
+        teamLeaderCommission: 800000, // 80만원
+        branchManagerCommission: 150000, // 15만원
+        centerCommission: 50000, // 5만원
+        salePrice: 2490000, // 249만원
+      },
+      {
+        productName: '제트5(초음파)',
+        productCategory: '의료기기',
+        salespersonCommission: 250000, // 25만원
+        teamLeaderCommission: 500000, // 50만원
+        branchManagerCommission: 50000, // 5만원
+        centerCommission: 50000, // 5만원
+        salePrice: 1500000, // 150만원
+      },
+      {
+        productName: '통증 패치',
+        productCategory: '소모품',
+        salespersonCommission: 0, // 없음
+        teamLeaderCommission: 20000, // 2만원
+        branchManagerCommission: 4800, // 4천8백원
+        centerCommission: 2400, // 2천4백원
+        salePrice: 48000, // 4만8천원
+      },
+      {
+        productName: '전용젤',
+        productCategory: '소모품',
+        salespersonCommission: 0, // 없음
+        teamLeaderCommission: 15000, // 1만5천원
+        branchManagerCommission: 3000, // 3천원
+        centerCommission: 1500, // 1천5백원
+        salePrice: 30000, // 3만원
+      },
+    ];
+
     return {
       bonusTypes,
       gradeSystem,
       settlementSchedule,
+      commissionTable,
     };
   }
 

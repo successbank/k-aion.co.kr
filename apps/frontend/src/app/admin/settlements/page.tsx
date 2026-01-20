@@ -12,12 +12,16 @@ import {
   Row,
   Col,
   Modal,
+  Alert,
+  Typography,
 } from 'antd';
 import {
   DollarOutlined,
   FileTextOutlined,
   CheckCircleOutlined,
   ClockCircleOutlined,
+  SettingOutlined,
+  CalendarOutlined,
 } from '@ant-design/icons';
 import DashboardLayout from '@/components/Layout/DashboardLayout';
 import { settlementsApi } from '@/lib/api';
@@ -28,6 +32,11 @@ import {
   SETTLEMENT_STATUS_COLORS,
   getBonusTypeKorean,
 } from '@/types/settlement';
+import { SettlementSchedule } from '@/types/settlement-schedule';
+import AutoSettlementModal from './components/AutoSettlementModal';
+import ManualSettlementModal from './components/ManualSettlementModal';
+
+const { Text } = Typography;
 
 export default function SettlementsPage() {
   const [settlements, setSettlements] = useState<Settlement[]>([]);
@@ -37,9 +46,25 @@ export default function SettlementsPage() {
   const [selectedSettlement, setSelectedSettlement] = useState<Settlement | null>(null);
   const [detailModalVisible, setDetailModalVisible] = useState(false);
 
+  // 자동정산 스케줄 상태
+  const [schedule, setSchedule] = useState<SettlementSchedule | null>(null);
+  const [autoSettlementModalOpen, setAutoSettlementModalOpen] = useState(false);
+  const [manualSettlementModalOpen, setManualSettlementModalOpen] = useState(false);
+
   useEffect(() => {
     fetchSettlements();
+    fetchSchedule();
   }, [page]);
+
+  const fetchSchedule = async () => {
+    try {
+      const response = await settlementsApi.getSchedule();
+      setSchedule(response.data);
+    } catch (error) {
+      // 스케줄이 없는 경우 무시
+      setSchedule(null);
+    }
+  };
 
   const fetchSettlements = async () => {
     try {
@@ -197,9 +222,62 @@ export default function SettlementsPage() {
     paidCount: settlements.filter((s) => s.status === SettlementStatus.PAID).length,
   };
 
+  const handleScheduleSuccess = () => {
+    fetchSchedule();
+  };
+
+  const handleManualSuccess = () => {
+    fetchSettlements();
+  };
+
   return (
     <DashboardLayout>
       <Space direction="vertical" size="large" style={{ width: '100%' }}>
+        {/* 자동정산 상태 표시 및 버튼 영역 */}
+        <Card>
+          <Row justify="space-between" align="middle">
+            <Col>
+              <Space direction="vertical" size={0}>
+                <Text strong>자동정산 상태</Text>
+                {schedule ? (
+                  <Space>
+                    <Tag color={schedule.isActive ? 'green' : 'default'}>
+                      {schedule.isActive ? '활성' : '비활성'}
+                    </Tag>
+                    <Text type="secondary">
+                      {schedule.cycleDescription}
+                    </Text>
+                    {schedule.nextRunAt && schedule.isActive && (
+                      <Text type="secondary">
+                        (다음 실행: {schedule.nextRunDescription})
+                      </Text>
+                    )}
+                  </Space>
+                ) : (
+                  <Text type="secondary">설정된 스케줄이 없습니다</Text>
+                )}
+              </Space>
+            </Col>
+            <Col>
+              <Space>
+                <Button
+                  icon={<SettingOutlined />}
+                  onClick={() => setAutoSettlementModalOpen(true)}
+                >
+                  자동정산 설정
+                </Button>
+                <Button
+                  type="primary"
+                  icon={<CalendarOutlined />}
+                  onClick={() => setManualSettlementModalOpen(true)}
+                >
+                  특정날짜 정산
+                </Button>
+              </Space>
+            </Col>
+          </Row>
+        </Card>
+
         {/* 통계 카드 */}
         <Row gutter={[16, 16]}>
           <Col xs={24} sm={12} lg={6}>
@@ -342,6 +420,20 @@ export default function SettlementsPage() {
             </Space>
           )}
         </Modal>
+
+        {/* 자동정산 설정 모달 */}
+        <AutoSettlementModal
+          open={autoSettlementModalOpen}
+          onClose={() => setAutoSettlementModalOpen(false)}
+          onSuccess={handleScheduleSuccess}
+        />
+
+        {/* 특정날짜 정산 모달 */}
+        <ManualSettlementModal
+          open={manualSettlementModalOpen}
+          onClose={() => setManualSettlementModalOpen(false)}
+          onSuccess={handleManualSuccess}
+        />
       </Space>
     </DashboardLayout>
   );

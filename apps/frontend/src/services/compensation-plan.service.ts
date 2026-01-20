@@ -27,10 +27,21 @@ export interface SettlementScheduleInfo {
   description: string;
 }
 
+export interface ProductCommissionInfo {
+  productName: string;
+  productCategory: string;
+  salespersonCommission: number;
+  teamLeaderCommission: number;
+  branchManagerCommission: number;
+  centerCommission: number;
+  salePrice: number;
+}
+
 export interface CompensationOverviewDto {
   bonusTypes: BonusTypeInfo[];
   gradeSystem: GradeInfo[];
   settlementSchedule: SettlementScheduleInfo;
+  commissionTable: ProductCommissionInfo[];
 }
 
 export interface BonusResponseDto {

@@ -1,12 +1,15 @@
 export class CompensationOverviewDto {
-  /** 6가지 보너스 유형 정보 */
+  /** 보너스 유형 정보 */
   bonusTypes: BonusTypeInfo[];
 
-  /** 5단계 등급 체계 */
+  /** 등급 체계 */
   gradeSystem: GradeInfo[];
 
   /** 정산 주기 정보 */
   settlementSchedule: SettlementScheduleInfo;
+
+  /** 제품별 수수료 테이블 */
+  commissionTable: ProductCommissionInfo[];
 }
 
 export interface BonusTypeInfo {
@@ -29,4 +32,14 @@ export interface SettlementScheduleInfo {
   closeDay: string;
   paymentDay: string;
   description: string;
+}
+
+export interface ProductCommissionInfo {
+  productName: string;
+  productCategory: string;
+  salespersonCommission: number;
+  teamLeaderCommission: number;
+  branchManagerCommission: number;
+  centerCommission: number;
+  salePrice: number;
 }
