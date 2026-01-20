@@ -22,27 +22,23 @@ export function transformToOrgChartData(member: TreeMember): OrgChartNode {
 }
 
 /**
- * 회원 등급별 색상 매핑
+ * 회원 등급별 색상 매핑 (신규 등급 체계)
  */
 export const gradeColors: Record<string, string> = {
   ADMIN: '#ff4d4f',
   CENTER: '#eb2f96',
-  DIVISION_CHIEF: '#fa8c16',
-  BRANCH_CHIEF: '#faad14',
-  MANAGER: '#52c41a',
-  AGENT: '#1890ff',
-  MEMBER: '#8c8c8c',
+  BRANCH_MANAGER: '#faad14',
+  TEAM_LEADER: '#52c41a',
+  SALESPERSON: '#1890ff',
 };
 
 /**
- * 회원 등급별 라벨 매핑
+ * 회원 등급별 라벨 매핑 (신규 등급 체계)
  */
 export const gradeLabels: Record<string, string> = {
-  ADMIN: '최고관리자',
+  ADMIN: '관리자',
   CENTER: '센터',
-  DIVISION_CHIEF: '본부장',
-  BRANCH_CHIEF: '지부장',
-  MANAGER: '매니저',
-  AGENT: '에이전트',
-  MEMBER: '회원',
+  BRANCH_MANAGER: '지사장',
+  TEAM_LEADER: '팀장',
+  SALESPERSON: '판매원',
 };

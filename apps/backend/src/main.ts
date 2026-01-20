@@ -77,12 +77,11 @@ async function bootstrap() {
 Authorization: Bearer {your_jwt_token}
 \`\`\`
 
-## 등급 체계
-- MEMBER: 회원
-- AGENT: 에이전트 (누적 100만 PV)
-- MANAGER: 매니저
-- BRANCH_CHIEF: 지부장
-- DIVISION_CHIEF: 본부장
+## 등급 체계 (신규)
+- SALESPERSON: 판매원 (제품 1세트 판매 후 자격)
+- TEAM_LEADER: 팀장 (판매원 10명 소개, 한시적 3명)
+- BRANCH_MANAGER: 지사장 (팀장 10명 소개, 한시적 3명)
+- CENTER: 센터 (지역본부장)
 - ADMIN: 최고관리자
 
 ## 문의

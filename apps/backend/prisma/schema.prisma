@@ -15,7 +15,7 @@ model Member {
   name                 String       @db.VarChar(100)
   phone                String?      @db.VarChar(20)
   birthDate            DateTime?    @map("birth_date") @db.Date
-  grade                MemberGrade  @default(MEMBER)
+  grade                MemberGrade  @default(SALESPERSON)
   recommenderId        Int?         @map("recommender_id")
   sponsorId            Int?         @map("sponsor_id")
   // 팀라인: 1, 2, 3만 허용 (1:3 규칙)
@@ -97,14 +97,35 @@ model Product {
   minStock    Int       @default(0) @map("min_stock")
   updatedAt   DateTime  @updatedAt @map("updated_at")
   id          Int       @id @default(autoincrement())
-  category    Category    @relation(fields: [categoryId], references: [id])
-  sales       Sale[]
-  orderItems  OrderItem[]
+  category         Category               @relation(fields: [categoryId], references: [id])
+  sales            Sale[]
+  orderItems       OrderItem[]
+  commissionRates  ProductCommissionRate[]
 
   @@index([categoryId])
   @@index([code])
   @@index([isActive])
   @@map("products")
+}
+
+// 제품별 수당율 (신규)
+// 제품/등급별 고정 수당 금액 관리
+model ProductCommissionRate {
+  id              Int         @id @default(autoincrement())
+  productId       Int         @map("product_id")
+  recipientGrade  MemberGrade @map("recipient_grade")
+  amount          Int         // 고정 금액 (원)
+  isActive        Boolean     @default(true) @map("is_active")
+  createdAt       DateTime    @default(now()) @map("created_at")
+  updatedAt       DateTime    @updatedAt @map("updated_at")
+
+  product         Product     @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  @@unique([productId, recipientGrade])
+  @@index([productId])
+  @@index([recipientGrade])
+  @@index([isActive])
+  @@map("product_commission_rates")
 }
 
 model Sale {
@@ -333,14 +354,18 @@ model CommissionQualification {
   @@map("commission_qualifications")
 }
 
+// 신규 등급 체계 (4등급 + ADMIN)
+// 판매원(SALESPERSON): 제품 1세트 판매 후 수수료 자격 취득
+// 팀장(TEAM_LEADER): 판매원 10명 소개 (한시적 3명)
+// 지사장(BRANCH_MANAGER): 팀장 10명 소개 (한시적 3명)
+// 센터(CENTER): 지역본부장 (관리자 지정)
+// 관리자(ADMIN): 시스템 관리자
 enum MemberGrade {
-  MEMBER
-  AGENT
-  MANAGER
-  BRANCH_CHIEF
-  DIVISION_CHIEF
-  CENTER
-  ADMIN
+  SALESPERSON     // 판매원 (구: MEMBER, AGENT)
+  TEAM_LEADER     // 팀장 (구: MANAGER)
+  BRANCH_MANAGER  // 지사장 (구: BRANCH_CHIEF, DIVISION_CHIEF)
+  CENTER          // 센터
+  ADMIN           // 관리자
 }
 
 enum SaleStatus {
@@ -350,13 +375,12 @@ enum SaleStatus {
   CANCELLED
 }
 
+// 신규 수당 체계 (2종류)
+// 판매 수수료(SALES_COMMISSION): 판매원, 팀장에게 지급
+// 교육 관리(EDUCATION_MANAGEMENT): 지사장, 센터에게 지급
 enum BonusType {
-  SALES
-  SALES_MANAGEMENT
-  LICENSE
-  LICENSE_MANAGEMENT
-  SHARING
-  BRANCH_OPERATION
+  SALES_COMMISSION       // 판매 수수료 (판매원, 팀장)
+  EDUCATION_MANAGEMENT   // 교육 관리 (지사장, 센터)
 }
 
 enum BonusStatus {
@@ -556,4 +580,17 @@ enum BackupOperation {
 enum BackupLogStatus {
   SUCCESS
   FAILED
+}
+
+// 시스템 설정 (신규)
+// 한시적 승급 조건 등 시스템 전반 설정 관리
+model SystemConfig {
+  id          Int      @id @default(autoincrement())
+  key         String   @unique @db.VarChar(100)
+  value       String   @db.Text
+  description String?  @db.Text
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
+  @@map("system_configs")
 }

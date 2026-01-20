@@ -27,81 +27,49 @@ export class CompensationPlanController {
   @Public()
   @Get('overview')
   async getOverview(): Promise<CompensationOverviewDto> {
+    // 신규 수당 체계 (2가지)
     const bonusTypes: BonusTypeInfo[] = [
       {
-        type: 'SALES',
-        name: '판매 보너스',
-        amount: '500,000원',
-        condition: '본인이 직접 판매 시',
-        description: '회원이 직접 제품을 판매했을 때 지급되는 보너스입니다.',
+        type: 'SALES_COMMISSION',
+        name: '판매 수수료',
+        amount: '제품별 고정금액',
+        condition: '판매원/팀장 등급',
+        description: '판매원과 팀장 등급이 제품 판매 시 지급되는 수수료입니다. 제품별 고정 금액이 적용됩니다.',
       },
       {
-        type: 'SALES_MANAGEMENT',
-        name: '판매 관리 보너스',
-        amount: '150,000원',
-        condition: '하위 회원 판매 시',
-        description: '추천하거나 후원한 하위 회원이 판매했을 때 지급됩니다.',
-      },
-      {
-        type: 'LICENSE',
-        name: '판권 보너스',
-        amount: '100,000~240,000원',
-        condition: '하위 회원 승급 시',
-        description: '하위 회원을 육성하여 승급시켰을 때 등급별로 차등 지급됩니다.',
-      },
-      {
-        type: 'LICENSE_MANAGEMENT',
-        name: '판권 관리 보너스',
-        amount: '30,000~50,000원',
-        condition: '하위 회원의 육성 실적',
-        description: '하위 회원이 다른 회원을 육성했을 때 상위 회원에게 지급됩니다.',
-      },
-      {
-        type: 'SHARING',
-        name: '공유 보너스',
-        amount: '20,000원',
-        condition: '매니저 이상 자격 충족',
-        description: '매니저 이상 등급에서 조건 충족 시 지급됩니다.',
-      },
-      {
-        type: 'BRANCH_OPERATION',
-        name: '지점 운영 보너스',
-        amount: '50,000원',
-        condition: '세미나 개최 및 승인',
-        description: '세미나를 개최하고 승인받았을 때 지급되는 운영 지원금입니다.',
+        type: 'EDUCATION_MANAGEMENT',
+        name: '교육 관리 수수료',
+        amount: '제품별 고정금액',
+        condition: '지사장/센터 등급',
+        description: '지사장과 센터 등급이 하위 회원 판매 시 지급되는 수수료입니다. 제품별 고정 금액이 적용됩니다.',
       },
     ];
 
+    // 신규 등급 체계 (4등급 + ADMIN)
     const gradeSystem: GradeInfo[] = [
       {
-        grade: 'MEMBER',
-        name: '회원',
-        requirements: '가입 후 기본 등급',
-        benefits: ['제품 구매', '판매 보너스 수령'],
+        grade: 'SALESPERSON',
+        name: '판매원',
+        requirements: '제품 1세트 판매 후 자격 취득',
+        benefits: ['직접 판매 수수료 수령'],
       },
       {
-        grade: 'AGENT',
-        name: '에이전트',
-        requirements: '일정 판매 실적 달성',
-        benefits: ['판매 보너스', '판매 관리 보너스'],
+        grade: 'TEAM_LEADER',
+        name: '팀장',
+        requirements: '판매원 10명 소개 (한시적 3명)',
+        benefits: ['직접 판매 수수료', '하위 판매원 판매 시 팀장 수수료'],
       },
       {
-        grade: 'MANAGER',
-        name: '매니저',
-        requirements: '하위 에이전트 3명 이상 육성',
-        benefits: ['판매 보너스', '판매 관리 보너스', '판권 보너스', '공유 보너스'],
+        grade: 'BRANCH_MANAGER',
+        name: '지사장',
+        requirements: '팀장 10명 소개 (한시적 3명)',
+        benefits: ['교육 관리 수수료'],
       },
       {
-        grade: 'BRANCH_CHIEF',
-        name: '지부장',
-        requirements: '하위 매니저 5명 이상 육성',
-        benefits: ['모든 보너스', '판권 보너스 증액', '지점 운영 보너스 자격'],
-      },
-      {
-        grade: 'DIVISION_CHIEF',
-        name: '본부장',
-        requirements: '하위 지부장 3명 이상 육성',
-        benefits: ['최고 등급 모든 혜택', '판권 보너스 최대 금액'],
+        grade: 'CENTER',
+        name: '센터',
+        requirements: '관리자 지정 (지역본부장)',
+        benefits: ['교육 관리 수수료', '센터 운영 지원'],
       },
     ];
 

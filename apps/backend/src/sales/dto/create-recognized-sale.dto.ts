@@ -34,9 +34,9 @@ export class CreateRecognizedSaleDto {
   quantity: number;
 
   @ApiProperty({
-    description: '목표 등급 (AGENT ~ CENTER)',
+    description: '목표 등급 (신규 등급 체계)',
     enum: MemberGrade,
-    example: 'MANAGER',
+    example: 'TEAM_LEADER',
   })
   @IsEnum(MemberGrade)
   targetGrade: MemberGrade;

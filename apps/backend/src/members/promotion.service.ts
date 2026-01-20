@@ -3,20 +3,47 @@ import { PrismaService } from '../prisma/prisma.service';
 import { MemberGrade } from '@prisma/client';
 
 /**
- * 승급 조건 서비스
+ * 승급 조건 서비스 (신규 등급 체계)
  *
  * 승급 규칙:
- * 1. MEMBER → AGENT: 누적 PV >= 2,000,000
- * 2. AGENT → MANAGER: 직접 후원 회원 중 AGENT 이상 15명
- * 3. MANAGER → BRANCH_CHIEF: 직접 후원 회원 중 MANAGER 이상 4명
- * 4. BRANCH_CHIEF → DIVISION_CHIEF: 직접 후원 회원 중 BRANCH_CHIEF 이상 5명
- * 5. DIVISION_CHIEF → ADMIN: 수동 승급 (시스템 관리자만)
+ * 1. SALESPERSON → TEAM_LEADER: 직접 소개 판매원 10명 (한시적 3명)
+ * 2. TEAM_LEADER → BRANCH_MANAGER: 직접 소개 팀장 10명 (한시적 3명)
+ * 3. BRANCH_MANAGER → CENTER: 관리자 수동 지정
+ * 4. CENTER → ADMIN: 시스템 관리자만 수동 처리
  */
 @Injectable()
 export class PromotionService {
   private readonly logger = new Logger(PromotionService.name);
 
   constructor(private readonly prisma: PrismaService) {}
+
+  /**
+   * 한시적 조건 활성화 여부 확인
+   */
+  private async isTemporaryConditionActive(): Promise<boolean> {
+    const config = await this.prisma.systemConfig.findUnique({
+      where: { key: 'PROMOTION_TEMPORARY_CONDITION_ACTIVE' },
+    });
+    return config?.value === 'true';
+  }
+
+  /**
+   * 승급에 필요한 인원 수 조회
+   */
+  private async getRequiredCount(gradeType: 'SALESPERSON_TO_TEAM_LEADER' | 'TEAM_LEADER_TO_BRANCH_MANAGER'): Promise<number> {
+    const isTemporary = await this.isTemporaryConditionActive();
+    if (isTemporary) {
+      const configKey = gradeType === 'SALESPERSON_TO_TEAM_LEADER'
+        ? 'SALESPERSON_TO_TEAM_LEADER_COUNT'
+        : 'TEAM_LEADER_TO_BRANCH_MANAGER_COUNT';
+
+      const config = await this.prisma.systemConfig.findUnique({
+        where: { key: configKey },
+      });
+      return parseInt(config?.value || '3', 10);
+    }
+    return 10; // 정상 조건
+  }
 
   /**
    * 회원의 승급 가능 여부 확인
@@ -26,6 +53,7 @@ export class PromotionService {
     currentGrade: MemberGrade;
     nextGrade?: MemberGrade;
     criteria?: string;
+    progress?: { current: number; required: number };
   }> {
     const member = await this.prisma.member.findUnique({
       where: { id: memberId },
@@ -33,30 +61,27 @@ export class PromotionService {
         id: true,
         grade: true,
         cumulativePv: true,
-        agentPromotedAt: true,
       },
     });
 
     if (!member) {
-      return { eligible: false, currentGrade: MemberGrade.MEMBER };
+      return { eligible: false, currentGrade: MemberGrade.SALESPERSON };
     }
 
     // 현재 등급에 따른 승급 조건 확인
     switch (member.grade) {
-      case MemberGrade.MEMBER:
-        return this.checkMemberToAgent(member);
+      case MemberGrade.SALESPERSON:
+        return this.checkSalespersonToTeamLeader(member.id);
 
-      case MemberGrade.AGENT:
-        return this.checkAgentToManager(member.id);
+      case MemberGrade.TEAM_LEADER:
+        return this.checkTeamLeaderToBranchManager(member.id);
 
-      case MemberGrade.MANAGER:
-        return this.checkManagerToBranchChief(member.id);
-
-      case MemberGrade.BRANCH_CHIEF:
-        return this.checkBranchChiefToDivisionChief(member.id);
-
-      case MemberGrade.DIVISION_CHIEF:
-        return this.checkDivisionChiefToCenter(member.id);
+      case MemberGrade.BRANCH_MANAGER:
+        return {
+          eligible: false,
+          currentGrade: member.grade,
+          criteria: 'CENTER 승급은 관리자가 수동으로 지정합니다',
+        };
 
       case MemberGrade.CENTER:
         return {
@@ -78,49 +103,28 @@ export class PromotionService {
   }
 
   /**
-   * MEMBER → AGENT 승급 조건 확인
-   * 조건: 누적 PV >= 2,000,000
+   * SALESPERSON → TEAM_LEADER 승급 조건 확인
+   * 조건: 직속 후원 회원 중 판매원 10명 (한시적 3명)
+   * (기존 추천계보에서 후원계보로 전환됨)
    */
-  private async checkMemberToAgent(member: {
-    id: number;
-    cumulativePv: number;
-    agentPromotedAt: Date | null;
-  }): Promise<{
+  private async checkSalespersonToTeamLeader(memberId: number): Promise<{
     eligible: boolean;
     currentGrade: MemberGrade;
     nextGrade?: MemberGrade;
     criteria?: string;
+    progress?: { current: number; required: number };
   }> {
-    const eligible = member.cumulativePv >= 2000000 && !member.agentPromotedAt;
+    const requiredCount = await this.getRequiredCount('SALESPERSON_TO_TEAM_LEADER');
 
-    return {
-      eligible,
-      currentGrade: MemberGrade.MEMBER,
-      nextGrade: eligible ? MemberGrade.AGENT : undefined,
-      criteria: `누적 PV 2,000,000 이상 (현재: ${member.cumulativePv.toLocaleString()})`,
-    };
-  }
-
-  /**
-   * AGENT → MANAGER 승급 조건 확인
-   * 조건: 직접 후원 회원 중 AGENT 이상 15명
-   */
-  private async checkAgentToManager(memberId: number): Promise<{
-    eligible: boolean;
-    currentGrade: MemberGrade;
-    nextGrade?: MemberGrade;
-    criteria?: string;
-  }> {
-    // 직접 후원 회원 중 AGENT 이상 등급 회원 수 확인
-    const agentCount = await this.prisma.member.count({
+    // 직속 후원 회원 중 SALESPERSON 이상 등급 회원 수 확인 (후원계보로 전환)
+    const salespersonCount = await this.prisma.member.count({
       where: {
-        sponsorId: memberId,
+        sponsorId: memberId, // recommenderId → sponsorId 변경
         grade: {
           in: [
-            MemberGrade.AGENT,
-            MemberGrade.MANAGER,
-            MemberGrade.BRANCH_CHIEF,
-            MemberGrade.DIVISION_CHIEF,
+            MemberGrade.SALESPERSON,
+            MemberGrade.TEAM_LEADER,
+            MemberGrade.BRANCH_MANAGER,
             MemberGrade.CENTER,
           ],
         },
@@ -128,35 +132,40 @@ export class PromotionService {
       },
     });
 
-    const eligible = agentCount >= 15;
+    const eligible = salespersonCount >= requiredCount;
+    const isTemporary = await this.isTemporaryConditionActive();
 
     return {
       eligible,
-      currentGrade: MemberGrade.AGENT,
-      nextGrade: eligible ? MemberGrade.MANAGER : undefined,
-      criteria: `직접 후원 AGENT 이상 15명 필요 (현재: ${agentCount}명)`,
+      currentGrade: MemberGrade.SALESPERSON,
+      nextGrade: eligible ? MemberGrade.TEAM_LEADER : undefined,
+      criteria: `직속 후원 판매원 ${requiredCount}명 필요${isTemporary ? ' (한시적 조건)' : ''} (현재: ${salespersonCount}명)`,
+      progress: { current: salespersonCount, required: requiredCount },
     };
   }
 
   /**
-   * MANAGER → BRANCH_CHIEF 승급 조건 확인
-   * 조건: 직접 후원 회원 중 MANAGER 이상 4명
+   * TEAM_LEADER → BRANCH_MANAGER 승급 조건 확인
+   * 조건: 직속 후원 회원 중 팀장 10명 (한시적 3명)
+   * (기존 추천계보에서 후원계보로 전환됨)
    */
-  private async checkManagerToBranchChief(memberId: number): Promise<{
+  private async checkTeamLeaderToBranchManager(memberId: number): Promise<{
     eligible: boolean;
     currentGrade: MemberGrade;
     nextGrade?: MemberGrade;
     criteria?: string;
+    progress?: { current: number; required: number };
   }> {
-    // 직접 후원 회원 중 MANAGER 이상 등급 회원 수 확인
-    const managerCount = await this.prisma.member.count({
+    const requiredCount = await this.getRequiredCount('TEAM_LEADER_TO_BRANCH_MANAGER');
+
+    // 직속 후원 회원 중 TEAM_LEADER 이상 등급 회원 수 확인 (후원계보로 전환)
+    const teamLeaderCount = await this.prisma.member.count({
       where: {
-        sponsorId: memberId,
+        sponsorId: memberId, // recommenderId → sponsorId 변경
         grade: {
           in: [
-            MemberGrade.MANAGER,
-            MemberGrade.BRANCH_CHIEF,
-            MemberGrade.DIVISION_CHIEF,
+            MemberGrade.TEAM_LEADER,
+            MemberGrade.BRANCH_MANAGER,
             MemberGrade.CENTER,
           ],
         },
@@ -164,75 +173,15 @@ export class PromotionService {
       },
     });
 
-    const eligible = managerCount >= 4;
+    const eligible = teamLeaderCount >= requiredCount;
+    const isTemporary = await this.isTemporaryConditionActive();
 
     return {
       eligible,
-      currentGrade: MemberGrade.MANAGER,
-      nextGrade: eligible ? MemberGrade.BRANCH_CHIEF : undefined,
-      criteria: `직접 후원 MANAGER 이상 4명 필요 (현재: ${managerCount}명)`,
-    };
-  }
-
-  /**
-   * BRANCH_CHIEF → DIVISION_CHIEF 승급 조건 확인
-   * 조건: 직접 후원 회원 중 BRANCH_CHIEF 이상 5명
-   */
-  private async checkBranchChiefToDivisionChief(memberId: number): Promise<{
-    eligible: boolean;
-    currentGrade: MemberGrade;
-    nextGrade?: MemberGrade;
-    criteria?: string;
-  }> {
-    // 직접 후원 회원 중 BRANCH_CHIEF 이상 등급 회원 수 확인
-    const branchChiefCount = await this.prisma.member.count({
-      where: {
-        sponsorId: memberId,
-        grade: {
-          in: [MemberGrade.BRANCH_CHIEF, MemberGrade.DIVISION_CHIEF, MemberGrade.CENTER],
-        },
-        isActive: true,
-      },
-    });
-
-    const eligible = branchChiefCount >= 5;
-
-    return {
-      eligible,
-      currentGrade: MemberGrade.BRANCH_CHIEF,
-      nextGrade: eligible ? MemberGrade.DIVISION_CHIEF : undefined,
-      criteria: `직접 후원 BRANCH_CHIEF 이상 5명 필요 (현재: ${branchChiefCount}명)`,
-    };
-  }
-
-  /**
-   * DIVISION_CHIEF → CENTER 승급 조건 확인
-   * 조건: 직접 후원 회원 중 DIVISION_CHIEF 이상 5명
-   */
-  private async checkDivisionChiefToCenter(memberId: number): Promise<{
-    eligible: boolean;
-    currentGrade: MemberGrade;
-    nextGrade?: MemberGrade;
-    criteria?: string;
-  }> {
-    // 직접 후원 회원 중 DIVISION_CHIEF 이상 등급 회원 수 확인
-    const divisionChiefCount = await this.prisma.member.count({
-      where: {
-        sponsorId: memberId,
-        grade: {
-          in: [MemberGrade.DIVISION_CHIEF, MemberGrade.CENTER],
-        },
-        isActive: true,
-      },
-    });
-
-    const eligible = divisionChiefCount >= 5;
-
-    return {
-      eligible,
-      currentGrade: MemberGrade.DIVISION_CHIEF,
-      nextGrade: eligible ? MemberGrade.CENTER : undefined,
-      criteria: `직접 후원 DIVISION_CHIEF 이상 5명 필요 (현재: ${divisionChiefCount}명)`,
+      currentGrade: MemberGrade.TEAM_LEADER,
+      nextGrade: eligible ? MemberGrade.BRANCH_MANAGER : undefined,
+      criteria: `직속 후원 팀장 ${requiredCount}명 필요${isTemporary ? ' (한시적 조건)' : ''} (현재: ${teamLeaderCount}명)`,
+      progress: { current: teamLeaderCount, required: requiredCount },
     };
   }
 
@@ -270,7 +219,7 @@ export class PromotionService {
       promoted: true,
       previousGrade: eligibility.currentGrade,
       newGrade: eligibility.nextGrade,
-      message: `승급 완료: ${eligibility.nextGrade}`,
+      message: `승급 완료: ${this.getGradeKorean(eligibility.nextGrade)}`,
     };
   }
 
@@ -290,11 +239,14 @@ export class PromotionService {
   }> {
     this.logger.log('일괄 승급 처리 시작...');
 
-    // ADMIN 제외한 모든 활성 회원 조회
+    // ADMIN, CENTER, BRANCH_MANAGER 제외한 모든 활성 회원 조회
+    // (자동 승급 대상: SALESPERSON, TEAM_LEADER)
     const members = await this.prisma.member.findMany({
       where: {
         isActive: true,
-        grade: { not: MemberGrade.ADMIN },
+        grade: {
+          in: [MemberGrade.SALESPERSON, MemberGrade.TEAM_LEADER],
+        },
       },
       select: { id: true, name: true, email: true, grade: true },
     });
@@ -328,5 +280,19 @@ export class PromotionService {
       promoted,
       details,
     };
+  }
+
+  /**
+   * 등급 한글명 변환
+   */
+  private getGradeKorean(grade: MemberGrade): string {
+    const gradeNames: Record<MemberGrade, string> = {
+      [MemberGrade.SALESPERSON]: '판매원',
+      [MemberGrade.TEAM_LEADER]: '팀장',
+      [MemberGrade.BRANCH_MANAGER]: '지사장',
+      [MemberGrade.CENTER]: '센터',
+      [MemberGrade.ADMIN]: '관리자',
+    };
+    return gradeNames[grade] || grade;
   }
 }

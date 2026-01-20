@@ -116,12 +116,10 @@ export class MembersController {
         totalMembers: 243,
         totalProducts: 30,
         gradeDistribution: {
-          MEMBER: 162,
-          AGENT: 54,
-          MANAGER: 18,
-          BRANCH_CHIEF: 6,
-          DIVISION_CHIEF: 2,
-          CENTER: 0,
+          SALESPERSON: 162,
+          TEAM_LEADER: 54,
+          BRANCH_MANAGER: 18,
+          CENTER: 6,
           ADMIN: 1,
         },
       },
@@ -375,7 +373,7 @@ export class MembersController {
             username: 'user1',
             name: '홍길동',
             phone: '010-1234-5678',
-            grade: 'MEMBER',
+            grade: 'SALESPERSON',
             cumulativePv: 500000,
             createdAt: '2026-01-01T00:00:00Z',
             centerName: '강남센터',
@@ -423,7 +421,7 @@ export class MembersController {
             username: 'user10',
             name: '김철수',
             phone: '010-9876-5432',
-            grade: 'AGENT',
+            grade: 'TEAM_LEADER',
             cumulativePv: 1500000,
             createdAt: '2026-01-05T00:00:00Z',
             centerName: null,
@@ -920,7 +918,7 @@ export class MembersController {
         currentValues: {
           name: 'Jane',
           phone: '010-3333-4444',
-          grade: 'AGENT',
+          grade: 'TEAM_LEADER',
         },
         changeHistory: [
           {

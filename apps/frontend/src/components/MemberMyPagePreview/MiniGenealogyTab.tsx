@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { Card, Tag, Spin, Empty, Segmented, Space, Typography, Divider } from 'antd';
+import { Card, Tag, Spin, Empty, Space, Typography, Divider } from 'antd';
 import {
   UserOutlined,
   ArrowUpOutlined,
@@ -101,7 +101,8 @@ const MemberCard = ({
 
 export function MiniGenealogyTab({ memberId }: MiniGenealogyTabProps) {
   const [loading, setLoading] = useState(false);
-  const [treeType, setTreeType] = useState<'sponsor' | 'recommender'>('sponsor');
+  // treeType을 'sponsor'로 고정 (추천계보 제거됨)
+  const treeType = 'sponsor' as const;
   const [genealogy, setGenealogy] = useState<LimitedGenealogyResponse | null>(null);
 
   const loadGenealogy = async () => {
@@ -118,7 +119,7 @@ export function MiniGenealogyTab({ memberId }: MiniGenealogyTabProps) {
 
   useEffect(() => {
     loadGenealogy();
-  }, [memberId, treeType]);
+  }, [memberId]); // treeType 제거 (고정값)
 
   if (loading) {
     return (
@@ -134,16 +135,9 @@ export function MiniGenealogyTab({ memberId }: MiniGenealogyTabProps) {
 
   return (
     <div style={{ padding: '0 8px' }}>
-      {/* 계보 유형 선택 */}
+      {/* 계보 유형 선택 제거 - 후원계보로 고정 */}
       <div style={{ marginBottom: 16, textAlign: 'center' }}>
-        <Segmented
-          options={[
-            { label: '후원계보', value: 'sponsor' },
-            { label: '추천계보', value: 'recommender' },
-          ]}
-          value={treeType}
-          onChange={(value) => setTreeType(value as 'sponsor' | 'recommender')}
-        />
+        <Tag color="blue">후원계보</Tag>
       </div>
 
       {/* 계보도 시각화 */}
@@ -159,7 +153,7 @@ export function MiniGenealogyTab({ memberId }: MiniGenealogyTabProps) {
         {/* 1단계 위 (상위 회원) */}
         <div style={{ textAlign: 'center' }}>
           <Text type="secondary" style={{ fontSize: 12, marginBottom: 8, display: 'block' }}>
-            {treeType === 'sponsor' ? '후원인' : '추천인'} (1단계 위)
+            후원인 (1단계 위)
           </Text>
           {genealogy.upline ? (
             <MemberCard member={genealogy.upline} direction="up" />
@@ -173,9 +167,7 @@ export function MiniGenealogyTab({ memberId }: MiniGenealogyTabProps) {
                 color: '#999',
               }}
             >
-              <div style={{ padding: 16 }}>
-                {treeType === 'sponsor' ? '후원인 없음' : '추천인 없음'}
-              </div>
+              <div style={{ padding: 16 }}>후원인 없음</div>
             </Card>
           )}
         </div>
@@ -209,7 +201,7 @@ export function MiniGenealogyTab({ memberId }: MiniGenealogyTabProps) {
         {genealogy.downline.length > 0 && (
           <div style={{ textAlign: 'center' }}>
             <Text type="secondary" style={{ fontSize: 12, marginBottom: 8, display: 'block' }}>
-              직속 {treeType === 'sponsor' ? '후원' : '추천'} 회원 ({genealogy.downlineCount}명)
+              직속 후원 회원 ({genealogy.downlineCount}명)
             </Text>
             <Space wrap style={{ justifyContent: 'center' }}>
               {genealogy.downline.slice(0, 6).map((member) => (
@@ -229,7 +221,7 @@ export function MiniGenealogyTab({ memberId }: MiniGenealogyTabProps) {
         {genealogy.downline.length === 0 && (
           <div style={{ textAlign: 'center', color: '#999' }}>
             <Text type="secondary" style={{ fontSize: 12 }}>
-              직속 {treeType === 'sponsor' ? '후원' : '추천'} 회원 없음
+              직속 후원 회원 없음
             </Text>
           </div>
         )}
@@ -247,9 +239,7 @@ export function MiniGenealogyTab({ memberId }: MiniGenealogyTabProps) {
       >
         <div style={{ textAlign: 'center' }}>
           <div style={{ fontSize: 20, fontWeight: 600 }}>{genealogy.downlineCount}</div>
-          <div style={{ fontSize: 12, color: '#666' }}>
-            직속 {treeType === 'sponsor' ? '후원' : '추천'} 회원
-          </div>
+          <div style={{ fontSize: 12, color: '#666' }}>직속 후원 회원</div>
         </div>
         <div style={{ textAlign: 'center' }}>
           <div style={{ fontSize: 20, fontWeight: 600 }}>

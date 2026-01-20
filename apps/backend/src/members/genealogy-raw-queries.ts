@@ -134,11 +134,10 @@ SELECT
   ) as team_line,
   COUNT(*) as member_count,
   SUM(cumulative_pv) as total_pv,
-  COUNT(CASE WHEN grade = 'MEMBER' THEN 1 END) as member_count_grade,
-  COUNT(CASE WHEN grade = 'AGENT' THEN 1 END) as agent_count,
-  COUNT(CASE WHEN grade = 'MANAGER' THEN 1 END) as manager_count,
-  COUNT(CASE WHEN grade = 'BRANCH_CHIEF' THEN 1 END) as branch_chief_count,
-  COUNT(CASE WHEN grade = 'DIVISION_CHIEF' THEN 1 END) as division_chief_count,
+  COUNT(CASE WHEN grade = 'SALESPERSON' THEN 1 END) as salesperson_count,
+  COUNT(CASE WHEN grade = 'TEAM_LEADER' THEN 1 END) as team_leader_count,
+  COUNT(CASE WHEN grade = 'BRANCH_MANAGER' THEN 1 END) as branch_manager_count,
+  COUNT(CASE WHEN grade = 'CENTER' THEN 1 END) as center_count,
   MAX(depth) as max_depth
 FROM team_tree
 GROUP BY team_line

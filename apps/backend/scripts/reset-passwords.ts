@@ -16,13 +16,11 @@ async function resetPasswords() {
   const hashedPassword = await bcrypt.hash(newPassword, saltRounds);
 
   console.log('대상 회원 조회 중...');
-  // CENTER, ADMIN 제외한 모든 등급
+  // CENTER, ADMIN 제외한 모든 등급 (신규 등급 체계)
   const targetGrades = [
-    MemberGrade.MEMBER,
-    MemberGrade.AGENT,
-    MemberGrade.MANAGER,
-    MemberGrade.BRANCH_CHIEF,
-    MemberGrade.DIVISION_CHIEF,
+    MemberGrade.SALESPERSON,
+    MemberGrade.TEAM_LEADER,
+    MemberGrade.BRANCH_MANAGER,
   ];
 
   // 대상 회원 수 확인

@@ -82,7 +82,9 @@ export class AuthService {
   }
 
   async register(registerDto: RegisterDto) {
-    const { username, password, recommenderId, sponsorId, ...rest } = registerDto;
+    // recommenderId는 더 이상 사용하지 않음 (후원계보로 전환)
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    const { username, password, recommenderId: _ignoredRecommenderId, sponsorId, ...rest } = registerDto;
 
     // username 중복 확인
     const existingUsername = await this.prisma.member.findUnique({
@@ -91,19 +93,6 @@ export class AuthService {
 
     if (existingUsername) {
       throw new ConflictException('이미 사용 중인 아이디입니다');
-    }
-
-    // 추천인 확인 (필수)
-    const recommender = await this.prisma.member.findUnique({
-      where: { id: recommenderId },
-    });
-
-    if (!recommender) {
-      throw new BadRequestException('존재하지 않는 추천인입니다');
-    }
-
-    if (!recommender.isActive) {
-      throw new BadRequestException('비활성화된 추천인입니다');
     }
 
     // 후원인 확인 (필수)
@@ -122,14 +111,14 @@ export class AuthService {
     // 비밀번호 해싱
     const hashedPassword = await bcrypt.hash(password, 10);
 
-    // 회원 생성
+    // 회원 생성 (recommenderId는 null로 설정 - 후원계보만 사용)
     const newMember = await this.prisma.member.create({
       data: {
         username,
         password: hashedPassword,
-        recommenderId,
+        recommenderId: null, // 추천계보 미사용 - 후원계보로 전환
         sponsorId,
-        grade: 'MEMBER', // 신규 가입자는 기본적으로 MEMBER 등급
+        grade: 'SALESPERSON', // 신규 가입자는 기본적으로 판매원 등급
         isActive: true,
         ...rest,
       },

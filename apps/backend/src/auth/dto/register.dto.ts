@@ -54,13 +54,14 @@ export class RegisterDto {
   })
   phone: string;
 
-  @ApiProperty({
-    description: '추천인 ID',
+  @ApiPropertyOptional({
+    description: '추천인 ID (더 이상 사용하지 않음 - 후원계보로 전환)',
     example: 1,
+    deprecated: true,
   })
-  @IsNotEmpty({ message: '추천인을 선택해주세요' })
+  @IsOptional()
   @IsNumber()
-  recommenderId: number;
+  recommenderId?: number;
 
   @ApiProperty({
     description: '후원인 ID',

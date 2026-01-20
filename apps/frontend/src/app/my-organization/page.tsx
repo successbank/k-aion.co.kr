@@ -9,7 +9,6 @@ import {
   Statistic,
   Table,
   Tag,
-  Tabs,
   Spin,
   message,
   Empty,
@@ -171,7 +170,7 @@ export default function MyOrganizationPage() {
           </Col>
           <Col xs={24} sm={16}>
             <Row gutter={[16, 16]}>
-              <Col span={8}>
+              <Col span={12}>
                 <Statistic
                   title="후원 계보 (직속)"
                   value={organization?.sponsorTree.totalCount || 0}
@@ -179,15 +178,8 @@ export default function MyOrganizationPage() {
                   suffix="명"
                 />
               </Col>
-              <Col span={8}>
-                <Statistic
-                  title="추천 계보"
-                  value={organization?.recommenderTree.totalCount || 0}
-                  prefix={<UserOutlined />}
-                  suffix="명"
-                />
-              </Col>
-              <Col span={8}>
+              {/* 추천 계보 통계 제거 - 후원계보로 전환됨 */}
+              <Col span={12}>
                 <Statistic
                   title="누적 PV"
                   value={organization?.member.cumulativePv || 0}
@@ -276,62 +268,27 @@ export default function MyOrganizationPage() {
         </Row>
       </Card>
 
-      {/* 회원 목록 탭 */}
-      <Card>
-        <Tabs
-          items={[
-            {
-              key: 'sponsor',
-              label: (
-                <Space>
-                  <TeamOutlined />
-                  후원 계보 (직속 {organization?.sponsorTree.totalCount || 0}명)
-                </Space>
-              ),
-              children: (
-                <>
-                  {organization?.sponsorTree.directDownline &&
-                  organization.sponsorTree.directDownline.length > 0 ? (
-                    <Table
-                      columns={memberColumns}
-                      dataSource={organization.sponsorTree.directDownline}
-                      rowKey="id"
-                      pagination={{ pageSize: 10 }}
-                      size="small"
-                    />
-                  ) : (
-                    <Empty description="직속 하위 회원이 없습니다" />
-                  )}
-                </>
-              ),
-            },
-            {
-              key: 'recommender',
-              label: (
-                <Space>
-                  <UserOutlined />
-                  추천 계보 ({organization?.recommenderTree.totalCount || 0}명)
-                </Space>
-              ),
-              children: (
-                <>
-                  {organization?.recommenderTree.recommendees &&
-                  organization.recommenderTree.recommendees.length > 0 ? (
-                    <Table
-                      columns={memberColumns.filter((col) => col.key !== 'teamLine')}
-                      dataSource={organization.recommenderTree.recommendees}
-                      rowKey="id"
-                      pagination={{ pageSize: 10 }}
-                      size="small"
-                    />
-                  ) : (
-                    <Empty description="추천한 회원이 없습니다" />
-                  )}
-                </>
-              ),
-            },
-          ]}
-        />
+      {/* 회원 목록 - 후원계보만 표시 (추천계보 탭 제거됨) */}
+      <Card
+        title={
+          <Space>
+            <TeamOutlined />
+            후원 계보 (직속 {organization?.sponsorTree.totalCount || 0}명)
+          </Space>
+        }
+      >
+        {organization?.sponsorTree.directDownline &&
+        organization.sponsorTree.directDownline.length > 0 ? (
+          <Table
+            columns={memberColumns}
+            dataSource={organization.sponsorTree.directDownline}
+            rowKey="id"
+            pagination={{ pageSize: 10 }}
+            size="small"
+          />
+        ) : (
+          <Empty description="직속 하위 회원이 없습니다" />
+        )}
       </Card>
     </div>
   );

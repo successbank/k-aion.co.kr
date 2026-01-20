@@ -17,7 +17,7 @@ export class MemberResponseDto {
   @ApiProperty({ description: '생년월일', example: '1990-01-01', nullable: true })
   birthDate: Date | null;
 
-  @ApiProperty({ description: '회원 등급', enum: MemberGrade, example: MemberGrade.MEMBER })
+  @ApiProperty({ description: '회원 등급', enum: MemberGrade, example: MemberGrade.SALESPERSON })
   grade: MemberGrade;
 
   @ApiProperty({ description: '추천인 ID', example: 1, nullable: true })

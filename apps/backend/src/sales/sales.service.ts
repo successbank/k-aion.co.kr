@@ -97,13 +97,11 @@ export class SalesService {
       throw new ForbiddenException('비활성화된 회원은 판매를 등록할 수 없습니다.');
     }
 
-    // MEMBER 이상만 판매 가능 (CENTER 제외)
+    // 판매원 이상만 판매 가능 (신규 등급 체계)
     const allowedGrades: MemberGrade[] = [
-      MemberGrade.MEMBER,
-      MemberGrade.AGENT,
-      MemberGrade.MANAGER,
-      MemberGrade.BRANCH_CHIEF,
-      MemberGrade.DIVISION_CHIEF,
+      MemberGrade.SALESPERSON,
+      MemberGrade.TEAM_LEADER,
+      MemberGrade.BRANCH_MANAGER,
       MemberGrade.ADMIN,
     ];
 
@@ -348,16 +346,16 @@ export class SalesService {
       throw new NotFoundException(`사용자 ID ${userId}를 찾을 수 없습니다.`);
     }
 
-    // BRANCH_CHIEF 이상 또는 ADMIN만 상태 변경 가능
+    // 지사장 이상 또는 ADMIN만 상태 변경 가능 (신규 등급 체계)
     const allowedGrades: MemberGrade[] = [
-      MemberGrade.BRANCH_CHIEF,
-      MemberGrade.DIVISION_CHIEF,
+      MemberGrade.BRANCH_MANAGER,
+      MemberGrade.CENTER,
       MemberGrade.ADMIN,
     ];
 
     if (!(allowedGrades as readonly MemberGrade[]).includes(user.grade)) {
       throw new ForbiddenException(
-        'BRANCH_CHIEF 이상 등급만 판매 상태를 변경할 수 있습니다.'
+        '지사장 이상 등급만 판매 상태를 변경할 수 있습니다.'
       );
     }
 

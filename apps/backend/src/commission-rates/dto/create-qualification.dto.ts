@@ -14,8 +14,8 @@ export class CreateQualificationDto {
 
   @ApiPropertyOptional({
     enum: MemberGrade,
-    description: '필요한 최소 등급',
-    example: MemberGrade.AGENT,
+    description: '필요한 최소 등급 (신규 등급 체계)',
+    example: MemberGrade.SALESPERSON,
   })
   @IsOptional()
   @IsEnum(MemberGrade)

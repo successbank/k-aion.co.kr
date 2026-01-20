@@ -14,7 +14,7 @@ export class BonusResponseDto {
   @ApiProperty({
     description: '보너스 유형',
     enum: BonusType,
-    example: BonusType.SALES,
+    example: BonusType.SALES_COMMISSION,
   })
   bonusType: BonusType;
 

@@ -71,7 +71,7 @@ export interface BonusSimulationResponseDto {
 }
 
 /**
- * 팀 자격 조건 응답 DTO
+ * 팀 자격 조건 응답 DTO (신규 등급 체계)
  */
 export interface TeamQualificationResponseDto {
   memberId: number;
@@ -81,24 +81,23 @@ export interface TeamQualificationResponseDto {
   teamStats: {
     teams: Array<{
       teamLine: number;
-      agentCount: number;
-      managerCount: number;
-      branchChiefCount: number;
-      divisionChiefCount: number;
+      salespersonCount: number;
+      teamLeaderCount: number;
+      branchManagerCount: number;
+      centerCount: number;
       totalCount: number;
     }>;
     totals: {
-      agentCount: number;
-      managerCount: number;
-      branchChiefCount: number;
-      divisionChiefCount: number;
+      salespersonCount: number;
+      teamLeaderCount: number;
+      branchManagerCount: number;
+      centerCount: number;
       totalCount: number;
     };
   };
   qualifications: {
-    managerCultivation: QualificationCheck;
-    branchChiefCultivation: QualificationCheck;
-    divisionChiefCultivation: QualificationCheck;
+    teamLeaderPromotion: QualificationCheck;
+    branchManagerPromotion: QualificationCheck;
   };
 }
 
@@ -114,19 +113,20 @@ export interface QualificationCheck {
 }
 
 /**
- * 활성 수당률 요약 응답 DTO
+ * 활성 수당률 요약 응답 DTO (신규 제품별 수당 체계)
  */
 export interface CommissionRateSummaryDto {
   rates: Array<{
-    bonusType: BonusType;
-    bonusTypeName: string;
-    isGradeTiered: boolean;
-    baseAmount?: number;
-    tiers?: Array<{
+    productId: number;
+    productName: string;
+    productCode: string;
+    price: number;
+    commissions: Array<{
       grade: MemberGrade;
       gradeName: string;
       amount: number;
+      bonusType: BonusType;
+      bonusTypeName: string;
     }>;
-    description?: string;
   }>;
 }

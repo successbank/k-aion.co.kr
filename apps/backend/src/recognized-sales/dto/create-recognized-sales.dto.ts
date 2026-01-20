@@ -8,8 +8,8 @@ export class CreateRecognizedSalesDto {
   memberId: number;
 
   @ApiProperty({
-    description: '인정 등급',
-    enum: ['AGENT', 'MANAGER', 'BRANCH_CHIEF', 'DIVISION_CHIEF'],
+    description: '인정 등급 (신규 등급 체계)',
+    enum: ['TEAM_LEADER', 'BRANCH_MANAGER'],
   })
   @IsEnum(MemberGrade)
   recognizedGrade: MemberGrade;

@@ -1,5 +1,5 @@
 /**
- * Kaion 공유 상수
+ * Kaion 공유 상수 (신규 체계)
  */
 
 // 브랜드 컬러
@@ -14,38 +14,49 @@ export const BRAND_COLORS = {
   success: '#43A047',
 } as const;
 
-// 회원 등급
+// 회원 등급 (신규 4등급 + ADMIN)
 export enum MemberRole {
-  MEMBER = 'MEMBER',           // 회원
-  MANAGER = 'MANAGER',         // 매니저
-  BRANCH_MANAGER = 'BRANCH_MANAGER',  // 지부장
-  DIVISION_MANAGER = 'DIVISION_MANAGER', // 본부장
-  ADMIN = 'ADMIN',             // 최고관리자
+  SALESPERSON = 'SALESPERSON',      // 판매원
+  TEAM_LEADER = 'TEAM_LEADER',      // 팀장
+  BRANCH_MANAGER = 'BRANCH_MANAGER', // 지사장
+  CENTER = 'CENTER',                 // 센터
+  ADMIN = 'ADMIN',                   // 관리자
 }
 
 // 회원 등급 한글명
 export const MemberRoleLabel: Record<MemberRole, string> = {
-  [MemberRole.MEMBER]: '회원',
-  [MemberRole.MANAGER]: '매니저',
-  [MemberRole.BRANCH_MANAGER]: '지부장',
-  [MemberRole.DIVISION_MANAGER]: '본부장',
-  [MemberRole.ADMIN]: '최고관리자',
+  [MemberRole.SALESPERSON]: '판매원',
+  [MemberRole.TEAM_LEADER]: '팀장',
+  [MemberRole.BRANCH_MANAGER]: '지사장',
+  [MemberRole.CENTER]: '센터',
+  [MemberRole.ADMIN]: '관리자',
 };
 
-// 수당 유형
+// 회원 등급 색상 (Ant Design)
+export const MemberRoleColor: Record<MemberRole, string> = {
+  [MemberRole.SALESPERSON]: 'blue',
+  [MemberRole.TEAM_LEADER]: 'green',
+  [MemberRole.BRANCH_MANAGER]: 'gold',
+  [MemberRole.CENTER]: 'magenta',
+  [MemberRole.ADMIN]: 'red',
+};
+
+// 수당 유형 (신규 2종류)
 export enum CommissionType {
-  DIRECT = 'DIRECT',           // 직접판매 수당
-  REFERRAL = 'REFERRAL',       // 추천 수당
-  POSITION = 'POSITION',       // 직급 수당
-  LEADERSHIP = 'LEADERSHIP',   // 리더십 수당
+  SALES_COMMISSION = 'SALES_COMMISSION',         // 판매 수수료
+  EDUCATION_MANAGEMENT = 'EDUCATION_MANAGEMENT', // 교육 관리 수수료
 }
 
 // 수당 유형 한글명
 export const CommissionTypeLabel: Record<CommissionType, string> = {
-  [CommissionType.DIRECT]: '직접판매 수당',
-  [CommissionType.REFERRAL]: '추천 수당',
-  [CommissionType.POSITION]: '직급 수당',
-  [CommissionType.LEADERSHIP]: '리더십 수당',
+  [CommissionType.SALES_COMMISSION]: '판매 수수료',
+  [CommissionType.EDUCATION_MANAGEMENT]: '교육 관리 수수료',
+};
+
+// 수당 유형 대상 등급
+export const CommissionTypeTargetGrades: Record<CommissionType, MemberRole[]> = {
+  [CommissionType.SALES_COMMISSION]: [MemberRole.SALESPERSON, MemberRole.TEAM_LEADER],
+  [CommissionType.EDUCATION_MANAGEMENT]: [MemberRole.BRANCH_MANAGER, MemberRole.CENTER],
 };
 
 // 제품 상태
@@ -60,4 +71,25 @@ export const PAGINATION = {
   DEFAULT_PAGE: 1,
   DEFAULT_LIMIT: 20,
   MAX_LIMIT: 100,
+} as const;
+
+// 승급 조건 (정상)
+export const PROMOTION_REQUIREMENTS = {
+  SALESPERSON_TO_TEAM_LEADER: 10,      // 판매원 10명 소개
+  TEAM_LEADER_TO_BRANCH_MANAGER: 10,   // 팀장 10명 소개
+} as const;
+
+// 승급 조건 (한시적)
+export const PROMOTION_REQUIREMENTS_TEMPORARY = {
+  SALESPERSON_TO_TEAM_LEADER: 3,       // 판매원 3명 소개
+  TEAM_LEADER_TO_BRANCH_MANAGER: 3,    // 팀장 3명 소개
+} as const;
+
+// 의료기기 제품 코드
+export const PRODUCT_CODES = {
+  ONCHE: 'MED-001',           // 온체 (고주파)
+  PULSE_ON: 'MED-002',        // 펄스온 (저주파)
+  JET5: 'MED-003',            // 제트5 (초음파)
+  PAIN_PATCH: 'MED-ACC-001',  // 통증 패치
+  GEL: 'MED-ACC-002',         // 전용젤
 } as const;

@@ -273,15 +273,15 @@ export class MembersService {
         // 센터는 후원인/추천인 없이 독립적으로 존재
         this.logger.log(`센터 생성: 후원/추천 관계 없이 생성됩니다.`);
       } else {
-        // 일반 회원: 기존 로직 유지
-        recommenderId = dto.recommenderId ?? null;
+        // 일반 회원: 후원계보만 사용 (추천계보 제거됨)
+        recommenderId = null; // 추천계보 미사용 - 항상 null
         sponsorId = dto.sponsorId ?? null;
         teamLine = dto.teamLine ?? null;
 
-        // 3. 트랜잭션 내에서 추천인 검증
-        if (recommenderId) {
-          await this.validateMemberExistsInTx(tx, recommenderId);
-        }
+        // 추천인 검증 제거 (후원계보로 전환됨)
+        // if (recommenderId) {
+        //   await this.validateMemberExistsInTx(tx, recommenderId);
+        // }
 
         // 4. 트랜잭션 내에서 후원인 검증 + TeamLine 자동 배분
         if (sponsorId) {
@@ -313,7 +313,7 @@ export class MembersService {
           name: dto.name,
           phone: dto.phone,
           birthDate: dto.birthDate ? new Date(dto.birthDate) : null,
-          grade: dto.grade || MemberGrade.MEMBER,
+          grade: dto.grade || MemberGrade.SALESPERSON,
           recommenderId, // CENTER는 null, 일반 회원은 dto에서 가져옴
           sponsorId, // CENTER는 null, 일반 회원은 dto에서 가져옴
           teamLine, // CENTER는 null, 일반 회원은 자동 배분
@@ -408,13 +408,13 @@ export class MembersService {
         throw new NotFoundException(`회원 ID ${id}를 찾을 수 없습니다`);
       }
 
-      // 추천인/후원인 검증
-      if (dto.recommenderId !== undefined) {
-        await this.validateMemberExistsInTx(tx, dto.recommenderId);
-        // 순환 참조 검증: 새 추천인이 현재 회원의 하위 조직이면 안됨
-        await this.validateNoCircularReference(id, dto.recommenderId, 'recommender');
-      }
+      // 추천인 변경 비활성화 (후원계보로 전환됨)
+      // if (dto.recommenderId !== undefined) {
+      //   await this.validateMemberExistsInTx(tx, dto.recommenderId);
+      //   await this.validateNoCircularReference(id, dto.recommenderId, 'recommender');
+      // }
 
+      // 후원인 검증
       if (dto.sponsorId !== undefined) {
         await this.validateMemberExistsInTx(tx, dto.sponsorId);
         // 순환 참조 검증: 새 후원인이 현재 회원의 하위 조직이면 안됨
@@ -491,7 +491,8 @@ export class MembersService {
           phone: dto.phone,
           birthDate: dto.birthDate ? new Date(dto.birthDate) : undefined,
           grade: dto.grade, // ADMIN 권한 체크는 Controller에서 수행
-          recommenderId: dto.recommenderId,
+          // recommenderId 변경 비활성화 (후원계보로 전환됨)
+          // recommenderId: dto.recommenderId,
           sponsorId: dto.sponsorId,
           teamLine: dto.teamLine,
           bankName: dto.bankName,
@@ -858,23 +859,8 @@ export class MembersService {
 
       const newCumulativePv = updated.cumulativePv;
 
-      // 에이전트 승급 조건: 누적 PV >= 2,000,000
-      const shouldPromoteToAgent =
-        member.grade === MemberGrade.MEMBER && !member.agentPromotedAt && newCumulativePv >= 2000000;
-
-      if (shouldPromoteToAgent) {
-        await tx.member.update({
-          where: { id: memberId },
-          data: {
-            grade: MemberGrade.AGENT,
-            agentPromotedAt: new Date(),
-          },
-        });
-
-        this.logger.log(`회원 ID ${memberId} 에이전트 승급 (누적 PV: ${newCumulativePv})`);
-
-        return { promoted: true, newGrade: MemberGrade.AGENT };
-      }
+      // 신규 등급 체계: 자동 승급 조건 제거 (PV 기반 승급 없음)
+      // 승급은 추천 인원 기준으로 PromotionService에서 별도 처리
 
       return { promoted: false };
     });
@@ -909,23 +895,8 @@ export class MembersService {
 
     const newCumulativePv = updated.cumulativePv;
 
-    // 에이전트 승급 조건
-    const shouldPromoteToAgent =
-      member.grade === MemberGrade.MEMBER && !member.agentPromotedAt && newCumulativePv >= 2000000;
-
-    if (shouldPromoteToAgent) {
-      await tx.member.update({
-        where: { id: memberId },
-        data: {
-          grade: MemberGrade.AGENT,
-          agentPromotedAt: new Date(),
-        },
-      });
-
-      this.logger.log(`회원 ID ${memberId} 에이전트 승급 (누적 PV: ${newCumulativePv})`);
-
-      return { promoted: true, newGrade: MemberGrade.AGENT };
-    }
+    // 신규 등급 체계: 자동 승급 조건 제거 (PV 기반 승급 없음)
+    // 승급은 추천 인원 기준으로 PromotionService에서 별도 처리
 
     return { promoted: false };
   }
@@ -1301,28 +1272,20 @@ export class MembersService {
         totalPv: teamMembers.reduce((sum, m) => sum + m.cumulativePv, 0),
         grades: {
           ADMIN: teamMembers.filter((m) => m.grade === 'ADMIN').length,
-          DIVISION_CHIEF: teamMembers.filter((m) => m.grade === 'DIVISION_CHIEF').length,
-          BRANCH_CHIEF: teamMembers.filter((m) => m.grade === 'BRANCH_CHIEF').length,
-          MANAGER: teamMembers.filter((m) => m.grade === 'MANAGER').length,
-          AGENT: teamMembers.filter((m) => m.grade === 'AGENT').length,
-          MEMBER: teamMembers.filter((m) => m.grade === 'MEMBER').length,
+          CENTER: teamMembers.filter((m) => m.grade === 'CENTER').length,
+          BRANCH_MANAGER: teamMembers.filter((m) => m.grade === 'BRANCH_MANAGER').length,
+          TEAM_LEADER: teamMembers.filter((m) => m.grade === 'TEAM_LEADER').length,
+          SALESPERSON: teamMembers.filter((m) => m.grade === 'SALESPERSON').length,
         },
       };
     });
 
-    // 추천 멤버 목록 (추천계보)
-    const recommendees = await this.prisma.member.findMany({
-      where: { recommenderId: userId, isActive: true },
-      select: {
-        id: true,
-        username: true,
-        name: true,
-        grade: true,
-        cumulativePv: true,
-        createdAt: true,
-      },
-      orderBy: { createdAt: 'asc' },
-    });
+    // 추천계보는 더 이상 사용하지 않음 - 빈 배열 반환 (후원계보로 전환됨)
+    // 기존 코드 주석 처리:
+    // const recommendees = await this.prisma.member.findMany({
+    //   where: { recommenderId: userId, isActive: true },
+    //   ...
+    // });
 
     return {
       member: {
@@ -1337,9 +1300,10 @@ export class MembersService {
         totalCount: directDownline.length,
         teamStats,
       },
+      // 추천계보는 더 이상 사용하지 않음 - 빈 배열 반환
       recommenderTree: {
-        recommendees,
-        totalCount: recommendees.length,
+        recommendees: [],
+        totalCount: 0,
       },
     };
   }
@@ -1547,13 +1511,11 @@ export class MembersService {
       gradeCountMap[item.grade] = item._count.grade;
     }
 
-    // 모든 등급에 대해 0으로 초기화 (없는 등급도 포함)
+    // 모든 등급에 대해 0으로 초기화 (신규 등급 체계)
     const allGrades: MemberGrade[] = [
-      'MEMBER',
-      'AGENT',
-      'MANAGER',
-      'BRANCH_CHIEF',
-      'DIVISION_CHIEF',
+      'SALESPERSON',
+      'TEAM_LEADER',
+      'BRANCH_MANAGER',
       'CENTER',
       'ADMIN',
     ];

@@ -11,23 +11,19 @@ import { UpdateRecognizedSalesDto } from './dto/update-recognized-sales.dto';
 import { RecognizedSalesQueryDto } from './dto/recognized-sales-query.dto';
 import { MemberGrade, RecognizedSalesStatus, RecognitionType, Prisma } from '@prisma/client';
 
-// 등급 계층 순서 (낮은 인덱스 = 높은 등급)
+// 등급 계층 순서 (신규 등급 체계, 낮은 인덱스 = 높은 등급)
 const GRADE_ORDER: MemberGrade[] = [
   MemberGrade.ADMIN,
   MemberGrade.CENTER,
-  MemberGrade.DIVISION_CHIEF,
-  MemberGrade.BRANCH_CHIEF,
-  MemberGrade.MANAGER,
-  MemberGrade.AGENT,
-  MemberGrade.MEMBER,
+  MemberGrade.BRANCH_MANAGER,
+  MemberGrade.TEAM_LEADER,
+  MemberGrade.SALESPERSON,
 ];
 
-// 인정 가능한 등급 목록
+// 인정 가능한 등급 목록 (신규 등급 체계)
 const RECOGNIZABLE_GRADES: MemberGrade[] = [
-  MemberGrade.AGENT,
-  MemberGrade.MANAGER,
-  MemberGrade.BRANCH_CHIEF,
-  MemberGrade.DIVISION_CHIEF,
+  MemberGrade.TEAM_LEADER,
+  MemberGrade.BRANCH_MANAGER,
 ];
 
 @Injectable()

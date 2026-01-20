@@ -1,7 +1,6 @@
 import {
   Controller,
   Get,
-  Post,
   Param,
   Query,
   ParseIntPipe,
@@ -14,7 +13,6 @@ import {
   ApiBearerAuth,
 } from '@nestjs/swagger';
 import { BonusesService } from './bonuses.service';
-import { BonusCalculatorService } from './bonus-calculator.service';
 import { BonusResponseDto } from './dto/bonus-response.dto';
 import { BonusStatus, BonusType } from '@prisma/client';
 import { Public } from '../auth/decorators/public.decorator';
@@ -23,10 +21,7 @@ import { Public } from '../auth/decorators/public.decorator';
 @Controller('v1/bonuses')
 @ApiBearerAuth()
 export class BonusesController {
-  constructor(
-    private readonly bonusesService: BonusesService,
-    private readonly bonusCalculatorService: BonusCalculatorService,
-  ) {}
+  constructor(private readonly bonusesService: BonusesService) {}
 
   /**
    * 보너스 목록 조회
@@ -83,27 +78,5 @@ export class BonusesController {
     return this.bonusesService.getMemberBonusSummary(memberId, weekCode);
   }
 
-  /**
-   * 판매 기준 보너스 미리보기
-   */
-  @Public()
-  @Get('preview/:sellerId')
-  @ApiOperation({ summary: '판매 보너스 미리보기' })
-  @ApiQuery({ name: 'saleAmount', required: true, type: Number })
-  previewBonuses(
-    @Param('sellerId', ParseIntPipe) sellerId: number,
-    @Query('saleAmount', ParseIntPipe) saleAmount: number,
-  ) {
-    return this.bonusCalculatorService.previewBonuses(sellerId, saleAmount);
-  }
-
-  /**
-   * 판매 발생 시 보너스 계산 (트리거)
-   * TODO: 실제로는 판매 등록 시 자동 호출되어야 함
-   */
-  @Post('calculate/:saleId')
-  @ApiOperation({ summary: '판매 보너스 계산 및 생성 (ADMIN)' })
-  calculateBonuses(@Param('saleId', ParseIntPipe) saleId: number) {
-    return this.bonusCalculatorService.calculateBonusesOnSale(saleId);
-  }
+  // NOTE: 보너스 미리보기 및 계산은 compensation-plan 모듈의 bonus-calculator.service 또는 bonus-simulator.service 사용
 }

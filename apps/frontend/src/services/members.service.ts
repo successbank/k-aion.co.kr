@@ -67,6 +67,7 @@ export interface CreateMemberDto {
   postalCode?: string;
   address?: string;
   addressDetail?: string;
+  /** @deprecated 추천계보는 더 이상 사용하지 않습니다. 후원계보(sponsorId)만 사용됩니다. */
   recommenderId?: number;
   sponsorId?: number;
   teamLine?: number;
@@ -87,6 +88,7 @@ export interface UpdateMemberDto {
   bankName?: string;
   accountNumber?: string;
   accountHolder?: string;
+  /** @deprecated 추천계보는 더 이상 사용하지 않습니다. 후원계보(sponsorId)만 사용됩니다. */
   recommenderId?: number;
   sponsorId?: number;
   teamLine?: number;

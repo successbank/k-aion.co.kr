@@ -49,16 +49,24 @@ export class CreateMemberDto {
   birthDate?: string;
 
   @ApiProperty({
-    description: '회원 등급',
+    description: '회원 등급 (신규 등급 체계)',
     enum: MemberGrade,
-    example: MemberGrade.MEMBER,
+    example: MemberGrade.SALESPERSON,
     required: false,
   })
   @IsOptional()
   @IsEnum(MemberGrade, { message: '유효한 등급을 선택해주세요' })
   grade?: MemberGrade;
 
-  @ApiProperty({ description: '추천인 ID', example: 1, required: false })
+  /**
+   * @deprecated 추천계보는 더 이상 사용하지 않습니다. 후원계보(sponsorId)만 사용됩니다.
+   */
+  @ApiProperty({
+    description: '추천인 ID (더 이상 사용하지 않음 - 후원계보로 전환)',
+    example: 1,
+    required: false,
+    deprecated: true,
+  })
   @IsOptional()
   @IsInt()
   recommenderId?: number;

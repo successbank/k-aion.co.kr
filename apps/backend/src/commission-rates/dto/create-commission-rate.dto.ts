@@ -18,7 +18,7 @@ export class CreateCommissionRateDto {
   @ApiProperty({
     enum: BonusType,
     description: '보너스 유형',
-    example: BonusType.SALES,
+    example: BonusType.SALES_COMMISSION,
   })
   @IsEnum(BonusType)
   bonusType: BonusType;

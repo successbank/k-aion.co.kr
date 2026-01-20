@@ -1,14 +1,16 @@
 import { Module } from '@nestjs/common';
 import { PrismaModule } from '../prisma/prisma.module';
-import { CommissionRatesModule } from '../commission-rates/commission-rates.module';
 import { BonusesController } from './bonuses.controller';
 import { BonusesService } from './bonuses.service';
-import { BonusCalculatorService } from './bonus-calculator.service';
 
+/**
+ * 보너스 모듈 (신규 수당 체계)
+ * 참고: 실제 보너스 계산은 compensation-plan/services/bonus-calculator.service.ts에서 수행
+ */
 @Module({
-  imports: [PrismaModule, CommissionRatesModule],
+  imports: [PrismaModule],
   controllers: [BonusesController],
-  providers: [BonusesService, BonusCalculatorService],
-  exports: [BonusesService, BonusCalculatorService],
+  providers: [BonusesService],
+  exports: [BonusesService],
 })
 export class BonusesModule {}

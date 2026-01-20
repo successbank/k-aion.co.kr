@@ -29,12 +29,11 @@ import { SaleStatus, MemberGrade } from '@prisma/client';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { Public } from '../auth/decorators/public.decorator';
 
-// 관리자급 등급 (전체 판매 조회 권한)
+// 관리자급 등급 (전체 판매 조회 권한, 신규 등급 체계)
 const ADMIN_GRADES: MemberGrade[] = [
   MemberGrade.ADMIN,
   MemberGrade.CENTER,
-  MemberGrade.DIVISION_CHIEF,
-  MemberGrade.BRANCH_CHIEF,
+  MemberGrade.BRANCH_MANAGER,
 ];
 
 /**

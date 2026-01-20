@@ -1,14 +1,11 @@
 /**
- * 보너스 유형
- * Commission PRD v2.0 기준
+ * 보너스 유형 (신규 수당 체계)
+ * SALES_COMMISSION: 판매 수수료 (판매원, 팀장)
+ * EDUCATION_MANAGEMENT: 교육 관리 (지사장, 센터)
  */
 export enum BonusType {
-  SALES = 'SALES', // 판매 보너스 (50만원)
-  SALES_MANAGEMENT = 'SALES_MANAGEMENT', // 판매 관리 보너스 (15만원)
-  LICENSE = 'LICENSE', // 판권 보너스 (매니저 10만/지부장 18만/본부장 24만)
-  LICENSE_MANAGEMENT = 'LICENSE_MANAGEMENT', // 판권 관리 보너스 (30-50%)
-  SHARING = 'SHARING', // 공유 보너스 (2만원 중복지급)
-  BRANCH_OPERATION = 'BRANCH_OPERATION', // 센터 운영 보너스 (5만원)
+  SALES_COMMISSION = 'SALES_COMMISSION',
+  EDUCATION_MANAGEMENT = 'EDUCATION_MANAGEMENT',
 }
 
 /**
@@ -23,28 +20,27 @@ export enum BonusStatus {
 }
 
 /**
- * 회원 등급
+ * 회원 등급 (신규 등급 체계)
+ * SALESPERSON: 판매원 (제품 1세트 판매 후 자격)
+ * TEAM_LEADER: 팀장 (판매원 10명 소개, 한시적 3명)
+ * BRANCH_MANAGER: 지사장 (팀장 10명 소개, 한시적 3명)
+ * CENTER: 센터 (관리자 지정)
+ * ADMIN: 관리자
  */
 export enum MemberGrade {
-  ADMIN = 'ADMIN', // 최고관리자
-  CENTER = 'CENTER', // 센터
-  DIVISION_CHIEF = 'DIVISION_CHIEF', // 본부장
-  BRANCH_CHIEF = 'BRANCH_CHIEF', // 지부장
-  MANAGER = 'MANAGER', // 매니저
-  AGENT = 'AGENT', // 에이전트
-  MEMBER = 'MEMBER', // 일반 회원
+  SALESPERSON = 'SALESPERSON',
+  TEAM_LEADER = 'TEAM_LEADER',
+  BRANCH_MANAGER = 'BRANCH_MANAGER',
+  CENTER = 'CENTER',
+  ADMIN = 'ADMIN',
 }
 
 /**
  * 한글 라벨 매핑
  */
 export const BonusTypeLabels: Record<BonusType, string> = {
-  [BonusType.SALES]: '판매 보너스',
-  [BonusType.SALES_MANAGEMENT]: '판매 관리 보너스',
-  [BonusType.LICENSE]: '판권 보너스',
-  [BonusType.LICENSE_MANAGEMENT]: '판권 관리 보너스',
-  [BonusType.SHARING]: '공유 보너스',
-  [BonusType.BRANCH_OPERATION]: '센터 운영 보너스',
+  [BonusType.SALES_COMMISSION]: '판매 수수료',
+  [BonusType.EDUCATION_MANAGEMENT]: '교육 관리 수수료',
 };
 
 export const BonusStatusLabels: Record<BonusStatus, string> = {
@@ -55,25 +51,30 @@ export const BonusStatusLabels: Record<BonusStatus, string> = {
 };
 
 export const MemberGradeLabels: Record<MemberGrade, string> = {
-  [MemberGrade.ADMIN]: '최고관리자',
+  [MemberGrade.SALESPERSON]: '판매원',
+  [MemberGrade.TEAM_LEADER]: '팀장',
+  [MemberGrade.BRANCH_MANAGER]: '지사장',
   [MemberGrade.CENTER]: '센터',
-  [MemberGrade.DIVISION_CHIEF]: '본부장',
-  [MemberGrade.BRANCH_CHIEF]: '지부장',
-  [MemberGrade.MANAGER]: '매니저',
-  [MemberGrade.AGENT]: '에이전트',
-  [MemberGrade.MEMBER]: '회원',
+  [MemberGrade.ADMIN]: '관리자',
 };
+
+/**
+ * 등급 순서 (낮은 인덱스 = 높은 등급)
+ */
+export const MemberGradeOrder: MemberGrade[] = [
+  MemberGrade.ADMIN,
+  MemberGrade.CENTER,
+  MemberGrade.BRANCH_MANAGER,
+  MemberGrade.TEAM_LEADER,
+  MemberGrade.SALESPERSON,
+];
 
 /**
  * Ant Design Tag 색상 매핑
  */
 export const BonusTypeColors: Record<BonusType, string> = {
-  [BonusType.SALES]: 'green',
-  [BonusType.SALES_MANAGEMENT]: 'blue',
-  [BonusType.LICENSE]: 'purple',
-  [BonusType.LICENSE_MANAGEMENT]: 'magenta',
-  [BonusType.SHARING]: 'orange',
-  [BonusType.BRANCH_OPERATION]: 'cyan',
+  [BonusType.SALES_COMMISSION]: 'green',
+  [BonusType.EDUCATION_MANAGEMENT]: 'purple',
 };
 
 export const BonusStatusColors: Record<BonusStatus, string> = {
@@ -84,11 +85,41 @@ export const BonusStatusColors: Record<BonusStatus, string> = {
 };
 
 export const MemberGradeColors: Record<MemberGrade, string> = {
-  [MemberGrade.ADMIN]: 'red',
+  [MemberGrade.SALESPERSON]: 'blue',
+  [MemberGrade.TEAM_LEADER]: 'green',
+  [MemberGrade.BRANCH_MANAGER]: 'gold',
   [MemberGrade.CENTER]: 'magenta',
-  [MemberGrade.DIVISION_CHIEF]: 'orange',
-  [MemberGrade.BRANCH_CHIEF]: 'gold',
-  [MemberGrade.MANAGER]: 'green',
-  [MemberGrade.AGENT]: 'blue',
-  [MemberGrade.MEMBER]: 'default',
+  [MemberGrade.ADMIN]: 'red',
 };
+
+/**
+ * 제품별 수당율 인터페이스
+ */
+export interface ProductCommissionRate {
+  id: number;
+  productId: number;
+  recipientGrade: MemberGrade;
+  amount: number;
+  isActive: boolean;
+}
+
+/**
+ * 보너스 미리보기 응답
+ */
+export interface BonusPreview {
+  type: BonusType;
+  typeKorean: string;
+  recipientId: number;
+  recipientName: string;
+  recipientGrade: MemberGrade;
+  recipientGradeKorean: string;
+  amount: number;
+  description: string;
+}
+
+export interface SaleBonusPreviewResponse {
+  totalPrice: number;
+  totalPv: number;
+  bonuses: BonusPreview[];
+  totalBonus: number;
+}

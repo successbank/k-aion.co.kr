@@ -3,7 +3,6 @@
 import { useState, useEffect, useMemo } from 'react';
 import {
   Card,
-  Tabs,
   Input,
   Select,
   Row,
@@ -125,10 +124,9 @@ interface OrganizationStats {
 export default function AdminOrganizationPage() {
   const { user } = useAuthStore();
   const [loading, setLoading] = useState(false);
-  const [activeTab, setActiveTab] = useState('recommender');
   const [searchTerm, setSearchTerm] = useState('');
   const [gradeFilter, setGradeFilter] = useState<string | undefined>();
-  const [recommenderTree, setRecommenderTree] = useState<TreeMember | null>(null);
+  // 후원계보만 사용 (추천계보 제거됨)
   const [sponsorTree, setSponsorTree] = useState<TreeMember | null>(null);
   const [selectedMember, setSelectedMember] = useState<TreeMember | null>(null);
   const [detailModalVisible, setDetailModalVisible] = useState(false);
@@ -264,28 +262,12 @@ export default function AdminOrganizationPage() {
   // 항상 모든 노드 펼침
   const chartInitialDepth = 100;
 
-  // 필터링된 트리 데이터
-  const filteredRecommenderTree = useMemo(() => {
-    if (!recommenderTree) return null;
-
-    // 선택된 검색 결과가 있으면 해당 노드를 루트로
-    if (selectedSearchResult && activeTab === 'recommender') {
-      return selectedSearchResult;
-    }
-
-    // 등급 필터만 있으면 기존 방식
-    if (gradeFilter) {
-      return filterTree(recommenderTree, '', gradeFilter);
-    }
-
-    return recommenderTree;
-  }, [recommenderTree, gradeFilter, selectedSearchResult, activeTab]);
-
+  // 필터링된 후원 트리 데이터 (추천계보 useMemo 제거됨)
   const filteredSponsorTree = useMemo(() => {
     if (!sponsorTree) return null;
 
     // 선택된 검색 결과가 있으면 해당 노드를 루트로
-    if (selectedSearchResult && activeTab === 'sponsor') {
+    if (selectedSearchResult) {
       return selectedSearchResult;
     }
 
@@ -295,7 +277,7 @@ export default function AdminOrganizationPage() {
     }
 
     return sponsorTree;
-  }, [sponsorTree, gradeFilter, selectedSearchResult, activeTab]);
+  }, [sponsorTree, gradeFilter, selectedSearchResult]);
 
   useEffect(() => {
     // user 상태가 복원된 후에만 데이터 로드 (Zustand persist 레이스 컨디션 방지)
@@ -327,22 +309,10 @@ export default function AdminOrganizationPage() {
     try {
       // ADMIN 등급인 경우 전체 조직 조회
       if (user.grade === 'ADMIN') {
-        // 전체 추천 계보
-        const recommenderResponse = await genealogyService.getAllOrganizationTrees(
-          'recommender',
-          100,
-        );
-
-        // 전체 후원 계보
+        // 전체 후원 계보만 로드 (추천계보 제거됨)
         const sponsorResponse = await genealogyService.getAllOrganizationTrees('sponsor', 100);
 
         // 센터를 제외한 트리 생성
-        const filteredRecommenderTrees = recommenderResponse.trees.flatMap((tree: TreeMember) => {
-          const result = filterOutCenters(tree);
-          if (result === null) return [];
-          return Array.isArray(result) ? result : [result];
-        });
-
         const filteredSponsorTrees = sponsorResponse.trees.flatMap((tree: TreeMember) => {
           const result = filterOutCenters(tree);
           if (result === null) return [];
@@ -350,14 +320,6 @@ export default function AdminOrganizationPage() {
         });
 
         // 다중 루트 트리를 하나의 가상 루트로 합치기
-        setRecommenderTree({
-          id: 0,
-          name: '전체 조직',
-          email: '',
-          grade: 'ADMIN',
-          children: filteredRecommenderTrees,
-        });
-
         setSponsorTree({
           id: 0,
           name: '전체 조직',
@@ -366,35 +328,14 @@ export default function AdminOrganizationPage() {
           children: filteredSponsorTrees,
         });
 
-        // 통계 계산 (모든 루트 합산)
-        calculateStatsFromMultipleRoots(recommenderResponse.trees);
+        // 통계 계산 (후원계보 기준)
+        calculateStatsFromMultipleRoots(sponsorResponse.trees);
       } else {
         // 일반 회원: 자신의 하위 조직만 조회
         // user.id가 string이므로 number로 변환
         const adminId = typeof user.id === 'string' ? parseInt(user.id, 10) : user.id;
 
-        // 추천 계보 (전체 조직)
-        const recommenderData = await genealogyService.getGenealogyTree(
-          adminId,
-          100, // 최대 100단계까지
-          'recommender',
-        );
-        // 센터 필터링 적용
-        const filteredRecommender = filterOutCenters(recommenderData);
-        if (filteredRecommender && !Array.isArray(filteredRecommender)) {
-          setRecommenderTree(filteredRecommender);
-        } else if (Array.isArray(filteredRecommender) && filteredRecommender.length > 0) {
-          // 루트가 센터인 경우 가상 루트로 감싸기
-          setRecommenderTree({
-            id: 0,
-            name: '전체 조직',
-            email: '',
-            grade: 'ADMIN',
-            children: filteredRecommender,
-          });
-        }
-
-        // 후원 계보 (3팀 시스템)
+        // 후원 계보만 로드 (추천계보 제거됨)
         const sponsorData = await genealogyService.getGenealogyTree(adminId, 100, 'sponsor');
         // 센터 필터링 적용
         const filteredSponsor = filterOutCenters(sponsorData);
@@ -411,8 +352,8 @@ export default function AdminOrganizationPage() {
           });
         }
 
-        // 통계 계산
-        calculateStats(recommenderData);
+        // 통계 계산 (후원계보 기준)
+        calculateStats(sponsorData);
       }
 
       message.success('조직 데이터를 불러왔습니다.');
@@ -514,10 +455,9 @@ export default function AdminOrganizationPage() {
   const handleSearch = () => {
     if (!searchTerm.trim()) return;
 
-    const currentTree = activeTab === 'recommender' ? recommenderTree : sponsorTree;
-    if (!currentTree) return;
+    if (!sponsorTree) return;
 
-    const matches = findAllMatches(currentTree, searchTerm, gradeFilter);
+    const matches = findAllMatches(sponsorTree, searchTerm, gradeFilter);
 
     if (matches.length === 0) {
       message.info('검색 결과가 없습니다.');
@@ -622,7 +562,7 @@ export default function AdminOrganizationPage() {
     }
   };
 
-  // 회원 이동 (후원인/추천인 변경)
+  // 회원 이동 (후원인 변경만 지원 - 추천계보 제거됨)
   const handleMoveMember = async () => {
     if (!selectedMember || !newParentId || selectedMember.id === 0) {
       message.warning('이동할 대상과 새로운 상위 회원을 선택해주세요.');
@@ -631,15 +571,10 @@ export default function AdminOrganizationPage() {
 
     setMoveLoading(true);
     try {
-      const updateData =
-        activeTab === 'sponsor'
-          ? { sponsorId: newParentId, downlineStrategy: downlineStrategy }
-          : { recommenderId: newParentId };
+      const updateData = { sponsorId: newParentId, downlineStrategy: downlineStrategy };
 
       await api.patch(`/v1/members/${selectedMember.id}`, updateData);
-      message.success(
-        `${selectedMember.name}님의 ${activeTab === 'sponsor' ? '후원인' : '추천인'}이 변경되었습니다.`,
-      );
+      message.success(`${selectedMember.name}님의 후원인이 변경되었습니다.`);
       setDetailModalVisible(false);
       setNewParentId(null);
       setParentSearchResults([]);
@@ -749,12 +684,10 @@ export default function AdminOrganizationPage() {
     return comparison;
   };
 
-  // 엑셀 내보내기
+  // 엑셀 내보내기 (후원계보 전용 - 추천계보 제거됨)
   const handleExport = () => {
     try {
-      const currentTree = activeTab === 'recommender' ? recommenderTree : sponsorTree;
-
-      if (!currentTree) {
+      if (!sponsorTree) {
         message.warning('내보낼 데이터가 없습니다.');
         return;
       }
@@ -773,13 +706,13 @@ export default function AdminOrganizationPage() {
         });
         node.children.forEach((child) => flattenTree(child, depth + 1, node.name));
       };
-      flattenTree(currentTree);
+      flattenTree(sponsorTree);
 
       // 통계 시트 데이터
       const statsData = [
         ['조직 통계 보고서', ''],
         ['생성일시', new Date().toLocaleString('ko-KR')],
-        ['조직 유형', activeTab === 'recommender' ? '추천인 조직도' : '스폰서 조직도'],
+        ['조직 유형', '후원 조직도'],
         ['', ''],
         ['총 회원 수', stats.totalMembers],
         ['총 누적 PV', stats.totalPV.toLocaleString()],
@@ -795,16 +728,14 @@ export default function AdminOrganizationPage() {
       });
 
       // 팀 균형 데이터 추가
-      if (activeTab === 'sponsor') {
-        statsData.push(
-          ['', ''],
-          ['팀 균형 분석', ''],
-          ['팀1', stats.teamBalance.team1],
-          ['팀2', stats.teamBalance.team2],
-          ['팀3', stats.teamBalance.team3],
-          ['균형도', `${calculateTeamBalance()}%`],
-        );
-      }
+      statsData.push(
+        ['', ''],
+        ['팀 균형 분석', ''],
+        ['팀1', stats.teamBalance.team1],
+        ['팀2', stats.teamBalance.team2],
+        ['팀3', stats.teamBalance.team3],
+        ['균형도', `${calculateTeamBalance()}%`],
+      );
 
       // 워크북 생성
       const wb = XLSX.utils.book_new();
@@ -833,7 +764,7 @@ export default function AdminOrganizationPage() {
       });
 
       // 파일 다운로드
-      const fileName = `조직도_${activeTab}_${new Date().toISOString().split('T')[0]}.xlsx`;
+      const fileName = `조직도_후원계보_${new Date().toISOString().split('T')[0]}.xlsx`;
       XLSX.writeFile(wb, fileName);
 
       message.success('엑셀 파일이 다운로드되었습니다.');
@@ -1006,105 +937,42 @@ export default function AdminOrganizationPage() {
           </Space>
         }
       >
-        <Tabs
-          activeKey={activeTab}
-          onChange={setActiveTab}
-          size="large"
-          items={[
-            {
-              key: 'recommender',
-              label: (
-                <span>
-                  <UserOutlined />
-                  추천 계보 (1:N)
-                </span>
-              ),
-              children: (
-                <div
-                  style={{
-                    padding: '24px',
-                    background: '#fafafa',
-                    borderRadius: 8,
-                    minHeight: 600,
-                    maxHeight: '70vh',
-                    overflow: 'auto',
-                  }}
-                >
-                  {loading ? (
-                    <div style={{ textAlign: 'center', padding: '100px 0' }}>
-                      <Spin size="large" />
-                      <div style={{ marginTop: 16 }}>
-                        <Text>조직 데이터를 불러오는 중...</Text>
-                      </div>
-                    </div>
-                  ) : filteredRecommenderTree ? (
-                    <>
-                      <div style={{ marginBottom: 16 }}>
-                        <Text type="secondary">
-                          💡 노드를 클릭하면 상세 정보를 확인하고 회원 정보를 수정할 수 있습니다.
-                        </Text>
-                      </div>
-                      <OrganizationChart
-                        data={filteredRecommenderTree}
-                        onNodeClick={handleNodeClick}
-                        initialDepth={chartInitialDepth}
-                        height={600}
-                      />
-                    </>
-                  ) : (
-                    <Empty description="추천 계보 데이터가 없습니다" />
-                  )}
-                </div>
-              ),
-            },
-            {
-              key: 'sponsor',
-              label: (
-                <span>
-                  <TeamOutlined />
-                  후원 계보 (3팀)
-                </span>
-              ),
-              children: (
-                <div
-                  style={{
-                    padding: '24px',
-                    background: '#fafafa',
-                    borderRadius: 8,
-                    minHeight: 600,
-                    maxHeight: '70vh',
-                    overflow: 'auto',
-                  }}
-                >
-                  {loading ? (
-                    <div style={{ textAlign: 'center', padding: '100px 0' }}>
-                      <Spin size="large" />
-                      <div style={{ marginTop: 16 }}>
-                        <Text>조직 데이터를 불러오는 중...</Text>
-                      </div>
-                    </div>
-                  ) : filteredSponsorTree ? (
-                    <>
-                      <div style={{ marginBottom: 16 }}>
-                        <Text type="secondary">
-                          💡 노드를 클릭하면 상세 정보를 확인하고 회원 정보를 수정할 수 있습니다.
-                        </Text>
-                      </div>
-                      <OrganizationChart
-                        data={filteredSponsorTree}
-                        onNodeClick={handleNodeClick}
-                        initialDepth={chartInitialDepth}
-                        height={600}
-                      />
-                    </>
-                  ) : (
-                    <Empty description="후원 계보 데이터가 없습니다" />
-                  )}
-                </div>
-              ),
-            },
-          ]}
-        />
+        {/* 후원계보만 표시 (추천계보 탭 제거됨) */}
+        <div
+          style={{
+            padding: '24px',
+            background: '#fafafa',
+            borderRadius: 8,
+            minHeight: 600,
+            maxHeight: '70vh',
+            overflow: 'auto',
+          }}
+        >
+          {loading ? (
+            <div style={{ textAlign: 'center', padding: '100px 0' }}>
+              <Spin size="large" />
+              <div style={{ marginTop: 16 }}>
+                <Text>조직 데이터를 불러오는 중...</Text>
+              </div>
+            </div>
+          ) : filteredSponsorTree ? (
+            <>
+              <div style={{ marginBottom: 16 }}>
+                <Text type="secondary">
+                  💡 노드를 클릭하면 상세 정보를 확인하고 회원 정보를 수정할 수 있습니다.
+                </Text>
+              </div>
+              <OrganizationChart
+                data={filteredSponsorTree}
+                onNodeClick={handleNodeClick}
+                initialDepth={chartInitialDepth}
+                height={600}
+              />
+            </>
+          ) : (
+            <Empty description="후원 계보 데이터가 없습니다" />
+          )}
+        </div>
       </Card>
 
       {/* 범례 */}
@@ -1361,16 +1229,13 @@ export default function AdminOrganizationPage() {
                       label: (
                         <Space>
                           <SwapOutlined />
-                          <Text strong>
-                            회원 이동 ({activeTab === 'sponsor' ? '후원인' : '추천인'} 변경)
-                          </Text>
+                          <Text strong>회원 이동 (후원인 변경)</Text>
                         </Space>
                       ),
                       children: (
                         <div>
                           <Text type="secondary" style={{ display: 'block', marginBottom: 8 }}>
-                            새로운 {activeTab === 'sponsor' ? '후원인' : '추천인'}을 검색하여
-                            선택하세요
+                            새로운 후원인을 검색하여 선택하세요
                           </Text>
                           <Select
                             showSearch
@@ -1396,8 +1261,8 @@ export default function AdminOrganizationPage() {
                             ))}
                           </Select>
 
-                          {/* 하위 조직 처리 옵션 - 후원 계보 탭에서 하위 회원이 있는 경우만 표시 */}
-                          {activeTab === 'sponsor' && selectedMember.children.length > 0 && (
+                          {/* 하위 조직 처리 옵션 - 하위 회원이 있는 경우만 표시 */}
+                          {selectedMember.children.length > 0 && (
                             <div style={{ marginBottom: 16 }}>
                               <Text type="secondary" style={{ display: 'block', marginBottom: 8 }}>
                                 하위 조직 처리 방법 (직속 하위 {selectedMember.children.length}명)
@@ -1435,7 +1300,7 @@ export default function AdminOrganizationPage() {
 
                           <Popconfirm
                             title="회원 이동 확인"
-                            description={`${selectedMember.name}님의 ${activeTab === 'sponsor' ? '후원인' : '추천인'}을 변경하시겠습니까?`}
+                            description={`${selectedMember.name}님의 후원인을 변경하시겠습니까?`}
                             onConfirm={handleMoveMember}
                             okText="이동"
                             cancelText="취소"

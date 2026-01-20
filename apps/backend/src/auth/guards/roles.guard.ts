@@ -1,15 +1,13 @@
 import { Injectable, CanActivate, ExecutionContext, ForbiddenException } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
 
-// 등급 계층 구조 정의 (낮은 숫자 = 높은 권한)
+// 등급 계층 구조 정의 (신규 등급 체계, 낮은 숫자 = 높은 권한)
 const GRADE_HIERARCHY = {
   ADMIN: 0,
   CENTER: 1,
-  DIVISION_CHIEF: 2,
-  BRANCH_CHIEF: 3,
-  MANAGER: 4,
-  AGENT: 5,
-  MEMBER: 6,
+  BRANCH_MANAGER: 2,
+  TEAM_LEADER: 3,
+  SALESPERSON: 4,
 };
 
 @Injectable()

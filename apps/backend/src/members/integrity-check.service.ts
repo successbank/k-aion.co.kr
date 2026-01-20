@@ -126,21 +126,11 @@ export class IntegrityCheckService {
       }
     }
 
-    // 추천 계보 순환 검사
-    const recommenderCycles = this.detectCycles(members, 'recommenderId', memberMap);
-    for (const cycle of recommenderCycles) {
-      const member = memberMap.get(cycle[0]);
-      if (member) {
-        violations.push({
-          type: ViolationType.CIRCULAR_REFERENCE,
-          memberId: member.id,
-          memberName: member.name,
-          description: `추천 계보 순환 참조: ${cycle.join(' → ')}`,
-          cycle,
-          treeType: 'recommender',
-        });
-      }
-    }
+    // 추천 계보 순환 검사 비활성화 (추천계보 미사용으로 전환됨)
+    // const recommenderCycles = this.detectCycles(members, 'recommenderId', memberMap);
+    // for (const cycle of recommenderCycles) {
+    //   ...
+    // }
 
     return violations;
   }

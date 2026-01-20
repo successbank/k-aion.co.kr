@@ -30,7 +30,7 @@ interface AddMemberFormValues {
   name: string;
   phone: string;
   sponsorId: number;
-  recommenderId: number;
+  // recommenderId 제거 (후원계보로 전환됨)
   centerName: string;
   postalCode: string;
   address: string;
@@ -88,10 +88,7 @@ export function AddMemberModal({ visible, onCancel, onSuccess }: AddMemberModalP
   const [sponsorOptions, setSponsorOptions] = useState<Member[]>([]);
   const sponsorSearchRef = useRef<NodeJS.Timeout | null>(null);
 
-  // 추천인 검색 상태
-  const [recommenderSearchLoading, setRecommenderSearchLoading] = useState(false);
-  const [recommenderOptions, setRecommenderOptions] = useState<Member[]>([]);
-  const recommenderSearchRef = useRef<NodeJS.Timeout | null>(null);
+  // 추천인 검색 상태 제거 (후원계보로 전환됨)
 
   // 주소 필드 값 추적 (DaumPostcode 컴포넌트에 전달용)
   const watchedPostalCode = Form.useWatch('postalCode', form);
@@ -145,7 +142,7 @@ export function AddMemberModal({ visible, onCancel, onSuccess }: AddMemberModalP
       setUsernameAvailable(null);
       setUsernameCheckMessage('');
       setSponsorOptions([]);
-      setRecommenderOptions([]);
+      // recommenderOptions 제거 (후원계보로 전환됨)
     }
   }, [visible, form]);
 
@@ -185,10 +182,7 @@ export function AddMemberModal({ visible, onCancel, onSuccess }: AddMemberModalP
     searchMembers(value, setSponsorSearchLoading, setSponsorOptions, sponsorSearchRef);
   };
 
-  // 추천인 검색
-  const handleRecommenderSearch = (value: string) => {
-    searchMembers(value, setRecommenderSearchLoading, setRecommenderOptions, recommenderSearchRef);
-  };
+  // 추천인 검색 제거 (후원계보로 전환됨)
 
   // 폼 제출 - membersService를 사용하여 일관된 API 호출 및 에러 처리
   const handleSubmit = async () => {
@@ -208,7 +202,7 @@ export function AddMemberModal({ visible, onCancel, onSuccess }: AddMemberModalP
         name: values.name,
         phone: values.phone,
         sponsorId: values.sponsorId,
-        recommenderId: values.recommenderId,
+        // recommenderId 제거 (후원계보로 전환됨)
         postalCode: values.postalCode,
         address: values.address,
         addressDetail: values.addressDetail,
@@ -228,19 +222,7 @@ export function AddMemberModal({ visible, onCancel, onSuccess }: AddMemberModalP
     }
   };
 
-  // 회원 옵션 렌더링 (추천인용 - 제한 없음)
-  const renderMemberOption = (member: Member) => (
-    <Option key={member.id} value={member.id} label={`${member.name} (${member.username})`}>
-      <div>
-        <div style={{ fontWeight: 500 }}>
-          {member.name} ({member.username})
-        </div>
-        <div style={{ fontSize: '12px', color: '#999' }}>
-          ID: {member.id} | {member.grade}
-        </div>
-      </div>
-    </Option>
-  );
+  // 회원 옵션 렌더링 (추천인용) 제거 - 후원계보로 전환됨
 
   // 후원인 옵션 렌더링 (1:3 제한 적용)
   const renderSponsorOption = (member: Member) => {
@@ -404,50 +386,26 @@ export function AddMemberModal({ visible, onCancel, onSuccess }: AddMemberModalP
         {/* 조직 정보 */}
         <Divider orientation="left">조직 정보</Divider>
 
-        <Row gutter={16}>
-          <Col span={12}>
-            <Form.Item
-              name="sponsorId"
-              label="후원인"
-              rules={[{ required: true, message: '후원인을 선택해주세요' }]}
-            >
-              <Select
-                placeholder="이름 또는 아이디로 검색"
-                showSearch
-                filterOption={false}
-                onSearch={handleSponsorSearch}
-                loading={sponsorSearchLoading}
-                notFoundContent={
-                  sponsorSearchLoading ? <Spin size="small" /> : '검색 결과가 없습니다'
-                }
-                allowClear
-              >
-                {sponsorOptions.map(renderSponsorOption)}
-              </Select>
-            </Form.Item>
-          </Col>
-          <Col span={12}>
-            <Form.Item
-              name="recommenderId"
-              label="추천인"
-              rules={[{ required: true, message: '추천인을 선택해주세요' }]}
-            >
-              <Select
-                placeholder="이름 또는 아이디로 검색"
-                showSearch
-                filterOption={false}
-                onSearch={handleRecommenderSearch}
-                loading={recommenderSearchLoading}
-                notFoundContent={
-                  recommenderSearchLoading ? <Spin size="small" /> : '검색 결과가 없습니다'
-                }
-                allowClear
-              >
-                {recommenderOptions.map(renderMemberOption)}
-              </Select>
-            </Form.Item>
-          </Col>
-        </Row>
+        {/* 추천인 필드 제거 - 후원계보로 전환됨 */}
+        <Form.Item
+          name="sponsorId"
+          label="후원인"
+          rules={[{ required: true, message: '후원인을 선택해주세요' }]}
+        >
+          <Select
+            placeholder="이름 또는 아이디로 검색"
+            showSearch
+            filterOption={false}
+            onSearch={handleSponsorSearch}
+            loading={sponsorSearchLoading}
+            notFoundContent={
+              sponsorSearchLoading ? <Spin size="small" /> : '검색 결과가 없습니다'
+            }
+            allowClear
+          >
+            {sponsorOptions.map(renderSponsorOption)}
+          </Select>
+        </Form.Item>
 
         <Form.Item
           name="centerName"

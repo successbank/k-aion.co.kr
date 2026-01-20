@@ -6,8 +6,8 @@ import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 export class CreateTierDto {
   @ApiProperty({
     enum: MemberGrade,
-    description: '적용 가능한 회원 등급',
-    example: MemberGrade.MANAGER,
+    description: '적용 가능한 회원 등급 (신규 등급 체계)',
+    example: MemberGrade.TEAM_LEADER,
   })
   @IsEnum(MemberGrade)
   applicableGrade: MemberGrade;

@@ -3,7 +3,7 @@ import { PrismaService } from '../prisma/prisma.service';
 import { MemberGrade } from '@prisma/client';
 
 /**
- * 계보 관리 서비스
+ * 계보 관리 서비스 (신규 등급 체계)
  * 추천계보(1:N) 및 후원계보(3팀) 관리
  */
 @Injectable()
@@ -93,40 +93,20 @@ export class GenealogyService {
 
   /**
    * 추천계보 통계
+   * @deprecated 추천계보는 더 이상 사용하지 않습니다. 후원계보(getTeamStatistics)를 사용하세요.
    */
   async getRecommenderStatistics(recommenderId: number) {
-    const recommendees = await this.prisma.member.findMany({
-      where: {
-        recommenderId,
-        isActive: true,
-      },
-      select: {
-        id: true,
-        name: true,
-        email: true,
-        grade: true,
-        cumulativePv: true,
-        createdAt: true,
-      },
-      orderBy: { createdAt: 'asc' },
-    });
-
-    const totalPv = recommendees.reduce((sum, m) => sum + m.cumulativePv, 0);
-
-    const gradeDistribution = recommendees.reduce(
-      (acc, m) => {
-        acc[m.grade] = (acc[m.grade] || 0) + 1;
-        return acc;
-      },
-      {} as Record<MemberGrade, number>,
+    // 추천계보는 더 이상 사용하지 않음 - 빈 결과 반환
+    this.logger.warn(
+      `[DEPRECATED] getRecommenderStatistics 호출됨 (recommenderId: ${recommenderId}). 추천계보는 더 이상 사용하지 않습니다.`,
     );
 
     return {
       recommenderId,
-      totalRecommendees: recommendees.length,
-      totalPv,
-      gradeDistribution,
-      recommendees,
+      totalRecommendees: 0,
+      totalPv: 0,
+      gradeDistribution: {} as Record<MemberGrade, number>,
+      recommendees: [],
     };
   }
 
@@ -332,12 +312,12 @@ export class GenealogyService {
     depth: number = 100,
     treeType: 'sponsor' | 'recommender' = 'sponsor',
   ): Promise<
-    Array<{ id: number; name: string; email: string; grade: MemberGrade; level: number }>
+    Array<{ id: number; name: string; email: string | null; grade: MemberGrade; level: number }>
   > {
     const upline: Array<{
       id: number;
       name: string;
-      email: string;
+      email: string | null;
       grade: MemberGrade;
       level: number;
     }> = [];
@@ -397,11 +377,8 @@ export class GenealogyService {
   }
 
   /**
-   * 판권보너스 자격 확인용 팀별 등급 통계
+   * 팀별 등급 통계 (신규 등급 체계)
    * 후원계보(SPONSOR) 기준 3팀의 등급별 회원 수 계산
-   *
-   * @param sponsorId 후원인 ID
-   * @returns 팀별 등급 분포 및 전체 합계
    */
   async getTeamGradeStatisticsForQualification(sponsorId: number) {
     const teamStats = await Promise.all(
@@ -417,10 +394,10 @@ export class GenealogyService {
 
         return {
           teamLine,
-          agentCount: members.filter((m) => m.grade === MemberGrade.AGENT).length,
-          managerCount: members.filter((m) => m.grade === MemberGrade.MANAGER).length,
-          branchChiefCount: members.filter((m) => m.grade === MemberGrade.BRANCH_CHIEF).length,
-          divisionChiefCount: members.filter((m) => m.grade === MemberGrade.DIVISION_CHIEF).length,
+          salespersonCount: members.filter((m) => m.grade === MemberGrade.SALESPERSON).length,
+          teamLeaderCount: members.filter((m) => m.grade === MemberGrade.TEAM_LEADER).length,
+          branchManagerCount: members.filter((m) => m.grade === MemberGrade.BRANCH_MANAGER).length,
+          centerCount: members.filter((m) => m.grade === MemberGrade.CENTER).length,
         };
       }),
     );
@@ -428,10 +405,10 @@ export class GenealogyService {
     return {
       teams: teamStats,
       totals: {
-        agentCount: teamStats.reduce((sum, t) => sum + t.agentCount, 0),
-        managerCount: teamStats.reduce((sum, t) => sum + t.managerCount, 0),
-        branchChiefCount: teamStats.reduce((sum, t) => sum + t.branchChiefCount, 0),
-        divisionChiefCount: teamStats.reduce((sum, t) => sum + t.divisionChiefCount, 0),
+        salespersonCount: teamStats.reduce((sum, t) => sum + t.salespersonCount, 0),
+        teamLeaderCount: teamStats.reduce((sum, t) => sum + t.teamLeaderCount, 0),
+        branchManagerCount: teamStats.reduce((sum, t) => sum + t.branchManagerCount, 0),
+        centerCount: teamStats.reduce((sum, t) => sum + t.centerCount, 0),
       },
     };
   }
@@ -529,9 +506,6 @@ export class GenealogyService {
 
   /**
    * ADMIN 전용: 모든 최상위 회원의 계보 조회
-   * @param treeType 'recommender' | 'sponsor'
-   * @param depth 조회 깊이 (기본 10)
-   * @returns 모든 루트 회원들의 트리 배열
    */
   async getAllOrganizationTrees(
     treeType: 'sponsor' | 'recommender',
@@ -544,10 +518,7 @@ export class GenealogyService {
         : { recommenderId: null, isActive: true };
 
     const topLevelMembers = await this.prisma.member.findMany({
-      where: {
-        ...whereClause,
-        // ADMIN도 포함하여 ADMIN 하위의 CENTER 등 회원들이 표시되도록 함
-      },
+      where: whereClause,
       select: {
         id: true,
         name: true,
