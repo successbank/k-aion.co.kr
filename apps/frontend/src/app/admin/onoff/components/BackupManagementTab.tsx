@@ -19,7 +19,6 @@ import {
   message,
 } from 'antd';
 import {
-  CloudServerOutlined,
   CloudUploadOutlined,
   CloudDownloadOutlined,
   DeleteOutlined,
@@ -36,22 +35,19 @@ import {
   CalendarOutlined,
 } from '@ant-design/icons';
 import type { ColumnsType } from 'antd/es/table';
-import DashboardLayout from '@/components/Layout/DashboardLayout';
 import { backupService } from '@/services/backup.service';
 import {
   BackupFile,
   BackupStatus,
   BackupLogItem,
   OperationLabels,
-  StatusLabels,
   BackupOperation,
   BackupLogStatus,
 } from '@/types/backup';
 
-const { Title, Text, Paragraph } = Typography;
-const { TabPane } = Tabs;
+const { Text } = Typography;
 
-export default function BackupPage() {
+export default function BackupManagementTab() {
   const [loading, setLoading] = useState(false);
   const [backupList, setBackupList] = useState<BackupFile[]>([]);
   const [status, setStatus] = useState<BackupStatus | null>(null);
@@ -389,18 +385,7 @@ export default function BackupPage() {
   ];
 
   return (
-    <DashboardLayout>
-      <div>
-        <div style={{ marginBottom: '24px' }}>
-          <Title level={2} style={{ margin: 0 }}>
-            <CloudServerOutlined style={{ marginRight: '12px' }} />
-            백업/복구 관리
-          </Title>
-        <Paragraph type="secondary" style={{ marginTop: '8px' }}>
-          데이터베이스 백업 및 복구를 관리합니다. 매일 새벽 2시에 자동 백업이 실행됩니다.
-        </Paragraph>
-      </div>
-
+    <div>
       {/* 상태 대시보드 */}
       {status && (
         <Card style={{ marginBottom: '24px' }}>
@@ -467,101 +452,103 @@ export default function BackupPage() {
 
       {/* 탭 콘텐츠 */}
       <Card>
-        <Tabs defaultActiveKey="backups">
-          <TabPane
-            tab={
-              <span>
-                <DatabaseOutlined />
-                백업 목록 ({backupList.length})
-              </span>
-            }
-            key="backups"
-          >
-            {backupList.length > 0 ? (
-              <Table
-                columns={backupColumns}
-                dataSource={backupList.map((b) => ({ ...b, key: b.filename }))}
-                pagination={{
-                  pageSize: 10,
-                  showSizeChanger: true,
-                  showTotal: (total) => `총 ${total}개`,
-                }}
-                scroll={{ x: 800 }}
-                size="small"
-              />
-            ) : (
-              <Empty description="백업 파일이 없습니다" />
-            )}
-          </TabPane>
-
-          <TabPane
-            tab={
-              <span>
-                <HistoryOutlined />
-                작업 이력
-              </span>
-            }
-            key="logs"
-          >
-            <Table
-              columns={logColumns}
-              dataSource={logs.map((l) => ({ ...l, key: l.id }))}
-              loading={logsLoading}
-              pagination={{
-                ...logsPagination,
-                onChange: (page) => fetchLogs(page),
-                showTotal: (total) => `총 ${total}건`,
-              }}
-              scroll={{ x: 900 }}
-              size="small"
-            />
-          </TabPane>
-
-          <TabPane
-            tab={
-              <span>
-                <InfoCircleOutlined />
-                안내
-              </span>
-            }
-            key="guide"
-          >
-            <Row gutter={[16, 16]}>
-              <Col span={12}>
-                <Card size="small" title="자동 백업">
-                  <Space direction="vertical" style={{ width: '100%' }}>
-                    <Text>매일 새벽 2시에 자동으로 데이터베이스 백업이 생성됩니다.</Text>
-                    <Text>{status?.retentionDays || 30}일 이상 된 백업 파일은 자동으로 삭제됩니다.</Text>
-                  </Space>
-                </Card>
-              </Col>
-              <Col span={12}>
-                <Card size="small" title="수동 백업">
-                  <Space direction="vertical" style={{ width: '100%' }}>
-                    <Text>"백업 생성" 버튼을 클릭하여 즉시 백업을 생성할 수 있습니다.</Text>
-                    <Text>중요한 작업 전에 수동 백업을 권장합니다.</Text>
-                  </Space>
-                </Card>
-              </Col>
-              <Col span={12}>
-                <Card size="small" title="복구">
-                  <Space direction="vertical" style={{ width: '100%' }}>
-                    <Text>백업 파일을 선택하여 데이터베이스를 복구할 수 있습니다.</Text>
-                    <Text type="warning">복구 시 현재 데이터가 교체되며, 안전 백업이 자동 생성됩니다.</Text>
-                  </Space>
-                </Card>
-              </Col>
-              <Col span={12}>
-                <Card size="small" title="다운로드">
-                  <Space direction="vertical" style={{ width: '100%' }}>
-                    <Text>백업 파일을 로컬로 다운로드할 수 있습니다.</Text>
-                    <Text>파일 형식: .sql.gz (gzip 압축된 SQL 덤프)</Text>
-                  </Space>
-                </Card>
-              </Col>
-            </Row>
-          </TabPane>
-        </Tabs>
+        <Tabs
+          defaultActiveKey="backups"
+          items={[
+            {
+              key: 'backups',
+              label: (
+                <span>
+                  <DatabaseOutlined />
+                  백업 목록 ({backupList.length})
+                </span>
+              ),
+              children: backupList.length > 0 ? (
+                <Table
+                  columns={backupColumns}
+                  dataSource={backupList.map((b) => ({ ...b, key: b.filename }))}
+                  pagination={{
+                    pageSize: 10,
+                    showSizeChanger: true,
+                    showTotal: (total) => `총 ${total}개`,
+                  }}
+                  scroll={{ x: 800 }}
+                  size="small"
+                />
+              ) : (
+                <Empty description="백업 파일이 없습니다" />
+              ),
+            },
+            {
+              key: 'logs',
+              label: (
+                <span>
+                  <HistoryOutlined />
+                  작업 이력
+                </span>
+              ),
+              children: (
+                <Table
+                  columns={logColumns}
+                  dataSource={logs.map((l) => ({ ...l, key: l.id }))}
+                  loading={logsLoading}
+                  pagination={{
+                    ...logsPagination,
+                    onChange: (page) => fetchLogs(page),
+                    showTotal: (total) => `총 ${total}건`,
+                  }}
+                  scroll={{ x: 900 }}
+                  size="small"
+                />
+              ),
+            },
+            {
+              key: 'guide',
+              label: (
+                <span>
+                  <InfoCircleOutlined />
+                  안내
+                </span>
+              ),
+              children: (
+                <Row gutter={[16, 16]}>
+                  <Col span={12}>
+                    <Card size="small" title="자동 백업">
+                      <Space direction="vertical" style={{ width: '100%' }}>
+                        <Text>매일 새벽 2시에 자동으로 데이터베이스 백업이 생성됩니다.</Text>
+                        <Text>{status?.retentionDays || 30}일 이상 된 백업 파일은 자동으로 삭제됩니다.</Text>
+                      </Space>
+                    </Card>
+                  </Col>
+                  <Col span={12}>
+                    <Card size="small" title="수동 백업">
+                      <Space direction="vertical" style={{ width: '100%' }}>
+                        <Text>"백업 생성" 버튼을 클릭하여 즉시 백업을 생성할 수 있습니다.</Text>
+                        <Text>중요한 작업 전에 수동 백업을 권장합니다.</Text>
+                      </Space>
+                    </Card>
+                  </Col>
+                  <Col span={12}>
+                    <Card size="small" title="복구">
+                      <Space direction="vertical" style={{ width: '100%' }}>
+                        <Text>백업 파일을 선택하여 데이터베이스를 복구할 수 있습니다.</Text>
+                        <Text type="warning">복구 시 현재 데이터가 교체되며, 안전 백업이 자동 생성됩니다.</Text>
+                      </Space>
+                    </Card>
+                  </Col>
+                  <Col span={12}>
+                    <Card size="small" title="다운로드">
+                      <Space direction="vertical" style={{ width: '100%' }}>
+                        <Text>백업 파일을 로컬로 다운로드할 수 있습니다.</Text>
+                        <Text>파일 형식: .sql.gz (gzip 압축된 SQL 덤프)</Text>
+                      </Space>
+                    </Card>
+                  </Col>
+                </Row>
+              ),
+            },
+          ]}
+        />
       </Card>
 
       {/* 복구 확인 모달 */}
@@ -623,7 +610,6 @@ export default function BackupPage() {
         </p>
         <p style={{ color: '#ff4d4f' }}>삭제된 파일은 복구할 수 없습니다.</p>
       </Modal>
-      </div>
-    </DashboardLayout>
+    </div>
   );
 }

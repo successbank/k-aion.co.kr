@@ -27,6 +27,7 @@ import { AllExceptionsFilter } from './common/filters/all-exceptions.filter';
 import { ScheduleModule } from '@nestjs/schedule';
 import { TasksModule } from './tasks/tasks.module';
 import { BackupModule } from './backup/backup.module';
+import { SystemConfigModule } from './system-config/system-config.module';
 
 @Module({
   imports: [
@@ -58,6 +59,7 @@ import { BackupModule } from './backup/backup.module';
     ScheduleModule.forRoot(),
     TasksModule,
     BackupModule,
+    SystemConfigModule,
   ],
   controllers: [AppController],
   providers: [

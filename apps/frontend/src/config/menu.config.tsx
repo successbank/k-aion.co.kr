@@ -186,6 +186,7 @@ export const adminMenuItems: MenuItem[] = [
   ]),
   createMenuGroup('제품 & 판매', [
     { key: '/admin/products', icon: <ShoppingCartOutlined />, label: '제품 관리' },
+    { key: '/admin/sales/stats', icon: <BarChartOutlined />, label: '판매 통계' },
     { key: '/admin/sales', icon: <ShoppingOutlined />, label: '판매 관리' },
   ]),
   createMenuGroup('수당 & 정산', [
@@ -202,8 +203,7 @@ export const adminMenuItems: MenuItem[] = [
     { key: '/admin/seminars', icon: <BookOutlined />, label: '세미나 관리' },
     { key: '/admin/integrity-check', icon: <SafetyOutlined />, label: '무결성 검사' },
     { key: '/admin/settings', icon: <ControlOutlined />, label: '시스템 설정' },
-    { key: '/admin/logs', icon: <DatabaseOutlined />, label: '로그 관리' },
-    { key: '/admin/backup', icon: <SafetyOutlined />, label: '백업/복구' },
+    { key: '/admin/onoff', icon: <SettingOutlined />, label: '시스템 관리' },
   ]),
   createMenuGroup('내 정보', [
     { key: '/profile', icon: <UserOutlined />, label: '프로필' },
@@ -270,6 +270,7 @@ export const pageTitles: Record<string, string> = {
   '/admin/organization': '조직도 관리',
   '/admin/products': '제품 관리',
   '/admin/sales': '판매 관리',
+  '/admin/sales/stats': '판매 통계',
   '/admin/bonuses': '수당 관리',
   '/admin/bonuses/history': '보너스 이력 조회',
   '/admin/settlements': '정산 관리',
@@ -279,6 +280,5 @@ export const pageTitles: Record<string, string> = {
   '/admin/seminars': '세미나 관리',
   '/admin/integrity-check': '무결성 검사',
   '/admin/settings': '시스템 설정',
-  '/admin/logs': '로그 관리',
-  '/admin/backup': '백업/복구',
+  '/admin/onoff': '시스템 관리',
 };
