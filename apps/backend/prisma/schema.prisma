@@ -1,0 +1,559 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Member {
+  id                   Int          @id @default(autoincrement())
+  username             String       @unique @db.VarChar(50)
+  email                String?      @db.VarChar(255)
+  password             String       @db.VarChar(255)
+  name                 String       @db.VarChar(100)
+  phone                String?      @db.VarChar(20)
+  birthDate            DateTime?    @map("birth_date") @db.Date
+  grade                MemberGrade  @default(MEMBER)
+  recommenderId        Int?         @map("recommender_id")
+  sponsorId            Int?         @map("sponsor_id")
+  // 팀라인: 1, 2, 3만 허용 (1:3 규칙)
+  // DB CHECK 제약조건: ALTER TABLE members ADD CONSTRAINT chk_team_line CHECK (team_line IS NULL OR (team_line >= 1 AND team_line <= 3));
+  teamLine             Int?         @map("team_line")
+  cumulativePv         Int          @default(0) @map("cumulative_pv")
+  agentPromotedAt      DateTime?    @map("agent_promoted_at")
+  bankName             String?      @map("bank_name") @db.VarChar(50)
+  accountNumber        String?      @map("account_number") @db.VarChar(50)
+  accountHolder        String?      @map("account_holder") @db.VarChar(100)
+  postalCode           String?      @map("postal_code") @db.VarChar(10)
+  address              String?      @db.VarChar(255)
+  addressDetail        String?      @map("address_detail") @db.VarChar(255)
+  centerName           String?      @map("center_name") @db.VarChar(100)
+  isActive             Boolean      @default(true) @map("is_active")
+  emailVerified        Boolean      @default(false) @map("email_verified")
+  createdAt            DateTime     @default(now()) @map("created_at")
+  updatedAt            DateTime     @updatedAt @map("updated_at")
+  deletedAt            DateTime?    @map("deleted_at")
+  bonuses              Bonus[]             @relation("MemberBonuses")
+  recommender          Member?             @relation("RecommenderTree", fields: [recommenderId], references: [id])
+  recommendees         Member[]            @relation("RecommenderTree")
+  sponsor              Member?             @relation("SponsorTree", fields: [sponsorId], references: [id])
+  sponsorees           Member[]            @relation("SponsorTree")
+  sales                Sale[]              @relation("SellerSales")
+  recognizedSales      Sale[]              @relation("RecognizedSales")
+  hostedSeminars       Seminar[]           @relation("SeminarHost")
+  confirmedSettlements Settlement[]        @relation("SettlementConfirmer")
+  cultivatedMembers    CultivationRecord[] @relation("MemberAsCultivator")
+  cultivatedBy         CultivationRecord[] @relation("MemberAsCultivated")
+  recognizedSalesRecords    RecognizedSales[]  @relation("RecognizedMember")
+  createdRecognitions       RecognizedSales[]  @relation("RecognizedSalesCreator")
+  deactivatedRecognitions   RecognizedSales[]  @relation("RecognizedSalesDeactivator")
+  orders                    Order[]
+  activityLogs              ActivityLog[]
+  backupLogs                BackupLog[]   @relation("BackupExecutor")
+
+  @@index([username])
+  @@index([email])
+  @@index([grade])
+  @@index([recommenderId])
+  @@index([sponsorId])
+  @@index([sponsorId, teamLine])
+  @@index([isActive])
+  @@index([grade, createdAt])
+  @@map("members")
+}
+
+model Category {
+  name         String     @db.VarChar(100)
+  createdAt    DateTime   @default(now()) @map("created_at")
+  deletedAt    DateTime?  @map("deleted_at")
+  displayOrder Int        @default(0) @map("display_order")
+  level        Int
+  parentId     Int?       @map("parent_id")
+  updatedAt    DateTime   @updatedAt @map("updated_at")
+  id           Int        @id @default(autoincrement())
+  parent       Category?  @relation("CategoryHierarchy", fields: [parentId], references: [id], onDelete: Cascade)
+  children     Category[] @relation("CategoryHierarchy")
+  products     Product[]
+
+  @@index([parentId])
+  @@index([level])
+  @@map("categories")
+}
+
+model Product {
+  code        String    @unique @db.VarChar(50)
+  name        String    @db.VarChar(200)
+  description String?   @db.Text
+  price       Int
+  pv          Int
+  stock       Int       @default(0)
+  categoryId  Int       @map("category_id")
+  createdAt   DateTime  @default(now()) @map("created_at")
+  deletedAt   DateTime? @map("deleted_at")
+  imageUrl    String?   @map("image_url") @db.VarChar(500)
+  isActive    Boolean   @default(true) @map("is_active")
+  minStock    Int       @default(0) @map("min_stock")
+  updatedAt   DateTime  @updatedAt @map("updated_at")
+  id          Int       @id @default(autoincrement())
+  category    Category    @relation(fields: [categoryId], references: [id])
+  sales       Sale[]
+  orderItems  OrderItem[]
+
+  @@index([categoryId])
+  @@index([code])
+  @@index([isActive])
+  @@map("products")
+}
+
+model Sale {
+  quantity         Int          @default(1)
+  createdAt        DateTime     @default(now()) @map("created_at")
+  productId        Int          @map("product_id")
+  saleCode         String       @unique @map("sale_code") @db.VarChar(50)
+  sellerId         Int          @map("seller_id")
+  settlementId     Int?         @map("settlement_id")
+  soldAt           DateTime     @default(now()) @map("sold_at")
+  status           SaleStatus   @default(PENDING)
+  totalPrice       Int          @map("total_price")
+  totalPv          Int          @map("total_pv")
+  unitPrice        Int          @map("unit_price")
+  unitPv           Int          @map("unit_pv")
+  updatedAt        DateTime     @updatedAt @map("updated_at")
+  weekCode         String       @map("week_code") @db.VarChar(10)
+  id               Int          @id @default(autoincrement())
+  // 인정매출 관련 필드
+  isRecognizedSale Boolean      @default(false) @map("is_recognized_sale")
+  recognizedGrade  MemberGrade? @map("recognized_grade")
+  recognizedBy     Int?         @map("recognized_by")
+  recognizedAt     DateTime?    @map("recognized_at")
+  description      String?      @db.Text
+  // 관계
+  bonuses          Bonus[]
+  product          Product      @relation(fields: [productId], references: [id])
+  seller           Member       @relation("SellerSales", fields: [sellerId], references: [id])
+  settlement       Settlement?  @relation(fields: [settlementId], references: [id])
+  recognizer       Member?      @relation("RecognizedSales", fields: [recognizedBy], references: [id])
+
+  @@index([sellerId])
+  @@index([weekCode])
+  @@index([settlementId])
+  @@index([status])
+  @@index([soldAt])
+  @@index([sellerId, weekCode])
+  @@index([weekCode, status])
+  @@index([isRecognizedSale])
+  @@map("sales")
+}
+
+model Bonus {
+  id               Int         @id @default(autoincrement())
+  memberId         Int         @map("member_id")
+  saleId           Int?        @map("sale_id")
+  seminarId        Int?        @map("seminar_id")
+  bonusType        BonusType   @map("bonus_type")
+  amount           Int
+  description      String?
+  calculationBasis String?     @map("calculation_basis")
+  weekCode         String      @map("week_code") @db.VarChar(10)
+  settlementId     Int?        @map("settlement_id")
+  status           BonusStatus @default(PENDING)
+  createdAt        DateTime    @default(now()) @map("created_at")
+  updatedAt        DateTime    @updatedAt @map("updated_at")
+  member           Member      @relation("MemberBonuses", fields: [memberId], references: [id], onDelete: Cascade)
+  sale             Sale?       @relation(fields: [saleId], references: [id])
+  seminar          Seminar?    @relation(fields: [seminarId], references: [id])
+  settlement       Settlement? @relation(fields: [settlementId], references: [id])
+
+  @@index([memberId])
+  @@index([weekCode])
+  @@index([settlementId])
+  @@index([seminarId])
+  @@index([bonusType])
+  @@index([status])
+  @@index([memberId, weekCode])
+  @@map("bonuses")
+}
+
+model Settlement {
+  id           Int              @id @default(autoincrement())
+  weekCode     String           @unique @map("week_code") @db.VarChar(10)
+  startDate    DateTime         @map("start_date") @db.Date
+  endDate      DateTime         @map("end_date") @db.Date
+  totalSales   Int              @default(0) @map("total_sales")
+  totalPv      Int              @default(0) @map("total_pv")
+  totalBonuses Int              @default(0) @map("total_bonuses")
+  status       SettlementStatus @default(OPEN)
+  calculatedAt DateTime?        @map("calculated_at")
+  confirmedAt  DateTime?        @map("confirmed_at")
+  paidAt       DateTime?        @map("paid_at")
+  confirmedBy  Int?             @map("confirmed_by")
+  createdAt    DateTime         @default(now()) @map("created_at")
+  updatedAt    DateTime         @updatedAt @map("updated_at")
+  bonuses      Bonus[]
+  sales        Sale[]
+  confirmer    Member?          @relation("SettlementConfirmer", fields: [confirmedBy], references: [id])
+
+  @@index([weekCode])
+  @@index([status])
+  @@index([startDate, endDate])
+  @@map("settlements")
+}
+
+model Seminar {
+  id                Int      @id @default(autoincrement())
+  hostId            Int      @map("host_id")
+  title             String   @db.VarChar(200)
+  description       String?
+  location          String   @db.VarChar(255)
+  hasOffice         Boolean  @default(false) @map("has_office")
+  hasEquipment      Boolean  @default(false) @map("has_equipment")
+  participantsCount Int      @default(0) @map("participants_count")
+  heldAt            DateTime @map("held_at")
+  isApproved        Boolean  @default(false) @map("is_approved")
+  approvedAt        DateTime? @map("approved_at")
+  createdAt         DateTime @default(now()) @map("created_at")
+  updatedAt         DateTime @updatedAt @map("updated_at")
+  host              Member   @relation("SeminarHost", fields: [hostId], references: [id])
+  bonuses           Bonus[]
+
+  @@index([hostId])
+  @@index([heldAt])
+  @@map("seminars")
+}
+
+model CultivationRecord {
+  id                  Int         @id @default(autoincrement())
+  cultivatorId        Int         @map("cultivator_id")
+  cultivatedMemberId  Int         @map("cultivated_member_id")
+  achievedGrade       MemberGrade @map("achieved_grade")
+  treeType            TreeType    @map("tree_type")
+  qualificationCount  Int         @default(1) @map("qualification_count")
+  achievedAt          DateTime    @default(now()) @map("achieved_at")
+  teamNumber          Int?        @map("team_number")
+  createdAt           DateTime    @default(now()) @map("created_at")
+  updatedAt           DateTime    @updatedAt @map("updated_at")
+  cultivator          Member      @relation("MemberAsCultivator", fields: [cultivatorId], references: [id], onDelete: Cascade)
+  cultivatedMember    Member      @relation("MemberAsCultivated", fields: [cultivatedMemberId], references: [id], onDelete: Cascade)
+
+  @@unique([cultivatorId, cultivatedMemberId, achievedGrade, treeType])
+  @@index([cultivatorId])
+  @@index([cultivatedMemberId])
+  @@index([achievedGrade])
+  @@index([treeType])
+  @@index([achievedAt])
+  @@index([cultivatorId, treeType])
+  @@map("cultivation_records")
+}
+
+model CommissionRate {
+  id                  Int                       @id @default(autoincrement())
+  bonusType           BonusType                 @map("bonus_type")
+  name                String                    @db.VarChar(100)
+  nameKo              String                    @map("name_ko") @db.VarChar(100)
+  description         String?                   @db.Text
+
+  // 금액 설정
+  baseAmount          Int?                      @map("base_amount")
+  basePercentage      Decimal?                  @map("base_percentage") @db.Decimal(5,2)
+  basePv              Int                       @default(2000000) @map("base_pv")
+
+  // 설정 플래그
+  isGradeTiered       Boolean                   @default(false) @map("is_grade_tiered")
+  isSameRankOnly      Boolean                   @default(false) @map("is_same_rank_only")
+  isFirstGenOnly      Boolean                   @default(false) @map("is_first_gen_only")
+  isDifferential      Boolean                   @default(false) @map("is_differential")
+
+  // 센터 운영 보너스 모드 (BRANCH_OPERATION 타입에만 적용)
+  centerBonusMode     CenterBonusMode?          @map("center_bonus_mode")
+
+  // 버전 관리
+  version             Int                       @default(1)
+  isActive            Boolean                   @default(true) @map("is_active")
+  effectiveFrom       DateTime                  @default(now()) @map("effective_from")
+  effectiveTo         DateTime?                 @map("effective_to")
+
+  // 감사
+  createdAt           DateTime                  @default(now()) @map("created_at")
+  updatedAt           DateTime                  @updatedAt @map("updated_at")
+  createdBy           Int?                      @map("created_by")
+  updatedBy           Int?                      @map("updated_by")
+
+  // 관계
+  tiers               CommissionRateTier[]
+  qualifications      CommissionQualification[]
+
+  @@unique([bonusType, version, isActive])
+  @@index([bonusType, isActive])
+  @@index([bonusType, isActive, effectiveFrom])
+  @@map("commission_rates")
+}
+
+model CommissionRateTier {
+  id                  Int             @id @default(autoincrement())
+  commissionRateId    Int             @map("commission_rate_id")
+  applicableGrade     MemberGrade     @map("applicable_grade")
+  amount              Int
+  percentage          Decimal?        @db.Decimal(5,2)
+  tierOrder           Int             @default(0) @map("tier_order")
+  createdAt           DateTime        @default(now()) @map("created_at")
+  updatedAt           DateTime        @updatedAt @map("updated_at")
+
+  commissionRate      CommissionRate  @relation(fields: [commissionRateId], references: [id], onDelete: Cascade)
+
+  @@unique([commissionRateId, applicableGrade])
+  @@index([commissionRateId])
+  @@map("commission_rate_tiers")
+}
+
+model CommissionQualification {
+  id                  Int                 @id @default(autoincrement())
+  commissionRateId    Int                 @map("commission_rate_id")
+  qualificationType   QualificationType   @map("qualification_type")
+
+  // 자격 파라미터
+  requiredGrade       MemberGrade?        @map("required_grade")
+  requiredCount       Int?                @map("required_count")
+  requiredTeamCount   Int?                @map("required_team_count")
+  minMembersPerTeam   Int?                @map("min_members_per_team")
+
+  // 시설 요구사항
+  requiresOffice      Boolean             @default(false) @map("requires_office")
+  requiresSeminar     Boolean             @default(false) @map("requires_seminar")
+  requiresCorporation Boolean             @default(false) @map("requires_corporation")
+  requiresTV          Boolean             @default(false) @map("requires_tv")
+
+  createdAt           DateTime            @default(now()) @map("created_at")
+  updatedAt           DateTime            @updatedAt @map("updated_at")
+
+  commissionRate      CommissionRate      @relation(fields: [commissionRateId], references: [id], onDelete: Cascade)
+
+  @@index([commissionRateId])
+  @@map("commission_qualifications")
+}
+
+enum MemberGrade {
+  MEMBER
+  AGENT
+  MANAGER
+  BRANCH_CHIEF
+  DIVISION_CHIEF
+  CENTER
+  ADMIN
+}
+
+enum SaleStatus {
+  PENDING
+  CONFIRMED
+  SETTLED
+  CANCELLED
+}
+
+enum BonusType {
+  SALES
+  SALES_MANAGEMENT
+  LICENSE
+  LICENSE_MANAGEMENT
+  SHARING
+  BRANCH_OPERATION
+}
+
+enum BonusStatus {
+  PENDING
+  CONFIRMED
+  PAID
+  CANCELLED
+}
+
+enum SettlementStatus {
+  OPEN
+  CALCULATING
+  CALCULATED
+  CONFIRMED
+  PAID
+  CLOSED
+}
+
+enum TreeType {
+  RECOMMENDER
+  SPONSOR
+}
+
+enum QualificationType {
+  MINIMUM_GRADE
+  TEAM_COUNT
+  MIN_GRADE_COUNT
+  MIN_MEMBERS_PER_TEAM
+  OFFICE_FACILITY
+  SAME_RANK_ONLY
+  FIRST_GEN_ONLY
+}
+
+// 센터 운영 보너스 발생 모드
+enum CenterBonusMode {
+  PER_SALE  // 건별: 매출 건당 보너스 발생
+  MONTHLY   // 월별: 월 1회 (해당 월 매출 발생 시)
+}
+
+enum RecognizedSalesStatus {
+  ACTIVE
+  EXPIRED
+  CANCELLED
+}
+
+enum RecognitionType {
+  GRADE      // 등급 인정 (SHARING 보너스용)
+  LICENSE    // 판권 인정 (LICENSE 보너스 팀 조건 우회)
+}
+
+model RecognizedSales {
+  id                Int                    @id @default(autoincrement())
+  memberId          Int                    @map("member_id")
+  recognizedGrade   MemberGrade            @map("recognized_grade")
+  recognitionType   RecognitionType        @default(GRADE) @map("recognition_type")
+  status            RecognizedSalesStatus  @default(ACTIVE)
+  reason            String?                @db.Text
+
+  // 기간
+  startDate         DateTime               @map("start_date") @db.Date
+  endDate           DateTime?              @map("end_date") @db.Date
+
+  // 감사
+  createdBy         Int                    @map("created_by")
+  createdAt         DateTime               @default(now()) @map("created_at")
+  updatedAt         DateTime               @updatedAt @map("updated_at")
+  deactivatedAt     DateTime?              @map("deactivated_at")
+  deactivatedBy     Int?                   @map("deactivated_by")
+
+  // 관계
+  member            Member                 @relation("RecognizedMember", fields: [memberId], references: [id])
+  creator           Member                 @relation("RecognizedSalesCreator", fields: [createdBy], references: [id])
+  deactivator       Member?                @relation("RecognizedSalesDeactivator", fields: [deactivatedBy], references: [id])
+
+  @@unique([memberId, recognizedGrade, recognitionType, status])
+  @@index([memberId])
+  @@index([status])
+  @@index([recognitionType])
+  @@index([startDate, endDate])
+  @@map("recognized_sales")
+}
+
+model TempMember {
+  id              Int       @id @default(autoincrement())
+  username        String    @unique @db.VarChar(50)
+  name            String    @db.VarChar(100)
+  residentNumber  String    @map("resident_number") @db.VarChar(14)
+  phone           String    @db.VarChar(20)
+  postalCode      String?   @map("postal_code") @db.VarChar(10)
+  address         String?   @db.VarChar(255)
+  addressDetail   String?   @map("address_detail") @db.VarChar(255)
+  bankName        String?   @map("bank_name") @db.VarChar(50)
+  accountNumber   String?   @map("account_number") @db.VarChar(50)
+  accountHolder   String?   @map("account_holder") @db.VarChar(100)
+  recommenderPhone String?  @map("recommender_phone") @db.VarChar(20)
+  sponsorPhone    String?   @map("sponsor_phone") @db.VarChar(20)
+  centerName      String?   @map("center_name") @db.VarChar(100)
+  password        String    @db.VarChar(255)
+  isMigrated      Boolean   @default(false) @map("is_migrated")
+  createdAt       DateTime  @default(now()) @map("created_at")
+  updatedAt       DateTime  @updatedAt @map("updated_at")
+
+  @@index([username])
+  @@index([phone])
+  @@index([isMigrated])
+  @@map("temp_members")
+}
+
+// 재구매 주문
+model Order {
+  id            Int         @id @default(autoincrement())
+  orderCode     String      @unique @map("order_code") @db.VarChar(50)
+  memberId      Int         @map("member_id")
+  totalPrice    Int         @map("total_price")
+  totalPv       Int         @map("total_pv")
+  status        OrderStatus @default(PENDING)
+  paymentMethod String      @default("BANK_TRANSFER") @map("payment_method") @db.VarChar(50)
+  note          String?     @db.Text
+  createdAt     DateTime    @default(now()) @map("created_at")
+  updatedAt     DateTime    @updatedAt @map("updated_at")
+  confirmedAt   DateTime?   @map("confirmed_at")
+  member        Member      @relation(fields: [memberId], references: [id])
+  items         OrderItem[]
+
+  @@index([memberId])
+  @@index([status])
+  @@index([createdAt])
+  @@index([orderCode])
+  @@map("orders")
+}
+
+model OrderItem {
+  id        Int     @id @default(autoincrement())
+  orderId   Int     @map("order_id")
+  productId Int     @map("product_id")
+  quantity  Int
+  unitPrice Int     @map("unit_price")
+  unitPv    Int     @map("unit_pv")
+  order     Order   @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  product   Product @relation(fields: [productId], references: [id])
+
+  @@index([orderId])
+  @@index([productId])
+  @@map("order_items")
+}
+
+enum OrderStatus {
+  PENDING    // 입금 대기
+  CONFIRMED  // 입금 확인
+  COMPLETED  // 완료
+  CANCELLED  // 취소
+}
+
+// 활동 로그
+model ActivityLog {
+  id         Int      @id @default(autoincrement())
+  memberId   Int      @map("member_id")
+  action     String   @db.VarChar(50)
+  targetType String?  @map("target_type") @db.VarChar(50)
+  targetId   Int?     @map("target_id")
+  details    Json?
+  ipAddress  String?  @map("ip_address") @db.VarChar(45)
+  createdAt  DateTime @default(now()) @map("created_at")
+  member     Member   @relation(fields: [memberId], references: [id])
+
+  @@index([memberId])
+  @@index([createdAt])
+  @@index([action])
+  @@index([memberId, action])
+  @@map("activity_logs")
+}
+
+// 백업 작업 로그
+model BackupLog {
+  id           Int               @id @default(autoincrement())
+  operation    BackupOperation
+  status       BackupLogStatus
+  filename     String?           @db.VarChar(255)
+  fileSize     Int?              @map("file_size")
+  message      String            @db.Text
+  executedById Int?              @map("executed_by_id")
+  executedAt   DateTime          @default(now()) @map("executed_at")
+  executedBy   Member?           @relation("BackupExecutor", fields: [executedById], references: [id])
+
+  @@index([executedAt])
+  @@index([operation])
+  @@index([status])
+  @@map("backup_logs")
+}
+
+enum BackupOperation {
+  BACKUP
+  RESTORE
+  DELETE
+}
+
+enum BackupLogStatus {
+  SUCCESS
+  FAILED
+}

@@ -1,0 +1,79 @@
+/* 조직도 차트 컨테이너 */
+.chartContainer {
+  position: relative;
+  width: 100%;
+  height: 600px;
+  background: #fafafa;
+  border-radius: 8px;
+  overflow: hidden;
+  border: 1px solid #e8e8e8;
+}
+
+/* 확대/축소 컨트롤 */
+.controls {
+  position: absolute;
+  top: 16px;
+  right: 16px;
+  z-index: 10;
+  background: rgba(255, 255, 255, 0.95);
+  padding: 8px;
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+/* react-d3-tree 컨테이너 스타일 */
+.chartContainer :global(.rd3t-tree-container) {
+  width: 100%;
+  height: 100%;
+}
+
+/* 트리 연결선 스타일 */
+.chartContainer :global(.rd3t-link) {
+  stroke: #d9d9d9;
+  stroke-width: 2px;
+  fill: none;
+}
+
+.chartContainer :global(.rd3t-link):hover {
+  stroke: #1890ff;
+  stroke-width: 3px;
+}
+
+/* 레거시 노드 스타일 (사용하지 않지만 CSS 특이성 방지) */
+.chartContainer :global(.rd3t-node) {
+  cursor: pointer;
+}
+
+.chartContainer :global(.rd3t-leaf-node) {
+  cursor: pointer;
+}
+
+/* 모바일 반응형 */
+@media (max-width: 768px) {
+  .chartContainer {
+    height: 500px;
+  }
+
+  .controls {
+    top: 8px;
+    right: 8px;
+  }
+}
+
+/* 다크 모드 지원 (필요시) */
+[data-theme='dark'] .chartContainer {
+  background: #1f1f1f;
+  border-color: #434343;
+}
+
+[data-theme='dark'] .chartContainer :global(.rd3t-link) {
+  stroke: #434343;
+}
+
+[data-theme='dark'] .chartContainer :global(.rd3t-link):hover {
+  stroke: #1890ff;
+}
+
+[data-theme='dark'] .controls {
+  background: rgba(30, 30, 30, 0.95);
+}

@@ -1,0 +1,34 @@
+{
+  "name": "kaion-monorepo",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Kaion MLM 통합관리시스템",
+  "scripts": {
+    "dev": "turbo run dev",
+    "build": "turbo run build",
+    "test": "turbo run test",
+    "lint": "turbo run lint",
+    "format": "prettier --write \"**/*.{js,jsx,ts,tsx,json,md}\""
+  },
+  "keywords": [
+    "monorepo",
+    "kaion",
+    "management-system"
+  ],
+  "author": "Kaion",
+  "license": "PRIVATE",
+  "engines": {
+    "node": ">=18.0.0",
+    "pnpm": ">=9.0.0"
+  },
+  "packageManager": "pnpm@9.12.3",
+  "devDependencies": {
+    "@typescript-eslint/eslint-plugin": "^6.0.0",
+    "@typescript-eslint/parser": "^6.0.0",
+    "eslint": "^8.57.0",
+    "eslint-config-prettier": "^9.0.0",
+    "eslint-plugin-prettier": "^5.0.0",
+    "prettier": "^3.3.3",
+    "turbo": "^2.7.2"
+  }
+}
