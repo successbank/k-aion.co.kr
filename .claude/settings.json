@@ -1,0 +1,51 @@
+{
+  "$schema": "https://json.schemastore.org/claude-code-settings.json",
+  "_comment": "Stage 4 DEV3-004 (2026-04-15) — Claude Code 기본 설정. allowedTools + hooks + env. 검증 게이트 v2 강제 inception.",
+  "_reference": "prd2/개발3팀_검증체크리스트.md DEV3-004",
+  "permissions": {
+    "allow": [
+      "Read(*)",
+      "Glob(*)",
+      "Grep(*)",
+      "Edit(*)",
+      "Write(*)",
+      "Bash(git status:*)",
+      "Bash(git diff:*)",
+      "Bash(git log:*)",
+      "Bash(git add:*)",
+      "Bash(git commit:*)",
+      "Bash(git show:*)",
+      "Bash(grep:*)",
+      "Bash(ls:*)",
+      "Bash(find:*)",
+      "Bash(cat:*)",
+      "Bash(head:*)",
+      "Bash(tail:*)",
+      "Bash(wc:*)",
+      "Bash(mkdir:*)",
+      "Bash(mv:*)",
+      "Bash(pnpm test*)",
+      "Bash(pnpm install*)",
+      "Bash(pnpm prisma:*)",
+      "Bash(docker exec:*)",
+      "Bash(docker logs:*)",
+      "Bash(docker-compose ps:*)",
+      "Bash(docker-compose logs:*)"
+    ],
+    "deny": [
+      "Bash(rm -rf:*)",
+      "Bash(git push --force:*)",
+      "Bash(git reset --hard:*)",
+      "Bash(docker-compose down:*)"
+    ]
+  },
+  "env": {
+    "PROJECT_NAME": "kaion",
+    "STAGE_4_EVIDENCE_DIR": "prd2/evidence",
+    "BRAND_COLOR": "#E53935"
+  },
+  "_hooks_note": "Stop hook은 향후 DEV3-002/003 verify-feature/integration-check Skill 완성 후 추가. 현재는 minimal config로 안전한 권한만 명시.",
+  "hooks": {
+    "Stop": []
+  }
+}

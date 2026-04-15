@@ -113,7 +113,9 @@ Authorization: Bearer {your_jwt_token}
   const document = SwaggerModule.createDocument(app, config);
   SwaggerModule.setup('api', app, document, {
     customSiteTitle: 'Kaion API Docs',
-    customCss: '.swagger-ui .topbar { background-color: #7CB342; }',
+    // Stage 4 MON-015 / BONUS-BRAND-001 (2026-04-15): #7CB342 연두색 → #E53935 빨간색
+    // (Material Red 600). 코드 현실(146회 하드코딩 #E53935)에 정합. 출처: prd2/요청.md 항목 7.
+    customCss: '.swagger-ui .topbar { background-color: #E53935; }',
   });
 
   const port = process.env.PORT || 5659;

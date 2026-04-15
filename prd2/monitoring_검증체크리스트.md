@@ -118,7 +118,7 @@
 
 ## 🟡 오류 / 미개발 (P1 High)
 
-- [ ] **[MON-004]** [P1 High] Nginx `/health` → `/api/health` 경로 수정
+- [x] **[MON-004]** ✅ PASS (2026-04-15) [P1 High] Nginx `/health` → `/api/health` 경로 수정 — nginx.conf 정정 + access_log/error_log 지시어 추가 (MON-002 일부 함께 해결)
   - **현상**: `docker/nginx/nginx.conf §48-52` — `/health` → `http://backend/health` 포워드. 그러나 NestJS `setGlobalPrefix('api')` → 실제 경로는 `/api/health`. 외부 모니터링 도구가 `/health` 호출 시 404 가능성.
   - **근거**: `prd/monitoring_파악된내용.md` §3 High / §1.6
   - **검증 방법**:
@@ -292,7 +292,7 @@
   - **시도 횟수**: 0 / 3
   - **상태**: PENDING
 
-- [ ] **[MON-015]** [P3 Low] Swagger topbar `#7CB342` → `#E53935` 정렬 (= BONUS-BRAND-001)
+- [x] **[MON-015]** ✅ PASS (2026-04-15) [P3 Low] Swagger topbar `#7CB342` → `#E53935` 정렬 (= BONUS-BRAND-001) — main.ts:116 customCss 정정. 전체 정합화 완료 (코드/페르소나/Swagger 모두 #E53935)
   - **현상**: `apps/backend/src/main.ts:116` Swagger customCss에 `#7CB342` 하드코딩. 프론트엔드는 146회 `#E53935` 사용. 유일한 연두색 잔재.
   - **근거**: 요청.md 항목 7 예외 (BONUS-BRAND-001)
   - **검증 방법**: `grep "#7CB342" apps/backend/src/main.ts` → 0건

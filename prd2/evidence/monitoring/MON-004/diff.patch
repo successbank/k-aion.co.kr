@@ -1,0 +1,24 @@
+diff --git a/docker/nginx/nginx.conf b/docker/nginx/nginx.conf
+index 0eb7c74..a935ae8 100644
+--- a/docker/nginx/nginx.conf
++++ b/docker/nginx/nginx.conf
+@@ -45,10 +45,18 @@ http {
+         }
+ 
+         # Health check endpoint
++        # Stage 4 MON-004 fix (2026-04-15): NestJS는 setGlobalPrefix('api')로
++        # 모든 라우트가 /api 접두사. 따라서 /health → backend/api/health 으로 정정.
++        # 이전엔 backend/health 으로 proxy 했으나 backend는 404 반환.
+         location /health {
+-            proxy_pass http://backend/health;
++            proxy_pass http://backend/api/health;
+             proxy_http_version 1.1;
+             proxy_set_header Host $host;
+         }
++
++        # Stage 4 MON-002 (2026-04-15): access_log + error_log 명시.
++        # 이전엔 지시어 부재로 default(stdout/stderr)였고 로그 형식 통일성 부족.
++        access_log /var/log/nginx/access.log;
++        error_log /var/log/nginx/error.log warn;
+     }
+ }
