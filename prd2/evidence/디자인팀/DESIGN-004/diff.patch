@@ -1,0 +1,59 @@
+diff --git a/apps/frontend/src/app/organization/page.tsx b/apps/frontend/src/app/organization/page.tsx
+index 280fcf5..1a5d3a0 100644
+--- a/apps/frontend/src/app/organization/page.tsx
++++ b/apps/frontend/src/app/organization/page.tsx
+@@ -36,23 +36,23 @@ import { MemberSelectModal } from '@/components/MemberSelectModal';
+ 
+ const { Title, Text } = Typography;
+ 
+-// 등급별 색상 매핑
++// Stage 4 DESIGN-004 (2026-04-15): 신 4단계 영업 + ADMIN 매핑
++// 이전: 5단계 (MEMBER/AGENT/MANAGER/BRANCH_CHIEF/DIVISION_CHIEF) — schema와 시대 차이
++// 신: 4단계 영업 (SALESPERSON/TEAM_LEADER/BRANCH_MANAGER/CENTER) + ADMIN
+ const gradeColors: Record<string, string> = {
+   ADMIN: '#ff4d4f',
+-  DIVISION_CHIEF: '#fa8c16',
+-  BRANCH_CHIEF: '#faad14',
+-  MANAGER: '#52c41a',
+-  AGENT: '#1890ff',
+-  MEMBER: '#8c8c8c',
++  CENTER: '#fa8c16',
++  BRANCH_MANAGER: '#faad14',
++  TEAM_LEADER: '#52c41a',
++  SALESPERSON: '#1890ff',
+ };
+ 
+ const gradeLabels: Record<string, string> = {
+-  ADMIN: '최고관리자',
+-  DIVISION_CHIEF: '본부장',
+-  BRANCH_CHIEF: '지부장',
+-  MANAGER: '매니저',
+-  AGENT: '에이전트',
+-  MEMBER: '회원',
++  ADMIN: '관리자',
++  CENTER: '센터',
++  BRANCH_MANAGER: '지사장',
++  TEAM_LEADER: '팀장',
++  SALESPERSON: '판매원',
+ };
+ 
+ interface Member {
+@@ -431,12 +431,12 @@ export default function OrganizationPage() {
+               value={gradeFilter}
+               onChange={(value) => setGradeFilter(value)}
+             >
+-              <Select.Option value="ADMIN">최고관리자</Select.Option>
+-              <Select.Option value="DIVISION_CHIEF">본부장</Select.Option>
+-              <Select.Option value="BRANCH_CHIEF">지부장</Select.Option>
+-              <Select.Option value="MANAGER">매니저</Select.Option>
+-              <Select.Option value="AGENT">에이전트</Select.Option>
+-              <Select.Option value="MEMBER">회원</Select.Option>
++              {/* Stage 4 DESIGN-004 (2026-04-15): 신 4단계 영업 + ADMIN */}
++              <Select.Option value="ADMIN">관리자</Select.Option>
++              <Select.Option value="CENTER">센터</Select.Option>
++              <Select.Option value="BRANCH_MANAGER">지사장</Select.Option>
++              <Select.Option value="TEAM_LEADER">팀장</Select.Option>
++              <Select.Option value="SALESPERSON">판매원</Select.Option>
+             </Select>
+           </Col>
+           {viewingSearchedMember && (

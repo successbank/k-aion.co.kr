@@ -1,0 +1,39 @@
+#!/usr/bin/env sh
+# Stage 4 DEV3-009 (2026-04-15): commit-msg Hook
+# 커밋 메시지 검증:
+# 1. 빈 메시지 차단
+# 2. 검증 태그 권장 ([검증:대기]/[검증:통과]/[검증:통합통과]/[검증:실패])
+# 3. 최소 길이 체크 (10자)
+#
+# 페르소나 시스템 v2 검증 게이트 규칙 강제력 확보.
+# Reference: prd2/요청.md, .claude/personas/pm팀.md (김현태 Git PM)
+
+if [ -f "$(dirname "$0")/_/husky.sh" ]; then
+  . "$(dirname "$0")/_/husky.sh"
+fi
+
+COMMIT_MSG_FILE="$1"
+COMMIT_MSG=$(cat "$COMMIT_MSG_FILE")
+
+# 1. 빈 메시지 차단
+if [ -z "$(echo "$COMMIT_MSG" | sed '/^#/d' | tr -d '[:space:]')" ]; then
+  echo "❌ [commit-msg] 빈 커밋 메시지는 허용되지 않습니다."
+  exit 1
+fi
+
+# 2. 최소 길이 (주석 제외 첫 줄 10자 이상)
+FIRST_LINE=$(echo "$COMMIT_MSG" | sed '/^#/d' | head -1)
+if [ ${#FIRST_LINE} -lt 10 ]; then
+  echo "❌ [commit-msg] 첫 줄이 너무 짧습니다 (최소 10자). 현재: ${#FIRST_LINE}"
+  exit 1
+fi
+
+# 3. 검증 태그 권장 (경고만, 차단 X)
+if ! echo "$COMMIT_MSG" | grep -qE "\[검증:(대기|통과|통합통과|실패)\]"; then
+  echo "⚠️  [commit-msg] 권장: 검증 태그 추가 ([검증:대기/통과/통합통과/실패])"
+  echo "   v2 검증 게이트 규칙 — pm팀.md (김현태 Git PM) 참조"
+  # 차단하지 않음 (Co-Authored 메시지나 fix commit은 태그 없을 수 있음)
+fi
+
+echo "✅ [commit-msg] OK"
+exit 0

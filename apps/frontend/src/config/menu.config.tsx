@@ -212,27 +212,40 @@ export const adminMenuItems: MenuItem[] = [
 
 /**
  * 등급별 메뉴 매핑
+ *
+ * Stage 4 DESIGN-005 (2026-04-15): 신 4단계 영업 + ADMIN.
+ * 이전: 5단계 (MEMBER/AGENT/MANAGER/BRANCH_CHIEF/DIVISION_CHIEF + CENTER + ADMIN)
+ * 신: 4단계 영업 (SALESPERSON/TEAM_LEADER/BRANCH_MANAGER/CENTER) + ADMIN
+ *
+ * 매핑 결정:
+ * - SALESPERSON ← agentMenuItems (활동 영업 메뉴, MEMBER tier는 신 시스템에 부재)
+ * - TEAM_LEADER ← managerMenuItems
+ * - BRANCH_MANAGER ← branchChiefMenuItems
+ * - CENTER ← divisionChiefMenuItems
+ * - ADMIN ← adminMenuItems
+ *
+ * memberMenuItems 변수는 dead code로 남음 — Stage 4 후속 정리 또는 SALESPERSON
+ * 메뉴 통합 후 삭제 권장.
  */
 export const menuByGrade: Record<string, MenuItem[]> = {
-  MEMBER: memberMenuItems,
-  AGENT: agentMenuItems,
-  MANAGER: managerMenuItems,
-  BRANCH_CHIEF: branchChiefMenuItems,
-  DIVISION_CHIEF: divisionChiefMenuItems,
+  SALESPERSON: agentMenuItems,
+  TEAM_LEADER: managerMenuItems,
+  BRANCH_MANAGER: branchChiefMenuItems,
+  CENTER: divisionChiefMenuItems,
   ADMIN: adminMenuItems,
 };
 
 /**
  * 등급별 한글명
+ *
+ * Stage 4 DESIGN-005 (2026-04-15): 신 4단계 영업 + ADMIN.
  */
 export const gradeLabels: Record<string, string> = {
-  MEMBER: '회원',
-  AGENT: '에이전트',
-  MANAGER: '매니저',
-  BRANCH_CHIEF: '지부장',
-  DIVISION_CHIEF: '본부장',
+  SALESPERSON: '판매원',
+  TEAM_LEADER: '팀장',
+  BRANCH_MANAGER: '지사장',
   CENTER: '센터',
-  ADMIN: '최고관리자',
+  ADMIN: '관리자',
 };
 
 /**

@@ -1,0 +1,24 @@
+#!/usr/bin/env sh
+# Stage 4 DEV3-008 (2026-04-15): pre-commit Hook
+# 커밋 전 lint 자동 실행 (DEV3-011 lint --max-warnings 0과 함께 강제력 확보)
+# husky install 후 활성화됨 (`pnpm install` 시 prepare script가 처리)
+
+# husky shim (pnpm install 후 .husky/_/husky.sh 생성됨)
+if [ -f "$(dirname "$0")/_/husky.sh" ]; then
+  . "$(dirname "$0")/_/husky.sh"
+fi
+
+# 1. Lint (backend + frontend)
+echo "🔍 [pre-commit] Running lint..."
+pnpm --filter @kaion/backend lint || {
+  echo "❌ backend lint failed"
+  exit 1
+}
+
+# 참고: frontend lint는 향후 추가 (현재 frontend lint script 미정)
+
+# 2. (선택) TypeScript 컴파일 체크
+# echo "📋 [pre-commit] TypeScript check..."
+# pnpm --filter @kaion/backend tsc --noEmit || exit 1
+
+echo "✅ [pre-commit] All checks passed"
