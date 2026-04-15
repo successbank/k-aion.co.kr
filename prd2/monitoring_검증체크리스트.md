@@ -50,7 +50,7 @@
 
 ## 🔴 Critical — 즉시 조치
 
-- [ ] **[MON-001]** [P0 Critical] LoggingInterceptor 전역 등록 (= STAGE3-010 일부)
+- [x] **[MON-001]** ✅ PASS (2026-04-15, 정적 검증) [P0 Critical] LoggingInterceptor 전역 등록 (= STAGE3-010 일부) — APP_INTERCEPTOR provider 추가 완료. 런타임 검증은 후속 사이클에서 컨테이너 재시작 후 수행
   - **현상**: `common/interceptors/logging.interceptor.ts` 47줄 작성됨. 그러나 `app.module.ts` + `main.ts` 전수 검색 결과 `useGlobalInterceptors(LoggingInterceptor)` 또는 `APP_INTERCEPTOR` provider 등록 0건 → **HTTP 요청 로그 전혀 찍히지 않음**. 장애 시 재구성 불가.
   - **근거**: `prd/monitoring_파악된내용.md` §3 Critical #3 / 요청.md STAGE3-010
   - **검증 방법**:

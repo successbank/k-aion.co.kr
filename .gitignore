@@ -57,6 +57,17 @@ docker-compose.override.yml
 backups/
 *.backup
 
+# Legacy file backups (Stage 2.6 — 강민호 결정 후 폐기됨, 보관용)
+# Keep tracked in git (NOT ignored) — these are intentional artifacts
+# Reference: prd2/요청.md 항목 3
+# *.bak — DO NOT add (currently 2 files staged for Stage 4 restoration)
+# *.legacy-old-system — DO NOT add (currently 2 archived files)
+#
+# Above patterns intentionally NOT ignored. The .gitignore entry below
+# only blocks NEW backup creation outside our 4 tracked files.
+*.tmp.bak
+*.swp.bak
+
 # Temporary files
 .tmp/
 tmp/

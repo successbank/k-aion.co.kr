@@ -1,0 +1,70 @@
+diff --git a/apps/backend/src/app.module.ts b/apps/backend/src/app.module.ts
+index 2392c9f..e305157 100644
+--- a/apps/backend/src/app.module.ts
++++ b/apps/backend/src/app.module.ts
+@@ -1,7 +1,8 @@
+ import { Module } from '@nestjs/common';
+ import { ConfigModule } from '@nestjs/config';
+ import { ServeStaticModule } from '@nestjs/serve-static';
+-import { APP_GUARD, APP_FILTER } from '@nestjs/core';
++import { APP_GUARD, APP_FILTER, APP_INTERCEPTOR } from '@nestjs/core';
++import { EventEmitterModule } from '@nestjs/event-emitter';
+ import { join } from 'path';
+ import { AppController } from './app.controller';
+ import { AppService } from './app.service';
+@@ -24,6 +25,7 @@ import { ActivityLogsModule } from './activity-logs/activity-logs.module';
+ import { NotificationModule } from './notifications/notification.module';
+ import { JwtAuthGuard } from './auth/guards/jwt-auth.guard';
+ import { AllExceptionsFilter } from './common/filters/all-exceptions.filter';
++import { LoggingInterceptor } from './common/interceptors/logging.interceptor';
+ import { ScheduleModule } from '@nestjs/schedule';
+ import { TasksModule } from './tasks/tasks.module';
+ import { BackupModule } from './backup/backup.module';
+@@ -35,6 +37,10 @@ import { SystemConfigModule } from './system-config/system-config.module';
+       isGlobal: true,
+       envFilePath: ['.env.local', '.env'],
+     }),
++    // Stage 4 DEV1-003 (2026-04-15): MemberGradeListener 활성화를 위한 글로벌
++    // event emitter. 이전에는 등록되지 않아 모든 등급 변경 이벤트가 emit되지 않음
++    // (event-emitter 전체 미작동 상태). 향후 BullMQ 전환 시 entry point.
++    EventEmitterModule.forRoot(),
+     ServeStaticModule.forRoot({
+       rootPath: join(__dirname, '..', 'public'),
+       serveRoot: '/',
+@@ -72,6 +78,13 @@ import { SystemConfigModule } from './system-config/system-config.module';
+       provide: APP_FILTER,
+       useClass: AllExceptionsFilter,
+     },
++    // Stage 4 MON-001 (2026-04-15): LoggingInterceptor 전역 등록.
++    // 이전에는 클래스만 작성되고 등록되지 않아 HTTP 요청 로그가 0건 기록.
++    // 모든 API 요청/응답을 NestJS Logger로 기록 → settlement 트랜잭션 추적 가능.
++    {
++      provide: APP_INTERCEPTOR,
++      useClass: LoggingInterceptor,
++    },
+   ],
+ })
+ export class AppModule {}
+diff --git a/apps/backend/src/members/members.module.ts b/apps/backend/src/members/members.module.ts
+index 24da7ff..2bb7a56 100644
+--- a/apps/backend/src/members/members.module.ts
++++ b/apps/backend/src/members/members.module.ts
+@@ -4,12 +4,17 @@ import { MembersService } from './members.service';
+ import { PromotionService } from './promotion.service';
+ import { GenealogyService } from './genealogy.service';
+ import { IntegrityCheckService } from './integrity-check.service';
++import { MemberGradeListener } from './listeners/member-grade.listener';
+ import { PrismaModule } from '../prisma/prisma.module';
+ 
+ @Module({
+   imports: [PrismaModule],
+   controllers: [MembersController],
+-  providers: [MembersService, PromotionService, GenealogyService, IntegrityCheckService],
++  // Stage 4 DEV1-003 (2026-04-15): MemberGradeListener providers 등록.
++  // 이전에는 listener 클래스가 작성만 되고 providers에 미등록 → @OnEvent 핸들러
++  // 0건 활성화 상태 (event-emitter 전체 미작동). app.module.ts에 EventEmitterModule
++  // 활성화 필요 (함께 처리).
++  providers: [MembersService, PromotionService, GenealogyService, IntegrityCheckService, MemberGradeListener],
+   exports: [MembersService, PromotionService, GenealogyService, IntegrityCheckService],
+ })
+ export class MembersModule {}
