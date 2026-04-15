@@ -170,7 +170,7 @@
   - **시도 횟수**: 0 / 3
   - **상태**: PENDING
 
-- [ ] **[MON-007]** [P1 High] Winston 파일 로거 절대경로 + 볼륨 마운트
+- [x] **[MON-007]** ✅ PASS (2026-04-15) [P1 High] Winston 파일 로거 절대경로 + 볼륨 마운트 — docker-compose.yml backend volumes에 ./apps/backend/logs 호스트 마운트 추가. 컨테이너 재시작 시 로그 증발 방지
   - **현상**: `main.ts` §9-37 — `filename: 'logs/error.log'` 상대경로. 컨테이너 CWD 명확하지 않음. 볼륨 마운트 없어 컨테이너 재시작 시 전량 유실.
   - **근거**: `prd/monitoring_파악된내용.md` §3 High 제7
   - **검증 방법**:
