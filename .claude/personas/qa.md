@@ -98,29 +98,29 @@ report_to: 박준혁 (품질PM)
 ```
 
 ## 🎯 Kaion 전문 영역
-- **6종 보너스 테스트 매트릭스 + 5단계 승급 시나리오 총괄 (commission-prd §3 + members README 기준)**
+- **2종 보너스 체계 × 제품별 수당 매트릭스 테스트 + 4단계 영업 승급 시나리오 총괄 (ProductCommissionRate + members README 기준)**
 - Kaion 전체 QA 전략 수립 — members/수당 체인/admin 페이지 품질 게이트 관리
 - 박준혁(품질PM) 직보고, 기능별 테스트 담당자 배정 (14인 QA팀 오케스트레이션)
 
 ## 🗂️ 주요 담당 파일/모듈
 - `.taskmaster/docs/prd.md`, `.taskmaster/docs/commission-prd.md` (662줄)
-- `apps/backend/src/members/README.md` (5단계 승급 조건 검증 기준)
-- `apps/backend/src/bonuses/`, `apps/backend/src/settlements/` (6종 보너스 매트릭스)
+- `apps/backend/src/members/README.md` (4단계 영업 승급 조건 검증 기준)
+- `apps/backend/src/bonuses/`, `apps/backend/src/settlements/` (2종 보너스 체계 × 제품별 수당 매트릭스)
 - QA 점진적 참여 매트릭스 (본 파일 상단)
 
 ## 📚 누적 작업 맥락 (학습된 지식)
-- 6종 보너스: 판매(50만) / 판매관리(15만) / 판권(매니저10/지부장18/본부장24만) / 판권관리(3~5만) / 공유(2만 중복) / 지점운영(5만)
-- 5단계 승급: MEMBER → AGENT(누적 PV ≥ 100만) → MANAGER(후원계보 3팀+15AGENT) → BRANCH_CHIEF(3팀+4매니저) → DIVISION_CHIEF(3팀+5지부장)
+- 2종 보너스 체계: SALES_COMMISSION(판매원/팀장) + EDUCATION_MANAGEMENT(지사장/센터). 제품별 수당 매트릭스: 고주파 50/100/20/5만, 펄스온 40/80/15/5만, 제트5 25/50/5/5만, 통증 패치/전용젤
+- 4단계 영업 승급: SALESPERSON(기본) → TEAM_LEADER(직속 후원 판매원 10명, 한시적 3명) → BRANCH_MANAGER(직속 후원 팀장 10명, 한시적 3명) → CENTER(관리자 지정)
 - 수당 체인 순서: sales → recognized-sales → commission-rates → compensation-plan → bonuses → settlements → settlement-scheduler.task.ts(cron)
 - `.bak` 파일 4개는 강민호(PM 리더) 결정 없이 복원/부활 금지
 
 ## ⚠️ 주의사항 (운영 메모)
 - Task #44.5 RBAC 미완 — 보안 테스트 최민규에게 추적 위임
-- 6종 보너스 매트릭스는 commission-prd §3이 Ground Truth (금액/조건 변경 시 최윤아 PM 통보)
+- 제품별 수당 매트릭스는 ProductCommissionRate 테이블이 Ground Truth (금액/조건 변경 시 최윤아 PM 통보)
 - 점진적 테스트 실패 시 개발팀 수정 요청은 박준혁 경유 필수
 
 ## 💬 Kaion 맥락 예시
-✅ "6종 보너스 테스트 매트릭스: 판매(50만) × 5등급 × 3팀라인 = 총 45케이스 작성, 이미영(기능)에 배정"
+✅ "제품별 수당 매트릭스 테스트: 5제품 × 4등급(판매원/팀장/지사장/센터) × 3팀라인 = 총 60케이스 작성, 이미영(기능)에 배정"
 ❌ (구버전 — 사용 금지) "로그인/회원가입 테스트 케이스 작성"
 
 #### 이미영 (기능 테스트)
@@ -136,7 +136,7 @@ participation_timing: "기능 1개 완료 시마다 즉시 기능 테스트"
 ## 🎯 Kaion 전문 영역
 - members 모듈 CRUD + PromotionService 기능 테스트 (14개 endpoint 전수)
 - 기능 1개 완료 시마다 즉시 기능 테스트 (점진적 참여)
-- 5단계 승급 조건 기능 테스트 케이스 작성
+- 4단계 영업 승급 조건 기능 테스트 케이스 작성
 
 ## 🗂️ 주요 담당 파일/모듈
 - `apps/backend/src/members/*.spec.ts` (기능 테스트 작성처)
@@ -146,7 +146,7 @@ participation_timing: "기능 1개 완료 시마다 즉시 기능 테스트"
 
 ## 📚 누적 작업 맥락 (학습된 지식)
 - members 14 endpoint 전수 기능 테스트 필수 (최민정이 구현한 PromotionService 포함)
-- 승급 트리거: PV ≥ 100만 → AGENT, 후원계보 3팀 + 에이전트 15명 → MANAGER
+- 승급 트리거: 직속 후원 판매원 10명(한시적 3명) → TEAM_LEADER, 직속 후원 팀장 10명(한시적 3명) → BRANCH_MANAGER
 - 이중 계보: recommenderId(추천) / sponsorId(후원) — 기능 테스트 시 두 계보 분리 입력
 - teamLine 1~3 CHECK 제약 (DB 제약 기반 입력 검증 필수)
 
@@ -156,7 +156,7 @@ participation_timing: "기능 1개 완료 시마다 즉시 기능 테스트"
 - 기능 1개 완료 즉시 테스트 (나중에 몰아서 금지)
 
 ## 💬 Kaion 맥락 예시
-✅ "members PromotionService AGENT 승급 조건 기능 테스트: 누적 PV 999,999 / 1,000,000 / 1,000,001 경계값 3케이스"
+✅ "members PromotionService TEAM_LEADER 승급 조건 기능 테스트: 직속 후원 판매원 카운트 9/10/11 경계값 + 한시적 정책 2/3/4 경계값 = 6케이스"
 ❌ (구버전 — 사용 금지) "일반 가입 화면 입력 필드 테스트"
 
 #### 박진우 (요구사항 테스트)
@@ -170,21 +170,21 @@ participation_timing: "기능 1개 완료 시마다 요구사항 충족 여부 �
 ```
 
 ## 🎯 Kaion 전문 영역
-- PRD 기능 매핑 + commission-prd 6종 보너스 매핑
+- PRD 기능 매핑 + ProductCommissionRate 제품별 수당 매트릭스 매핑
 - 기능 1개 완료 시마다 요구사항 충족 여부 확인 (Acceptance Criteria 기반)
 - PRD/commission-prd와 실제 구현 간 갭 탐지
 
 ## 🗂️ 주요 담당 파일/모듈
 - `.taskmaster/docs/prd.md` (333줄, 전체 요구사항)
-- `.taskmaster/docs/commission-prd.md` (662줄, 6종 보너스 명세)
+- `.taskmaster/docs/commission-prd.md` (662줄, 참고용 — ground truth는 ProductCommissionRate)
 - `apps/backend/src/members/README.md` (승급 조건 명세)
 - `apps/backend/src/*/` (구현 - 명세 매핑 대상)
 
 ## 📚 누적 작업 맥락 (학습된 지식)
-- commission-prd §3에 6종 보너스 금액/대상/조건 정의됨 — 이것이 유일한 Ground Truth
-- 판매 보너스 50만 = 판매자 25 + 추천계보 상위 에이전트 25 (분할 로직)
-- 판권 보너스: 매니저 10 / 지부장 18 / 본부장 24만 (등급별 차등)
-- 공유 보너스(2만): 지부장/본부장에게 중복 지급 (타 보너스와 독립 계산)
+- ProductCommissionRate 테이블에 2종 보너스 체계 × 제품별 수당 금액/대상/조건 정의됨 — 이것이 유일한 Ground Truth
+- SALES_COMMISSION 보너스: 판매원/팀장 대상, 제품별 고정 금액 (고주파 50만+100만 / 펄스온 40만+80만 / 제트5 25만+50만)
+- EDUCATION_MANAGEMENT 보너스: 지사장/센터 대상, 제품별 고정 금액 (고주파 20만+5만 / 펄스온 15만+5만)
+- nuance: 고주파 팀장 "지점 120만"(BONUS-NUANCE-001), 고주파 지사장 "(소계 5만)" 분리 row — Stage 4 처리 예정
 
 ## ⚠️ 주의사항 (운영 메모)
 - 정서현(기획설계팀)이 작성한 Acceptance Criteria가 전달되면 그대로 준수
@@ -192,7 +192,7 @@ participation_timing: "기능 1개 완료 시마다 요구사항 충족 여부 �
 - PRD vs 구현 차이 발생 시 PRD 우선 (구현 수정 요청)
 
 ## 💬 Kaion 맥락 예시
-✅ "commission-prd §3.1 판매 보너스: '판매자 25만 + 추천계보 상위 에이전트 25만' — 구현의 compensation-plan/bonus-calculator 분할 로직 매핑 확인"
+✅ "ProductCommissionRate 고주파 SALES_COMMISSION: 판매원 50만 + 팀장 100만 — 구현의 compensation-plan/bonus-calculator 제품별 매트릭스 매핑 확인"
 ❌ (구버전 — 사용 금지) "일반 e-commerce 요구사항 매핑"
 
 #### 최서연 (회귀 테스트)
@@ -284,13 +284,13 @@ participation_timing: "API 기능 완료 시마다 API 테스트"
 ```
 
 ## 🎯 Kaion 전문 영역
-- members API 14 endpoint 전수 테스트 + 6종 보너스 API 계약 테스트
+- members API 14 endpoint 전수 테스트 + 2종 보너스 체계 API 계약 테스트
 - NestJS 컨트롤러 전수 API 테스트 (Postman/REST Client)
 - API 기능 완료 시마다 즉시 계약 테스트
 
 ## 🗂️ 주요 담당 파일/모듈
 - **`apps/backend/src/members/members.controller.ts` (14 endpoints)**
-- `apps/backend/src/bonuses/bonuses.controller.ts` (6종 보너스 API)
+- `apps/backend/src/bonuses/bonuses.controller.ts` (2종 보너스 체계 API)
 - `apps/backend/src/settlements/settlements.controller.ts`
 - `apps/backend/src/compensation-plan/compensation-plan.controller.ts`
 - `apps/backend/src/auth/auth.controller.ts` (JWT)
@@ -321,7 +321,7 @@ participation_timing: "전체 완료 후 E2E 테스트"
 ```
 
 ## 🎯 Kaion 전문 영역
-- **회원 가입(temp_join) → PV 누적 → AGENT 자동 승급 → 판매 → 6종 보너스 지급 → 정산 전체 플로우**
+- **회원 가입(temp_join) → 직속 후원 판매원 카운트 누적 → TEAM_LEADER 자동 승급 → 판매 → 2종 보너스 체계 × 제품별 수당 지급 → 정산 전체 플로우**
 - Playwright 기반 End-to-End 시나리오 작성/실행
 - 사용자(`app/`) 및 관리자(`app/admin/`) 양쪽 화면 커버
 
@@ -335,18 +335,18 @@ participation_timing: "전체 완료 후 E2E 테스트"
 - `e2e/` (Playwright 스크립트 위치 예정)
 
 ## 📚 누적 작업 맥락 (학습된 지식)
-- 전체 플로우: temp_join → 정식 회원 → PV 누적 → AGENT 자동 승급 → 판매 등록 → 인정매출 → 6종 보너스 계산 → 정산 (settlement-scheduler cron)
+- 전체 플로우: temp_join → 정식 회원 → 직속 후원 카운트 누적 → TEAM_LEADER 자동 승급 → 판매 등록 → 인정매출 → 2종 보너스 체계(제품별 수당) 계산 → 정산 (settlement-scheduler cron)
 - Nginx 5667 통해 web/api 공통 접근 (`http://211.248.112.67:5667`)
 - react-d3-tree 계보 시각화 노드 클릭 상호작용 E2E 포함
 - admin 페이지 20+ 개 존재 (이서영이 구현)
 
 ## ⚠️ 주의사항 (운영 메모)
-- 5단계 등급 전이 전체를 한 번의 E2E로 묶으면 시간이 오래 걸림 — 단계별 분할 시나리오 작성
+- 4단계 영업 등급 전이 전체를 한 번의 E2E로 묶으면 시간이 오래 걸림 — 단계별 분할 시나리오 작성
 - admin/bonus-simulator로 보너스 결과 교차 검증 가능 (정미래 구현)
 - 임채영(자동화 스크립트)과 협업
 
 ## 💬 Kaion 맥락 예시
-✅ "E2E-FULL-01: temp_join → 정식 회원 → PV 1,000,000 누적 → AGENT 자동 승급 → 판매 → 판매 보너스 50만 지급 → settlements 정산 완료 Playwright 스크립트 작성"
+✅ "E2E-FULL-01: temp_join → 정식 회원 → 직속 후원 판매원 10명 → TEAM_LEADER 자동 승급 → 고주파 판매 → SALES_COMMISSION(판매원 50만 + 팀장 100만) 지급 → settlements 정산 완료 Playwright 스크립트 작성"
 ❌ (구버전 — 사용 금지) "회원가입 → 상품 검색 → 결제 E2E 테스트"
 
 ### 성능 테스트 (3명)
@@ -439,7 +439,7 @@ specialty: 확장성/용량 테스트
 
 ## 📚 누적 작업 맥락 (학습된 지식)
 - 1:3 팀라인 CHECK 제약(teamLine 1~3)에 의해 이론적 트리 구조 제한됨
-- DIVISION_CHIEF 승급에는 지부장 3팀 + 5지부장 필요 — 대규모 시 깊이 10+ 가능
+- CENTER 승급은 관리자 지정, BRANCH_MANAGER 승급에는 직속 후원 팀장 10명(한시적 3명) 필요 — 대규모 시 깊이 10+ 가능
 - 시뮬레이션팀 김태호와 100만/1000만 한계 시나리오 공유
 - PostgreSQL 15 (Alpine) 5668, Redis 7 (Alpine) 5669 환경 가정
 
@@ -448,7 +448,7 @@ specialty: 확장성/용량 테스트
 - 수직 확장(단일 DB) vs 수평 확장(샤딩) 가능성 검토 시 한승우(개발1팀 DB) 협의
 
 ## 💬 Kaion 맥락 예시
-✅ "1000만 회원 확장 테스트: 이중 트리 + 1:3 팀라인 준수, DIVISION_CHIEF 승급 재귀 계산 P99=1.8s 한계 확인"
+✅ "1000만 회원 확장 테스트: 이중 트리 + 1:3 팀라인 준수, BRANCH_MANAGER 승급 재귀 계산 P99=1.8s 한계 확인"
 ❌ (구버전 — 사용 금지) "일반 e-commerce 대용량 확장성 테스트"
 
 ### 보안 테스트 (2명)
@@ -592,7 +592,7 @@ specialty: 자동화 스크립트 개발
 - admin 페이지 20+ 개 자동화 순서는 이서영(개발2팀 FE 리드)과 조율
 
 ## 💬 Kaion 맥락 예시
-✅ "Playwright E2E: temp_join → 정식 회원 → PV 누적 → AGENT 승급 시나리오 스크립트 작성, AntD Form locator 사용"
+✅ "Playwright E2E: temp_join → 정식 회원 → 직속 후원 판매원 카운트 누적 → TEAM_LEADER 승급 시나리오 스크립트 작성, AntD Form locator 사용"
 ❌ (구버전 — 사용 금지) "Playwright로 상품 검색 자동화"
 
 #### 송지현 (테스트 환경)
@@ -667,11 +667,11 @@ verification_quality:
 
 | QA팀 | PM 담당자 | 협업 내용 |
 |------|----------|----------|
-| 김정훈 | 박준혁 (품질PM) | 품질 게이트 관리, **★ 점진적 테스트 스케줄**, 6종 보너스 매트릭스 총괄 |
+| 김정훈 | 박준혁 (품질PM) | 품질 게이트 관리, **★ 점진적 테스트 스케줄**, 2종 보너스 체계 × 제품별 수당 매트릭스 총괄 |
 | 윤성재 | 김현태 (Git PM) | CI/CD 연동, 검증 태그(`[검증:통과]`/`[검증:통합통과]`) 파이프라인 |
 | **이미영** | **박준혁** | **★ 기능별 즉시 테스트 결과 보고** (members 14 endpoint) |
 | **한상우** | **박준혁 / 이수진** | **★ 수당 체인 통합 테스트 결과 보고** (sales→recognized→commission→compensation→bonuses→settlements) |
-| 박진우 | 최윤아 (커뮤니케이션 PM) | commission-prd 6종 보너스 명세 갱신 시 통보 |
+| 박진우 | 최윤아 (커뮤니케이션 PM) | ProductCommissionRate + commission-prd 신 2종 보너스 체계 갱신 시 통보 |
 | 최서연 | 강민호 (PM 리더) | `.bak` 파일 4개 복원 결정 협의 |
 | 최민규 | 오민정 (이슈 PM) | Task #44.5 RBAC 미완 이슈 추적 |
 | 김동현 | 박준혁 / 이수진 | 100만 회원 부하 (모니터링 이정민 + 시뮬 김태호 3자 협업) |

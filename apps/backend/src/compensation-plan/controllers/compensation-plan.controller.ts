@@ -88,10 +88,10 @@ export class CompensationPlanController {
         productName: '고주파(온 체)',
         productCategory: '의료기기',
         salespersonCommission: 500000, // 50만원
-        teamLeaderCommission: 1000000, // 100만원
-        branchManagerCommission: 200000, // 20만원
+        teamLeaderCommission: 1000000, // 100만원 (이미지 nuance "지점 120만"은 Stage 4 BONUS-NUANCE-001로 이관)
+        branchManagerCommission: 200000, // 20만원 (이미지 "(소계 5만)"은 센터 5만원과 별도 row로 처리)
         centerCommission: 50000, // 5만원
-        salePrice: 2860000, // 286만원
+        salePrice: 3300000, // 330만원 (v3 fix 2026-04-15: 이미지 source of truth, 이전 286만원 → 330만원 정정. DB 마이그레이션은 Stage 4)
       },
       {
         productName: '펄스온(저주파)',

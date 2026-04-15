@@ -3,41 +3,56 @@
 > **이 섹션은 모든 페르소나가 호출 시 자동으로 알고 있어야 하는 기본 사실입니다.**
 > 페르소나별 세부 책임은 `.claude/personas/*.md`를 참조하세요.
 
+> **★ v3.1 정정 (2026-04-15)**:
+> - 6종 보너스 → 신 2종 체계 (SALES_COMMISSION + EDUCATION_MANAGEMENT) + 제품별 매트릭스
+> - 등급 5단계(MEMBER/AGENT/MANAGER/BRANCH_CHIEF/DIVISION_CHIEF) → 4단계 영업(SALESPERSON/TEAM_LEADER/BRANCH_MANAGER/CENTER) + ADMIN
+> - 브랜드 컬러 #7CB342 연두색 → #E53935 빨간색 (Material Red 600, 코드 현실에 정합)
+> - 출처: prd2/요청.md 항목 7 (자율 결정 2026-04-15)
+
 ## 회사/제품
 - (주)케이아이온 MLM 통합관리시스템
-- 브랜드 컬러: **#7CB342** (연두색)
+- 브랜드 컬러: **#E53935** (빨간색, Material Red 600)
 - PRD: `.taskmaster/docs/prd.md`
 - 수당 PRD: `.taskmaster/docs/commission-prd.md` (662줄)
 - members README: `apps/backend/src/members/README.md`
 
-## 회원 등급 5단계 (+ ADMIN)
+## 회원 등급 (4단계 영업 + ADMIN system)
 
-| 등급 | 승급 조건 |
-|------|----------|
-| MEMBER | 가입 시 기본 |
-| AGENT | 누적 PV ≥ 1,000,000 |
-| MANAGER | 후원계보 3팀 형성 + 에이전트 15명 육성 |
-| BRANCH_CHIEF | 매니저 3팀 + 매니저 4명 (각 팀 1명+) |
-| DIVISION_CHIEF | 지부장 3팀 + 지부장 5명 (각 팀 1명+) |
-| ADMIN | 시스템 지정 (수당 대상 아님) |
+| 등급 | enum | 승급 조건 |
+|------|------|----------|
+| 판매원 | SALESPERSON | 가입 시 기본 |
+| 팀장 | TEAM_LEADER | 직속 후원 판매원 10명 (한시적 3명) |
+| 지사장 | BRANCH_MANAGER | 직속 후원 팀장 10명 (한시적 3명) |
+| 센터 | CENTER | 지역본부장 관리자 지정 |
+| 관리자 | ADMIN | 시스템 지정 (수당 대상 아님) |
 
-Prisma enum: `MEMBER | AGENT | MANAGER | BRANCH_CHIEF | DIVISION_CHIEF | ADMIN`
+Prisma enum: `SALESPERSON | TEAM_LEADER | BRANCH_MANAGER | CENTER | ADMIN`
 
 ## 이중 계보
 - `recommenderId`: 추천계보 (1:N, 보너스 지급 기준)
 - `sponsorId`: 후원계보 (트리, 승급 조건 기준)
 - `teamLine` 1~3 (DB CHECK 제약, **Kaion 고유** 1:3 팀라인)
 
-## 6종 보너스 (commission-prd §3)
+## 보너스 시스템 (2종 체계)
 
-| 보너스 | 금액 | 대상 |
-|--------|------|------|
-| 판매 | 50만원 (판매자 25 + 추천계보 상위 에이전트 25) | 전체 |
-| 판매 관리 | 15만원 | 직접 추천인 |
-| 판권 | 매니저 10 / 지부장 18 / 본부장 24만 | 매니저 이상 |
-| 판권 관리 | 매니저 5 / 지부장 4 / 본부장 3만 | 동급 상위 |
-| 공유 | 2만원 (중복) | 지부장/본부장 |
-| 지점 운영 | 5만원 | 매니저 이상 (세미나 시) |
+| 보너스 타입 | enum | 대상 | 계산 |
+|-----------|------|------|------|
+| 판매 수수료 | SALES_COMMISSION | 판매원, 팀장 | 제품별 ProductCommissionRate 고정 금액 |
+| 교육 관리 | EDUCATION_MANAGEMENT | 지사장, 센터 | 제품별 ProductCommissionRate 고정 금액 |
+
+## 제품별 수당 매트릭스 (이미지 기준)
+
+| 제품 | 판매원 | 팀장 | 지사장 | 센터 | 판매가 |
+|------|--------|------|--------|------|--------|
+| 고주파(온체) | 50만 | 100만 | 20만 | 5만 | **330만** |
+| 펄스온 | 40만 | 80만 | 15만 | 5만 | 249만 |
+| 제트5 | 25만 | 50만 | 5만 | 5만 | 150만 |
+| 통증 패치 | 미지급 | 2만 | 4,800 | 2,400 | 4만8천 |
+| 전용젤 | 미지급 | 1만5천 | 3,000 | 1,500 | 3만 |
+
+### nuance (Stage 4 처리 예정)
+- 고주파 팀장 "지점 120만" — Stage 4 BONUS-NUANCE-001
+- 고주파 지사장 "(소계 5만)" — 코드는 분리 row로 표현 중
 
 ## 수당 정산 체인
 sales → recognized-sales → commission-rates → compensation-plan → bonuses → settlements → tasks/settlement-scheduler.task.ts (cron)

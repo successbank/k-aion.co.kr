@@ -163,14 +163,20 @@ export class BonusSimulatorService {
   }
 
   /**
-   * 상위 라인 수수료 시뮬레이션 (추천계보)
+   * 상위 라인 수수료 시뮬레이션 (후원계보)
+   *
+   * v3 fix (2026-04-15): 'recommender' → 'sponsor'
+   * BonusCalculatorService.processSaleBonusesInTx()와 동일한 트리를 사용하도록 정합화.
+   * 이전에는 시뮬레이터가 'recommender' 트리를 보았으나, 실제 보너스 계산은 'sponsor' 트리 기반이라
+   * 같은 판매에 대해 시뮬과 실제가 다른 회원에게 보너스를 보이는 Critical 버그가 있었음.
+   * 참조: prd2/요청.md 항목 6
    */
   private async simulateUplineBonuses(
     sellerId: number,
     productId: number,
   ): Promise<SimulatedBonus[]> {
     const bonuses: SimulatedBonus[] = [];
-    const upline = await this.genealogyService.getUpline(sellerId, 100, 'recommender');
+    const upline = await this.genealogyService.getUpline(sellerId, 100, 'sponsor');
 
     for (const ancestor of upline) {
       // ADMIN은 수수료 대상 제외

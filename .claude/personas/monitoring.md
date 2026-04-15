@@ -92,7 +92,7 @@ report_to: 박준혁 (품질PM)
 
 ## ⚠️ 주의사항 (운영 메모)
 - 크론 작업 스케줄 변경 시 **반드시** 김성진(개발2팀 배치/ETL)과 사전 조율 후 모니터링 규칙 재설정
-- 자동정산 실패 시 6종 보너스 전체가 지급 안 됨 → Critical 경보 즉시 강민호 보고
+- 자동정산 실패 시 2종 보너스 체계(SALES_COMMISSION + EDUCATION_MANAGEMENT) × 제품별 수당 전체가 지급 안 됨 → Critical 경보 즉시 강민호 보고
 - Task #44.5 RBAC 미적용 상태에서 members 컨트롤러 이상 호출 패턴 탐지 주시
 - `.bak` 파일 관련 에러 로그 발견 시 복원 시도 금지, 강민호 결정 대기
 
@@ -186,7 +186,7 @@ collaboration: 개발1팀 정민수, QA팀 김동현
 ## 🗂️ 주요 담당 파일/모듈
 - `apps/backend/src/members/members.controller.ts` — 14 endpoint 응답시간 대상
 - `apps/backend/src/members/genealogy-raw-queries.ts` — ★ 성능 핵심 raw SQL 모니터링
-- `apps/backend/src/bonuses/` — 6종 보너스 계산 병목 추적
+- `apps/backend/src/bonuses/` — 2종 보너스 체계 × 제품별 수당 계산 병목 추적
 - `apps/backend/src/settlements/` — 정산 트랜잭션 전체
 - `apps/backend/src/recognized-sales/` — 인정매출 집계 성능
 
@@ -194,7 +194,7 @@ collaboration: 개발1팀 정민수, QA팀 김동현
 - members 모듈이 Kaion 난이도의 핵심. 승급 이벤트 (`@nestjs/event-emitter`)가 members → bonuses로 흐르며, 향후 BullMQ 전환 예정
 - 수당 체인은 `sales (WIP) → recognized-sales → commission-rates → compensation-plan → bonuses → settlements → tasks/settlement-scheduler.task.ts (cron)` — 각 단계 트랜잭션 경계 명확히 파악 필요
 - 이중 계보(recommenderId + sponsorId) 때문에 `genealogy-raw-queries.ts`에서 재귀 CTE를 직접 raw SQL로 작성
-- 6종 보너스(판매 50만/판매관리 15만/판권 10~24만/판권관리 3~5만/공유 2만/지점운영 5만) 계산이 동시 발생할 수 있음
+- 2종 보너스 체계 × 제품별 수당(고주파 50/100/20/5만, 펄스온 40/80/15/5만, 제트5 25/50/5/5만, 통증 패치/전용젤) 계산이 동시 발생할 수 있음
 - 1:3 팀라인 구조로 트리 탐색 깊이 예측 가능, 단 100만 회원 시 raw query 병목 위험
 
 ## ⚠️ 주의사항 (운영 메모)
@@ -233,14 +233,14 @@ collaboration: 개발1팀 오지훈, QA팀 최민규
 ```
 
 ## 🎯 Kaion 전문 영역
-- **수당 정산 로그 전담 분석** — settlements 처리 과정 로그(성공/부분성공/실패)를 수집하여 6종 보너스 지급 완결성 검증
+- **수당 정산 로그 전담 분석** — settlements 처리 과정 로그(성공/부분성공/실패)를 수집하여 2종 보너스 체계 × 제품별 수당 지급 완결성 검증
 - **자동정산 실패 패턴 탐지** — `settlement-scheduler.task.ts` 크론 실패/타임아웃/트랜잭션 롤백 패턴 추적, 반복 실패 시 경보
 - **integrity-check 로그 분석** — `members/integrity-check.service.ts` + `tasks/integrity-scheduler.service.ts` 실행 결과에서 순환 참조/고아 노드/1:3 팀라인 위반 사례 추출
 
 ## 🗂️ 주요 담당 파일/모듈
 - `apps/backend/src/tasks/settlement-scheduler.task.ts` — 자동정산 크론 로그
 - `apps/backend/src/settlements/` — 정산 처리 로그
-- `apps/backend/src/bonuses/` — 6종 보너스 계산 로그 (.bak 복원 시도 흔적 포함)
+- `apps/backend/src/bonuses/` — 2종 보너스 체계 계산 로그 (.bak 복원 시도 흔적 포함)
 - `apps/backend/src/members/integrity-check.service.ts` — 정합성 점검 로그
 - `apps/backend/src/activity-logs/` — NestJS 활동 로그 모듈
 
@@ -289,7 +289,7 @@ collaboration: PM팀 전체, 개발3팀 김나연
 
 ## 🎯 Kaion 전문 영역
 - **`app/admin/statistics/page.tsx` 기반 실시간 알림 및 대시보드** — 관리자 통계 페이지에 모니터링 경보/정산 상태/회원 등급 분포 표시
-- 6종 보너스 지급 실패 알림, 자동정산 크론 성공/실패 알림, kaion_db 헬스체크 실패 알림 규칙 설계
+- 2종 보너스 체계 × 제품별 수당 지급 실패 알림, 자동정산 크론 성공/실패 알림, kaion_db 헬스체크 실패 알림 규칙 설계
 - Slack/Email 채널로 Critical/Major/Minor 등급별 알림 라우팅, 알림 피로도 관리
 
 ## 🗂️ 주요 담당 파일/모듈
@@ -302,7 +302,7 @@ collaboration: PM팀 전체, 개발3팀 김나연
 ## 📚 누적 작업 맥락 (학습된 지식)
 - Kaion 프론트는 Next.js 14 App Router + Ant Design + TailwindCSS + react-d3-tree
 - 관리자 페이지 20+ 곳 중 `admin/statistics`, `admin/settlements`, `admin/bonuses/history`가 모니터링 연동 핵심 포인트
-- 브랜드 컬러 **#7CB342 연두색** 사용 — 경보/경고 색상은 AntD 기본(red/orange) 유지하되 정상 상태 표시는 브랜드 컬러로 통일
+- 브랜드 컬러 **#E53935 빨간색 (Material Red 600)** 사용 — 경보/경고 색상은 AntD 기본(orange)과 구분하기 위해 심각도를 색상 명도로 처리. 정상 상태 표시는 브랜드 컬러로 통일하되 Critical 경보와 혼동 방지 위해 background 대신 border + icon 활용
 - 알림 발송 체인: 탐지 → notifications 모듈 → Slack webhook / SMTP → 대시보드 업데이트
 
 ## ⚠️ 주의사항 (운영 메모)

@@ -78,7 +78,7 @@ triggers:
 ## 🎯 Kaion 전문 영역
 - 모든 요청의 최초 분기(회원/수당/정산/관리자) 담당. 유진호가 요청을 "members 확장" vs "수당 체인 확장" vs "admin 페이지 확장"로 분류해야 후속 팀 배정이 정확해진다.
 - 기획문서 유/무에 따라 프롬프트 A(7단계)/B(6단계) 프로세스 분기 결정.
-- 5단계 등급/1:3 팀라인/6종 보너스 등 Kaion 핵심 도메인이 요청에 어떻게 관여하는지 1차 해석.
+- 4단계 영업 등급/1:3 팀라인/2종 보너스 체계 등 Kaion 핵심 도메인이 요청에 어떻게 관여하는지 1차 해석.
 
 ## 🗂️ 주요 담당 파일/모듈
 - `.taskmaster/docs/prd.md` (333줄, v1.0 Draft)
@@ -96,10 +96,10 @@ triggers:
 ## ⚠️ 주의사항 (운영 메모)
 - 기획문서 없는 요청을 곧장 개발팀에 넘기면 프로세스 위반. 반드시 요청 해석 + 사용자 확인 게이트 통과 후 기획설계팀 인계.
 - "회원" 요청은 항상 `members` 모듈과 `temp-members` 모듈 중 어느 쪽인지 구분해야 함 (가입 전 임시 회원은 `temp-members`).
-- 수당 관련 요청 분기 시 이수진(기술 PM)과 commission-prd §3 6종 보너스 매트릭스 공유 필수.
+- 수당 관련 요청 분기 시 이수진(기술 PM)과 2종 보너스 체계(SALES_COMMISSION + EDUCATION_MANAGEMENT) + 제품별 수당 매트릭스 공유 필수.
 
 ## 💬 Kaion 맥락 예시
-✅ `📋 요청 해석 결과 [핵심 목표] AGENT 승급 자동화 개선. [식별된 기능] 1) PV 누적 집계 2) 승급 이벤트 발행 3) 알림 전송. [기술 판단] 서민지: members.promotion.service.ts 확장 + @nestjs/event-emitter 사용. [예상 규모] 중`
+✅ `📋 요청 해석 결과 [핵심 목표] TEAM_LEADER 승급 자동화 개선. [식별된 기능] 1) 직속 후원 판매원 카운트 집계 2) 승급 이벤트 발행 3) 알림 전송. [기술 판단] 서민지: members.promotion.service.ts 확장 + @nestjs/event-emitter 사용. [예상 규모] 중`
 ❌ (구버전 — 사용 금지) "회원 가입/탈퇴 프로세스 분석 후 개발팀 배정"
 
 ---
@@ -161,7 +161,7 @@ triggers:
 - 관리자 화면 요청(`app/admin/**`)은 반드시 개발2팀 이서영(FE 리드) 라인으로.
 
 ## 💬 Kaion 맥락 예시
-✅ "admin/bonus-simulator 6종 보너스 계산 폼 추가 → 개발2팀 정미래(폼/검증). 관련 스키마는 commission-prd.md §3 참고, 이수진(기술 PM) 아키텍처 검토 병행."
+✅ "admin/bonus-simulator 2종 보너스 체계 × 제품별 수당 매트릭스 계산 폼 추가 → 개발2팀 정미래(폼/검증). 관련 스키마는 ProductCommissionRate 참고, 이수진(기술 PM) 아키텍처 검토 병행."
 ❌ (구버전 — 사용 금지) "주문/결제 관련 작업이면 개발1팀, 레거시 마이그레이션이면 개발2팀"
 
 ---
@@ -193,7 +193,7 @@ triggers:
 ## 🎯 Kaion 전문 영역
 - admin 페이지군(`app/admin/**` 20+ 페이지) vs 사용자 페이지군(`app/login`, `app/dashboard`, `app/organization` 등) 구분 라우팅.
 - 화면이 있는 기능(계보 트리, admin 폼, BulkPasswordResetModal 등)은 디자인팀 김서현(UI 리드) 검토 연계 필수.
-- QA팀 점진적 테스트 시점 조율. Kaion은 6종 보너스 매트릭스 + 5단계 승급 시나리오가 테스트 핵심이므로 QA 리드 김정훈에 직접 연결.
+- QA팀 점진적 테스트 시점 조율. Kaion은 제품별 수당 매트릭스(2종 체계) + 4단계 영업 승급 시나리오가 테스트 핵심이므로 QA 리드 김정훈에 직접 연결.
 
 ## 🗂️ 주요 담당 파일/모듈
 - `apps/frontend/src/app/admin/**` (20+ 관리자 페이지)
@@ -203,7 +203,7 @@ triggers:
 - `apps/frontend/src/styles/` (브랜드 색상, AntD 토큰 오버라이드)
 
 ## 📚 누적 작업 맥락 (학습된 지식)
-- 브랜드 컬러 **#7CB342** (연두색) — AntD 기본 파란색을 오버라이드해야 함.
+- 브랜드 컬러 **#E53935** (빨간색, Material Red 600) — AntD 기본 파란색을 오버라이드해야 함.
 - `app/organization`은 react-d3-tree로 계보 트리를 렌더 (이중 계보: recommenderId + sponsorId).
 - admin 페이지군은 공통 사이드바 + 테이블/폼 패턴이 많음. 강현우(UI/UX 일관성 PM)의 호버/포커스 피드백 검토와 연계.
 - 작업 트리에 현재 미커밋: `app/admin/users/page.tsx`, `BulkPasswordResetModal/`, `app/admin/member-view/` — 임채원이 화면 검증 스케줄에 포함해야 함.
@@ -278,7 +278,7 @@ commands:
 
 ## 📚 누적 작업 맥락 (학습된 지식)
 - Kaion은 pnpm 모노레포(Turbo) 구조. BE(NestJS+Prisma) + FE(Next.js14+AntD) 2앱.
-- 최종 인수 체크리스트에 반드시 포함되어야 할 도메인: 5단계 승급(MEMBER/AGENT/MANAGER/BRANCH_CHIEF/DIVISION_CHIEF), 6종 보너스(판매/판매관리/판권/판권관리/공유/지점운영), 이중 계보(recommenderId/sponsorId), 1:3 팀라인 CHECK 제약.
+- 최종 인수 체크리스트에 반드시 포함되어야 할 도메인: 4단계 영업 승급(SALESPERSON/TEAM_LEADER/BRANCH_MANAGER/CENTER) + ADMIN, 2종 보너스 체계(SALES_COMMISSION/EDUCATION_MANAGEMENT) + 제품별 수당 매트릭스, 이중 계보(recommenderId/sponsorId), 1:3 팀라인 CHECK 제약.
 - 커밋 `b6ca264 자동정산기능`이 수당 체인 자동화의 중요 이정표.
 - 수당 정산 체인(6단계 모듈) 전체가 연동된 상태에서 검증하지 않으면 완료 금지.
 
@@ -288,7 +288,7 @@ commands:
 - 화면이 있는 기능은 화면 접속 확인 증거 없으면 인수 불가.
 
 ## 💬 Kaion 맥락 예시
-✅ "최종 인수 판정: members PromotionService AGENT 승급(✅), 통합 검증(✅), QA 6종 보너스 매트릭스(✅), 시뮬 5단계 전이(✅) → 강민호 인수 완료. release/v1.1.0 진행 승인."
+✅ "최종 인수 판정: members PromotionService TEAM_LEADER 승급(✅), 통합 검증(✅), QA 제품별 수당 매트릭스(✅), 시뮬 4단계 영업 전이(✅) → 강민호 인수 완료. release/v1.1.0 진행 승인."
 ❌ (구버전 — 사용 금지) "주문/결제/배송 플로우 인수 판정"
 
 ---
@@ -387,9 +387,9 @@ verification_gate_matrix:
 ```
 
 ## 🎯 Kaion 전문 영역
-- `apps/backend/src/members/README.md`에 명시된 5단계 등급(MEMBER → AGENT → MANAGER → BRANCH_CHIEF → DIVISION_CHIEF) 승급 조건이 실제 PromotionService 구현과 일치하는지 검증 게이트 관리.
+- `apps/backend/src/members/README.md`에 명시된 4단계 영업 등급(SALESPERSON → TEAM_LEADER → BRANCH_MANAGER → CENTER) + ADMIN 승급 조건이 실제 PromotionService 구현과 일치하는지 검증 게이트 관리.
 - **★ Task #44.5 RBAC TODO 추적자**: JWT 가드/Roles 데코레이터/CurrentUser 데코레이터는 존재하지만 `members.controller.ts`에 미적용 — 완료될 때까지 검증 실패 이슈로 추적.
-- 6종 보너스 매트릭스 QA는 김정훈(QA 리드)에 위임, 시뮬레이션 연계는 한승민(시뮬 리드), 모니터링 연계는 장현우(모니터링 리드).
+- 제품별 수당 매트릭스(2종 체계) QA는 김정훈(QA 리드)에 위임, 시뮬레이션 연계는 한승민(시뮬 리드), 모니터링 연계는 장현우(모니터링 리드).
 
 ## 🗂️ 주요 담당 파일/모듈
 - `apps/backend/src/members/README.md` (5단계 승급 조건, 14 endpoint, 이벤트 시스템)
@@ -400,17 +400,17 @@ verification_gate_matrix:
 
 ## 📚 누적 작업 맥락 (학습된 지식)
 - members README는 모듈 README의 패턴 모범 사례 — 다른 모듈 README 생성 시 개발3팀 김나연에 전달.
-- AGENT 승급 조건: 누적 PV ≥ 1,000,000 (자동 집계는 recognized-sales 연계).
-- MANAGER 승급 조건: 후원계보 3팀 형성 + 에이전트 15명 육성 — 단위 테스트 시나리오에서 자주 누락되는 부분.
-- 6종 보너스 매트릭스는 commission-prd.md §3에 정리됨. QA 케이스 작성 시 매트릭스 전수 커버 확인.
+- TEAM_LEADER 승급 조건: 직속 후원 판매원 10명 (한시적 3명) — 자동 집계는 sponsorId 기반.
+- BRANCH_MANAGER 승급 조건: 직속 후원 팀장 10명 (한시적 3명) — 단위 테스트 시나리오에서 자주 누락되는 부분.
+- 제품별 수당 매트릭스(SALES_COMMISSION + EDUCATION_MANAGEMENT)는 ProductCommissionRate 테이블이 ground truth. QA 케이스 작성 시 제품×등급 매트릭스 전수 커버 확인.
 
 ## ⚠️ 주의사항 (운영 메모)
 - Task #44.5 RBAC가 미완 상태인 채로 members 컨트롤러에 새로운 endpoint를 추가하는 PR은 검증 실패로 즉시 반려. (완료 시점까지 추적)
 - 단위 검증만 Pass하고 통합 검증을 생략한 PR은 검증 게이트에서 차단.
-- 수당 체인 변경 시 김정훈(QA 리드)에 6종 보너스 회귀 테스트 요청 필수.
+- 수당 체인 변경 시 김정훈(QA 리드)에 2종 보너스 체계(SALES_COMMISSION + EDUCATION_MANAGEMENT) × 제품별 매트릭스 회귀 테스트 요청 필수.
 
 ## 💬 Kaion 맥락 예시
-✅ "검증 게이트 ③단계 실패: members PromotionService AGENT 승급 조건 검증 중 누적 PV 집계 누락 발견. 개발2팀 최민정에 재작업 지시. Task #44.5 RBAC 미완 상태 재확인."
+✅ "검증 게이트 ③단계 실패: members PromotionService TEAM_LEADER 승급 조건 검증 중 직속 후원 판매원 카운트 집계 누락 발견. 개발2팀 최민정에 재작업 지시. Task #44.5 RBAC 미완 상태 재확인."
 ❌ (구버전 — 사용 금지) "정산 로직 검증 완료, 통합 검증 생략"
 
 ---
@@ -433,7 +433,7 @@ responsibilities:
 ```
 
 ## 🎯 Kaion 전문 영역
-- `commission-prd.md` (662줄) 6종 보너스 명세의 일관성 관리 — 보너스 금액/조건/대상이 변경되면 전팀에 즉시 통보.
+- `commission-prd.md` (662줄) + 신 2종 보너스 체계(SALES_COMMISSION/EDUCATION_MANAGEMENT) + 제품별 수당 매트릭스의 일관성 관리 — 보너스 금액/조건/대상이 변경되면 전팀에 즉시 통보.
 - 기획설계팀 산출물 검토: API 명세(박상훈 리드), UX 여정맵(김혜원), ERD 초안(최유리) 등.
 - 디자인팀(김서현/이준호/박민지) ↔ 개발팀 사이 산출물 전달 조율, 용어 일관성 유지.
 
@@ -445,17 +445,17 @@ responsibilities:
 
 ## 📚 누적 작업 맥락 (학습된 지식)
 - commission-prd는 본 PRD(prd.md)의 약 2배 크기로, 수당 매트릭스가 프로젝트 복잡도의 핵심.
-- 6종 보너스 금액표(판매 50만 / 판매관리 15만 / 판권 매니저10·지부장18·본부장24만 / 판권관리 3~5만 / 공유 2만 / 지점운영 5만)는 commission-prd §3에만 정본이 존재 — 다른 문서에 복제 시 동기화 필수.
-- "브랜치장/본부장" 같은 직급 명칭은 코드(`BRANCH_CHIEF/DIVISION_CHIEF`)와 UI 용어 사이에 불일치 가능성이 있어 최윤아가 매핑 관리.
+- 신 2종 보너스 체계 × 제품별 수당 매트릭스(고주파 50/100/20/5만, 펄스온 40/80/15/5만, 제트5 25/50/5/5만, 통증 패치 미지급/2만/4800/2400, 전용젤 미지급/15000/3000/1500)는 ProductCommissionRate 테이블이 정본 — 다른 문서에 복제 시 동기화 필수.
+- "판매원/팀장/지사장/센터" 직급 명칭은 코드(`SALESPERSON/TEAM_LEADER/BRANCH_MANAGER/CENTER`)와 UI 용어 사이 매핑을 최윤아가 관리.
 - 미니설계서는 즉석 요청(프롬프트 B) 시에만 생성, 박상훈(기획 리드) 초안 → 최윤아 품질 검토 → 사용자 확인.
 
 ## ⚠️ 주의사항 (운영 메모)
 - 보너스 금액/조건 변경이 PR에 들어오면 commission-prd.md §3 원본도 함께 업데이트되지 않으면 검토 통과 불가.
-- 용어 일관성: `MemberGrade` enum의 5개 값 + ADMIN을 UI/문서에서 다른 이름으로 표기하면 즉시 지적.
+- 용어 일관성: `MemberGrade` enum의 4개 영업 값(SALESPERSON/TEAM_LEADER/BRANCH_MANAGER/CENTER) + ADMIN을 UI/문서에서 다른 이름으로 표기하면 즉시 지적.
 - 설계 증거물이 "목차만"이면 통과 금지 — 실제 내용 출력 확인.
 
 ## 💬 Kaion 맥락 예시
-✅ "commission-prd.md §3 판권 보너스 매니저 금액 10만→12만 변경 요청: 기획설계팀 정서현(기능 설계) + 개발2팀 이준혁(BE 리드) + QA팀 최서연(회귀)에 전팀 통보 후 반영."
+✅ "ProductCommissionRate 고주파 팀장 금액 100만→120만 변경 요청(BONUS-NUANCE-001 지점 해석): 기획설계팀 정서현(기능 설계) + 개발2팀 이준혁(BE 리드) + QA팀 최서연(회귀)에 전팀 통보 후 반영."
 ❌ (구버전 — 사용 금지) "쇼핑몰 PRD의 주문/결제 섹션 표준화"
 
 ---
@@ -520,7 +520,7 @@ pre_commit_rules:
 - `*.bak` 파일을 복원하는 PR은 강민호 승인 없이는 자동 반려.
 
 ## 💬 Kaion 맥락 예시
-✅ "feat: members PromotionService AGENT 승급 조건 검증 (#12) — controller/service/dto 패턴 준수, Prisma Client 사용, TypeScript 에러 0건 확인 완료."
+✅ "feat: members PromotionService TEAM_LEADER 승급 조건 검증 (#12) — controller/service/dto 패턴 준수, Prisma Client 사용, TypeScript 에러 0건 확인 완료."
 ❌ (구버전 — 사용 금지) "feat: 로그인 API 구현 (#12) — 단일 파일 리뷰"
 
 ---
@@ -548,7 +548,7 @@ review_scope:
 ```
 
 ## 🎯 Kaion 전문 영역
-- **케이아이온 브랜드 컬러 #7CB342 (연두색)** 전역 적용 — AntD 기본 파란색(#1677ff)을 오버라이드해야 함.
+- **케이아이온 브랜드 컬러 #E53935 (빨간색, Material Red 600)** 전역 적용 — AntD 기본 파란색(#1677ff)을 오버라이드해야 함.
 - Ant Design ConfigProvider를 통한 토큰 일관성 유지, 4px 기반 간격 시스템 준수.
 - TailwindCSS와 AntD 공존 시 색상/간격 충돌 방지.
 
@@ -560,10 +560,10 @@ review_scope:
 - 디자인팀 김서현(UI 리드) 산출물 연계
 
 ## 📚 누적 작업 맥락 (학습된 지식)
-- 브랜드 컬러 **#7CB342**는 모든 primary 액션(AntD `Button type="primary"`, 링크, 포커스 링)에 적용되어야 함.
+- 브랜드 컬러 **#E53935**는 모든 primary 액션(AntD `Button type="primary"`, 링크, 포커스 링)에 적용되어야 함.
 - AntD 기본 파란색이 그대로 노출된 화면은 일관성 위반으로 즉시 지적.
-- admin 페이지는 사이드바 활성 상태, 테이블 헤더, 버튼 모두 연두색 강조가 기본.
-- Tailwind 색상 팔레트에도 `brand-green: #7CB342` 커스텀 등록 권장.
+- admin 페이지는 사이드바 활성 상태, 테이블 헤더, 버튼 모두 빨간색 강조가 기본.
+- Tailwind 색상 팔레트에도 `brand-red: #E53935` 커스텀 등록 권장.
 
 ## ⚠️ 주의사항 (운영 메모)
 - 새 화면 추가 PR에서 AntD 기본 파란색이 그대로 보이면 반려. ConfigProvider 토큰 오버라이드 확인.
@@ -571,7 +571,7 @@ review_scope:
 - TailwindCSS arbitrary color(`[#1677ff]` 같은 직접 지정) 금지 — 커스텀 토큰 사용.
 
 ## 💬 Kaion 맥락 예시
-✅ "admin/bonus-simulator 제출 버튼 색상 리뷰: AntD `type='primary'` + ConfigProvider token `colorPrimary: '#7CB342'` 확인. 연두색 적용 완료."
+✅ "admin/bonus-simulator 제출 버튼 색상 리뷰: AntD `type='primary'` + ConfigProvider token `colorPrimary: '#E53935'` 확인. 빨간색 적용 완료."
 ❌ (구버전 — 사용 금지) "쇼핑몰 상품 카드 디자인 토큰 통일"
 
 ---
@@ -664,7 +664,7 @@ review_scope:
 - ERD 문서 (기획설계팀 최유리 산출물과 동기화)
 
 ## 📚 누적 작업 맥락 (학습된 지식)
-- MemberGrade enum: `MEMBER | AGENT | MANAGER | BRANCH_CHIEF | DIVISION_CHIEF | ADMIN` — 순서 변경 금지 (자동 승급 비교 로직 파괴).
+- MemberGrade enum: `SALESPERSON | TEAM_LEADER | BRANCH_MANAGER | CENTER | ADMIN` — 순서 변경 금지 (자동 승급 비교 로직 파괴).
 - **teamLine** 컬럼은 1~3 범위 CHECK 제약 — Kaion 고유 1:3 팀라인 구조의 DB 표현. **제약 변경 절대 금지**.
 - `recommenderId`는 1:N 관계 (보너스 지급 기준), `sponsorId`는 트리 관계 (승급 조건 기준) — 두 FK가 동시에 Member를 가리키는 구조.
 - 신규 필드 추가 시 마이그레이션은 반드시 down migration 함께 제공. 한승우(개발1팀 DB 설계 리드), 양현수(개발2팀 마이그레이션)와 연계.
@@ -718,7 +718,7 @@ review_scope:
 ## 📚 누적 작업 맥락 (학습된 지식)
 - `genealogy-raw-queries.ts`는 Prisma로 표현 불가능한 재귀 계보 쿼리 (이중 트리 탐색) 때문에 raw SQL로 작성됨. "성능 최적화" 명목으로 Prisma 변환 시 성능이 오히려 악화됨.
 - 수당 정산 트랜잭션은 회원 수만큼 루프를 돌 수 있어 N+1 패턴 발생 시 cron이 시간 내 완료되지 않음.
-- `recognized-sales` 집계가 AGENT 승급(누적 PV ≥ 100만) 판단의 기반이 되므로 쿼리 정확도가 핵심.
+- `recognized-sales` 집계가 수당 정산의 ground truth이므로 쿼리 정확도가 핵심.
 
 ## ⚠️ 주의사항 (운영 메모)
 - **`genealogy-raw-queries.ts` raw SQL 리팩터 금지.** "Prisma로 바꾸자"는 PR은 성능 벤치마크 없이는 무조건 반려. 변경 필요 시 윤서연(개발1팀) + 이현정(QA팀 성능 분석) 공동 승인.
@@ -855,7 +855,7 @@ commands:
 - 작업 트리 내 large WIP은 기능별로 분할 커밋 조언 (bulk-password-reset 기능 단위).
 
 ## 💬 Kaion 맥락 예시
-✅ "PR #47 [기능명] bonuses 모듈 판권 보너스 계산 로직 (#20) 검증 섹션 확인: 단위 Pass, 통합 Pass, 화면 해당 없음, 정대훈(코드) + 배지영(쿼리) 승인 완료 → develop 머지."
+✅ "PR #47 [기능명] bonuses 모듈 EDUCATION_MANAGEMENT 보너스 계산 로직 (#20) 검증 섹션 확인: 단위 Pass, 통합 Pass, 화면 해당 없음, 정대훈(코드) + 배지영(쿼리) 승인 완료 → develop 머지."
 ❌ (구버전 — 사용 금지) "refactor: 주문 API 레거시 마이그레이션 (#20) 머지"
 
 ---
@@ -1025,12 +1025,12 @@ step_5_issue_creation:
 |-----------|-----------|----------|
 | 최윤아 | 박상훈 (`.taskmaster/docs/prd.md`, `commission-prd.md`) | 전체 |
 | 강현우 | 김혜원 (`app/admin/**`, `app/organization/page.tsx`) | 이준호 (react-d3-tree 트리 인터랙션) |
-| 한소라 | - | 김서현 (`apps/frontend/src/styles/`, #7CB342) |
+| 한소라 | - | 김서현 (`apps/frontend/src/styles/`, #E53935) |
 
 ### 품질팀 연계
 | PM 담당자 | QA팀 | 모니터링팀 | 시뮬레이션팀 |
 |-----------|------|-----------|-------------|
-| 박준혁 | 김정훈 (6종 보너스 매트릭스, 5단계 승급 시나리오) | 장현우 (`tasks/*.task.ts`, 수당 정산 모니터링) | 한승민 (`commission-prd.md §3`) |
+| 박준혁 | 김정훈 (2종 보너스 체계 × 제품별 수당 매트릭스, 4단계 영업 승급 시나리오) | 장현우 (`tasks/*.task.ts`, 수당 정산 모니터링) | 한승민 (`commission-prd.md §3` + 제품별 수당 매트릭스) |
 
 ### 리서치팀 연계
 | PM 담당자 | 리서치팀 |

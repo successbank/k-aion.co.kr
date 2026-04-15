@@ -1,13 +1,35 @@
-# (주)케이아이온 전산프로그램 개발 PRD
+# (주)케이아이온 수당 PRD v2.0 (2026-04-15 신 체계 재작성)
 
-**Product Requirements Document**
+**Product Requirements Document — 보상플랜 / 수당 / 정산**
 
-| 항목     | 내용               |
-| -------- | ------------------ |
-| 문서버전 | 2.0                |
-| 작성일자 | 2025년 12월        |
-| 상태     | 초안(Draft)        |
-| 기반자료 | 케이아이온 보상플랜 문서 |
+| 항목     | 내용                                       |
+| -------- | ------------------------------------------ |
+| 문서버전 | 2.0                                        |
+| 작성일자 | 2026-04-15                                 |
+| 상태    | 재작성 (Rewritten, v1.0 전면 교체)          |
+| 기반자료 | 첨부 보상플랜 이미지 + `schema.prisma` 현재 구현 |
+| 우선순위 | 이미지 > 코드 > PRD 문서 (충돌 시 코드 신뢰) |
+
+---
+
+## 0. 변경 이력
+
+| 버전 | 일자 | 변경 내용 | 작성 |
+|------|------|----------|------|
+| v1.0 | 2025-12 | 초안 — 구 6종 보너스 체계 (SALES, SALES_MGMT, LICENSE, LICENSE_MGMT, SHARING, BRANCH_OPERATION) + 5단계 등급(MEMBER/AGENT/MANAGER/BRANCH_CHIEF/DIVISION_CHIEF) | 기획설계팀 |
+| v2.0 | 2026-04-15 | **신 체계로 전면 재작성** — 첨부 보상플랜 이미지 + 현재 schema(BonusType 2종 SALES_COMMISSION + EDUCATION_MANAGEMENT, 4단계 영업 + ADMIN) 기준. 제품별 매트릭스 + 자동정산 스케줄러 + RecognizedSales 모델 반영. | 기획설계팀 + PM팀 강민호 주관 |
+
+### v1.0 → v2.0 구 체계 vs 신 체계 한눈에
+
+| 영역 | v1.0 (구) | v2.0 (신, 현재 코드) |
+|------|-----------|---------------------|
+| 등급 체계 | 5단계 영업 (MEMBER/AGENT/MANAGER/BRANCH_CHIEF/DIVISION_CHIEF) + ADMIN | **4단계 영업 (SALESPERSON/TEAM_LEADER/BRANCH_MANAGER/CENTER) + ADMIN** |
+| BonusType | 6종 (SALES, SALES_MGMT, LICENSE, LICENSE_MGMT, SHARING, BRANCH_OPERATION) | **2종 (SALES_COMMISSION, EDUCATION_MANAGEMENT)** |
+| 수당 계산 | 보너스별 고정 금액 (ex. 판매 보너스 50만, 공유 보너스 2만) | **제품별 × 등급별 매트릭스 (ProductCommissionRate)** |
+| 계보 사용 | 판매 보너스 = 추천계보 / 판권 달성 = 후원계보 | **후원계보(sponsor) 단일** — recommenderId는 @deprecated |
+| 정산 | 화요일 수동 처리 | **자동정산 스케줄러 (SettlementSchedule + cron)** — 단, calculate/confirm/pay는 여전히 수동 (Stage 4 이슈) |
+| 승급 조건 | PV 기반 (100만/15명/3팀 등) | **인원수 기반 (판매원 10명, 팀장 10명). SystemConfig로 "한시적 3명" 토글** |
+| 수당률 관리 | CommissionRate + CommissionRateTier + CommissionQualification (구 6종 기반) | **ProductCommissionRate (productId + recipientGrade unique)**. 구 모듈은 유령 상태 (Stage 4 STAGE3-006) |
 
 ---
 
@@ -17,646 +39,717 @@
 
 | 항목          | 내용                                                             |
 | ------------- | ---------------------------------------------------------------- |
-| 프로젝트명    | (주)케이아이온 통합관리시스템                                  |
-| 회사명        | (주)케이아이온                                                 |
-| 프로젝트 목적 | 회원관리, 제품관리, 보상플랜(수당) 관리를 통합한 전산시스템 구축 |
-| 브랜드 컬러   | **#7CB342** (연두색)                                             |
+| 프로젝트명    | (주)케이아이온 통합관리시스템                                     |
+| 회사명        | (주)케이아이온                                                   |
+| 프로젝트 목적 | 회원관리 · 제품관리 · 보상플랜(수당) 관리를 통합한 전산시스템 구축 |
+| 브랜드 컬러   | **#E53935** (Material Red 600) — 실제 프론트엔드 하드코딩 기준. v1.0의 #7CB342는 Swagger topbar 1건 외 전량 폐기 |
 
-### 1.2 핵심 기능 범위
+### 1.2 핵심 기능 범위 (v2.0)
 
-1. **회원관리**: 회원 → 에이전트 → 매니저 → 지부장 → 본부장 → 최고관리자 계층구조
-2. **계보관리**: 추천계보 및 후원계보 이원화 관리
-3. **제품관리**: 카테고리 관리 포함, PV(Point Value) 기반 제품 관리
-4. **수당관리**: 6종 보너스 자동 정산 시스템
-5. **권한기반 화면**: 각 등급별 전용 대시보드
+1. **회원관리**: 4단계 영업 등급 + ADMIN 계층 구조
+2. **계보관리**: 후원계보(sponsorId) 단일 기반. 추천계보(recommenderId)는 @deprecated 유지만
+3. **제품관리**: 카테고리 + PV + 제품별 수당율 매트릭스
+4. **수당관리**: 2종 BonusType + 제품별 ProductCommissionRate 기반 자동 계산
+5. **자동정산**: SettlementSchedule(DAILY/WEEKLY/MONTHLY) + settlement-scheduler.task.ts 크론
+6. **인정매출/인정판권**: RecognizedSales 모델로 등급/판권 임시 효력 부여
 
 ---
 
-## 2. 회원 등급 체계
+## 2. 회원 등급 체계 (4단계 영업 + ADMIN)
+
+Prisma enum (`schema.prisma` 363~369 line): `SALESPERSON | TEAM_LEADER | BRANCH_MANAGER | CENTER | ADMIN`
 
 ### 2.1 등급 정의
 
-| 등급           | 승급 조건                              | 설명                              |
-| -------------- | -------------------------------------- | --------------------------------- |
-| **회원**       | 가입 시 기본                           | 누적 100만 포인트 미만 구매자     |
-| **에이전트**   | 누적 100만 PV 이상 구매                | 판매 활동 가능한 정식 회원        |
-| **매니저**     | 에이전트 3팀 형성 + 에이전트 15명 육성 | 후원계보 기준                     |
-| **지부장**     | 매니저 3팀 형성 + 매니저 4명 육성      | 각 팀당 1명 이상 매니저 필수      |
-| **본부장**     | 지부장 3팀 형성 + 지부장 5명 육성      | 각 팀당 1명 이상 지부장 필수      |
-| **최고관리자** | 시스템 지정                            | 전체 시스템 관리 (수당 대상 아님) |
+| 등급 | enum 값 | 자격 조건 | 수수료 분류 | 한글 표기 |
+|------|--------|----------|----------|----------|
+| 판매원 | `SALESPERSON` | 가입 시 기본 등급. **제품 1세트 판매 후** 수수료 자격 취득 (이미지 명시) | 판매 수수료 (SALES_COMMISSION) | 판매원 |
+| 팀장 | `TEAM_LEADER` | 직속 후원 판매원 N명 소개 — 정상 10명, 한시적 3명 | 판매 수수료 (SALES_COMMISSION) | 팀장 |
+| 지사장 | `BRANCH_MANAGER` | 직속 후원 팀장 N명 소개 — 정상 10명, 한시적 3명 | 교육 관리 (EDUCATION_MANAGEMENT) | 지사장 |
+| 센터 | `CENTER` | 지역본부장으로 **관리자 수동 지정** (인원 조건 없음) | 교육 관리 (EDUCATION_MANAGEMENT) | 센터 |
+| 관리자 | `ADMIN` | 시스템 관리자 지정 — **수당 대상 아님** | - | 관리자 |
 
-### 2.2 승급 조건 상세
+### 2.2 등급 계층 (높은 순서)
 
-#### 매니저 승급 조건
+`BonusCalculatorService.GRADE_ORDER` 상수:
 
-```
-조건 1: 후원계보상 3개 팀(라인) 형성
-조건 2: 후원계보 하위에 에이전트 15명 육성
-```
-
-#### 지부장 승급 조건
-
-```
-조건 1: 후원계보상 3개 팀(라인) 형성
-조건 2: 각 팀에서 최소 1명 이상의 매니저 육성
-조건 3: 3개 팀의 매니저 총합 4명 이상
+```ts
+const GRADE_ORDER: MemberGrade[] = [
+  MemberGrade.ADMIN,           // 0 (가장 높음)
+  MemberGrade.CENTER,          // 1
+  MemberGrade.BRANCH_MANAGER,  // 2
+  MemberGrade.TEAM_LEADER,     // 3
+  MemberGrade.SALESPERSON,     // 4 (가장 낮음)
+];
 ```
 
-#### 본부장 승급 조건
+### 2.3 한시적 승급 조건 (DB 제어)
 
+`SystemConfig` 테이블 key 3개로 런타임 제어. `PromotionService` 구현.
+
+| SystemConfig.key | 설명 | 기본값 | 사용 위치 |
+|-----------------|------|--------|----------|
+| `PROMOTION_TEMPORARY_CONDITION_ACTIVE` | 한시적 조건 on/off (`'true'`/`'false'`) | `'false'` | `PromotionService.isTemporaryConditionActive()` |
+| `SALESPERSON_TO_TEAM_LEADER_COUNT` | 판매원→팀장 승급 인원 (한시적일 때만 조회) | `'3'` | `PromotionService.getRequiredCount('SALESPERSON_TO_TEAM_LEADER')` |
+| `TEAM_LEADER_TO_BRANCH_MANAGER_COUNT` | 팀장→지사장 승급 인원 (한시적일 때만 조회) | `'3'` | `PromotionService.getRequiredCount('TEAM_LEADER_TO_BRANCH_MANAGER')` |
+
+- `PROMOTION_TEMPORARY_CONDITION_ACTIVE = false` → 강제로 10명 반환 (정상 조건)
+- `PROMOTION_TEMPORARY_CONDITION_ACTIVE = true` → `SALESPERSON_TO_TEAM_LEADER_COUNT` / `TEAM_LEADER_TO_BRANCH_MANAGER_COUNT` 값 조회 (기본 3)
+- BRANCH_MANAGER → CENTER, CENTER → ADMIN은 수동 지정이므로 SystemConfig 없음
+
+### 2.4 계보 구조 (후원계보 단일 운영)
+
+| 구분 | 필드 | 용도 | 운영 상태 |
+|------|------|------|----------|
+| 후원계보 | `Member.sponsorId` + `teamLine (1|2|3)` | **수당 계산 + 승급 조건** 모두 후원계보 기반 | ★ 실제 운영 |
+| 추천계보 | `Member.recommenderId` | 구 체계에서 판매 보너스 분배 기준 | `@deprecated` — schema에만 존재, 런타임 미사용 |
+
+`BonusCalculatorService.processSaleBonusesInTx()` line 227:
+
+```ts
+const upline = await this.genealogyService.getUpline(sale.sellerId, 100, 'sponsor');
 ```
-조건 1: 후원계보상 3개 팀(라인) 형성
-조건 2: 각 팀에서 최소 1명 이상의 지부장 육성
-조건 3: 3개 팀의 지부장 총합 5명 이상
-```
 
-### 2.3 계보 구조 (이원화)
+두 번째 인자가 `'sponsor'`. v1.0 PRD의 "판매 보너스는 추천계보로 지급" 규정은 **폐기**.
 
-시스템은 **추천계보**와 **후원계보** 두 가지 계보를 관리합니다.
-
-| 구분     | 추천계보                      | 후원계보                        |
-| -------- | ----------------------------- | ------------------------------- |
-| **정의** | 직접 추천한 회원 관계         | 조직 내 배치 관계 (스폰서 라인) |
-| **용도** | 판매 보너스, 판권 보너스 지급 | 승급 조건 판단, 팀 구성         |
-| **특징** | 1:N 관계 (여러 명 추천 가능)  | 트리 구조 (3팀 기반)            |
+> **주의** (Stage 1 발견 C1): 2026-04-15 이전 `BonusSimulatorService`는 `'recommender'`로 호출해 실제 계산기(Calculator)와 불일치했음. Stage 2.7에서 `'sponsor'`로 통일 완료.
 
 ---
 
-## 3. 보너스(커미션) 시스템
+## 3. 보너스 시스템 (2종 체계)
 
-### 3.1 보너스 종류 요약
+Prisma enum (`schema.prisma` 381~384 line): `BonusType = SALES_COMMISSION | EDUCATION_MANAGEMENT`
 
-| 보너스 유형          | 금액            | 대상          | 지급 조건                |
-| -------------------- | --------------- | ------------- | ------------------------ |
-| 판매 보너스          | 500,000원       | 전체          | 제품 판매 시             |
-| 판매 관리 보너스     | 150,000원       | 추천인        | 추천 회원 판매 시        |
-| 판권 보너스 (매니저) | 100,000원       | 매니저        | 직접 판매 시             |
-| 판권 보너스 (지부장) | 180,000원       | 지부장        | 직접 판매 시             |
-| 판권 보너스 (본부장) | 240,000원       | 본부장        | 직접 판매 시             |
-| 판권 관리 보너스     | 30,000~50,000원 | 매니저 이상   | 동급 하위 회원 판매 시   |
-| 공유 보너스          | 20,000원        | 지부장/본부장 | 하위 판매 발생 시 (중복) |
-| 지점 운영 보너스     | 50,000원        | 매니저 이상   | 세미나 진행 시           |
+### 3.1 SALES_COMMISSION (판매 수수료)
 
-### 3.2 판매 보너스 상세
+| 항목 | 내용 |
+|------|------|
+| 대상 등급 | 판매원 (`SALESPERSON`) + 팀장 (`TEAM_LEADER`) |
+| 트리거 | 실제 제품 판매 발생 시 (`Sale.isRecognizedSale = false`) |
+| 계산 | `ProductCommissionRate.amount` (제품별 × 등급별 고정 금액) |
+| 분배 | ① 판매자 본인에게 본인 등급 금액 + ② 후원계보 상위 라인의 TEAM_LEADER에게 TEAM_LEADER 금액 |
+| amount = 0 케이스 | **Bonus row 생성 안 함** (`if (rate && rate.amount > 0)` 가드) |
 
-#### 기본 구조
+### 3.2 EDUCATION_MANAGEMENT (교육 관리)
 
-```
-총 판매 보너스: 500,000원
+| 항목 | 내용 |
+|------|------|
+| 대상 등급 | 지사장 (`BRANCH_MANAGER`) + 센터 (`CENTER`) |
+| 트리거 | 하위 라인의 실제 제품 판매 발생 시 |
+| 계산 | `ProductCommissionRate.amount` (제품별 × 등급별 고정 금액) |
+| 분배 | 판매자 후원계보 상위 라인의 BRANCH_MANAGER / CENTER에게 각각 해당 등급 금액 |
+| 비고 | 판매자가 본인이 지사장/센터여도 본인이 받는 것이 아니라 **상위 라인에 지급**. 지사장/센터는 상위 라인 탐색 결과로만 수당 수령 |
 
-분배:
-├── 판매자 (회원/에이전트): 250,000원
-└── 추천계보 상위 에이전트: 250,000원
-    (가장 가까운 에이전트에게 지급)
-```
-
-#### 지급 로직
-
-1. 회원이 제품 판매 완료
-2. 판매자에게 250,000원 지급
-3. 추천계보를 따라 상위로 올라가며 가장 가까운 **에이전트 이상** 등급 찾기
-4. 해당 에이전트에게 250,000원 지급
-
-#### 시스템 구현 요구사항
+### 3.3 Bonus 계산 흐름 (`BonusCalculatorService.processSaleBonusesInTx`)
 
 ```
-function calculateSalesBonus(sellerId, saleAmount) {
-    // 1. 판매자에게 25만원 지급
-    addBonus(sellerId, 250000, 'SALES_BONUS');
+Sale 생성 (isRecognizedSale=false)
+  ↓
+BonusCalculatorService.processSaleBonusesInTx(tx, saleId)
+  ├─ weekCode = getWeekCode(sale.soldAt)              // "YYYY-Wnn"
+  ├─ productId = sale.productId
+  ├─ [1] 판매자 본인 수수료
+  │   ├─ sale.seller.grade === ADMIN → skip
+  │   ├─ rate = ProductCommissionRate[productId, seller.grade]
+  │   ├─ if (rate && rate.amount > 0):
+  │   │   ├─ bonusType = getBonusTypeForGrade(seller.grade)
+  │   │   │   ├─ SALESPERSON | TEAM_LEADER → SALES_COMMISSION
+  │   │   │   └─ BRANCH_MANAGER | CENTER   → EDUCATION_MANAGEMENT
+  │   │   └─ Bonus.create({ memberId, saleId, bonusType, amount, weekCode, status: PENDING })
+  │
+  ├─ [2] 후원 상위 라인 탐색
+  │   ├─ upline = genealogyService.getUpline(sellerId, 100, 'sponsor')
+  │   └─ for ancestor in upline:
+  │       ├─ ancestor.grade === ADMIN       → continue (skip)
+  │       ├─ ancestor.grade === SALESPERSON → continue (상위 탐색이므로 판매원은 본인만)
+  │       ├─ rate = ProductCommissionRate[productId, ancestor.grade]
+  │       ├─ if (rate && rate.amount > 0):
+  │       │   ├─ bonusType = getBonusTypeForGrade(ancestor.grade)
+  │       │   └─ Bonus.create(...)
+  │       └─ continue (상위로 계속)
+  │
+  └─ return bonuses[]
+```
 
-    // 2. 추천계보 상위에서 가장 가까운 에이전트 찾기
-    let currentId = getRecommender(sellerId); // 추천인
-    while (currentId != null) {
-        if (getMemberGrade(currentId) >= 'AGENT') {
-            addBonus(currentId, 250000, 'SALES_BONUS_REFERRAL');
-            break;
-        }
-        currentId = getRecommender(currentId);
-    }
+**핵심 가드 2건**:
+1. `ADMIN` 상위는 항상 skip (관리자는 수당 미수령)
+2. `SALESPERSON` 상위도 skip (상위 탐색 단계에서 판매원은 본인 수당만 받고 라인 수당은 받지 못함)
+
+### 3.4 주차 코드 (weekCode)
+
+`BonusCalculatorService.getWeekCode(date: Date): string`
+
+```ts
+const year = date.getFullYear();
+const startOfYear = new Date(year, 0, 1);
+const days = Math.floor((date.getTime() - startOfYear.getTime()) / (24 * 60 * 60 * 1000));
+const weekNumber = Math.ceil((days + startOfYear.getDay() + 1) / 7);
+return `${year}-W${weekNumber.toString().padStart(2, '0')}`;  // "2026-W15"
+```
+
+> **주의** (Stage 4 STAGE3-012): 현재 시스템에 weekCode 포맷 3종이 독립 존재.
+> - `Sale.weekCode`: 일부 경로 `"2026-04"` (월 포맷)
+> - `Bonus.weekCode` / `Settlement.weekCode`: `"2026-W15"` (ISO 주차 유사)
+> - 이 불일치는 정산 조인 시 결함 원인. Stage 4 STAGE3-012로 정상화 예정.
+
+### 3.5 인정매출(RecognizedSale) 처리
+
+`Sale.isRecognizedSale = true`인 경우 Bonus 계산에서 **완전히 제외**. (bonus-calculator.service.ts line 86)
+
+```ts
+if (sale.isRecognizedSale) {
+  this.logger.log(`인정매출(ID: ${saleId}, ${sale.saleCode})은 보너스 계산에서 제외됩니다.`);
+  return [];
 }
 ```
 
-### 3.3 판매 관리 보너스 상세
+즉, 인정매출은 판매 기록으로만 남고 수당은 발생하지 않음. 인정매출의 목적은 "등급 유지/승급 기록용 가짜 매출"이며, 실제 수당 흐름과는 분리됨.
 
-#### 기본 구조
-
-```
-판매 관리 보너스: 150,000원
-조건: 추천한 회원이 판매 시 추천인에게 지급
-비례: 판매 보너스 지급에 비례
-```
-
-#### 지급 로직
-
-1. 하위 회원이 판매 보너스 수령
-2. 해당 회원의 **직접 추천인**에게 150,000원 지급
-
-### 3.4 판권 보너스 상세
-
-#### 등급별 금액
-
-| 등급   | 금액      | 승급 조건          |
-| ------ | --------- | ------------------ |
-| 매니저 | 100,000원 | 에이전트 15명 육성 |
-| 지부장 | 180,000원 | 매니저 4명 육성    |
-| 본부장 | 240,000원 | 지부장 5명 육성    |
-
-#### 지급 조건
-
-- **직접 판매 시** 판매 보너스에 추가로 판권 보너스 지급
-- 판권은 **후원계보**로 달성
-- 판권 보너스는 **추천계보**로 지급
-
-#### 예시: 매니저가 직접 판매 시
-
-```
-수령 보너스:
-├── 판매 보너스: 500,000원 (250,000 + 추천 상위 250,000)
-└── 판권 보너스: 100,000원
-    총합: 600,000원 (본인 수령: 350,000원)
-```
-
-### 3.5 판권 관리 보너스 상세
-
-#### 동급 간 보너스
-
-| 관계            | 금액     | 조건                |
-| --------------- | -------- | ------------------- |
-| 매니저 → 매니저 | 50,000원 | 하위 매니저 판매 시 |
-| 지부장 → 지부장 | 40,000원 | 하위 지부장 판매 시 |
-| 본부장 → 본부장 | 30,000원 | 하위 본부장 판매 시 |
-
-#### 지급 로직
-
-- 판매자와 **동일한 등급**의 상위 회원에게 지급
-- 추천계보 기준으로 가장 가까운 동급 상위자
-
-### 3.6 공유 보너스 상세
-
-#### 기본 구조
-
-| 등급   | 금액     | 비고      |
-| ------ | -------- | --------- |
-| 지부장 | 20,000원 | 중복 지급 |
-| 본부장 | 20,000원 | 중복 지급 |
-
-#### 중복 지급 의미
-
-- 하위 조직에서 판매 발생 시
-- 해당 라인의 **모든** 지부장과 본부장에게 각각 지급
-- 여러 명이 동시에 수령 가능
-
-#### 지급 로직 예시
-
-```
-판매 발생 → 추천계보 상위로 탐색
-├── 지부장 A: 20,000원 지급
-├── 본부장 B: 20,000원 지급
-├── 지부장 C: 20,000원 지급 (중복)
-└── 본부장 D: 20,000원 지급 (중복)
-```
-
-### 3.7 지점 운영 보너스 상세
-
-| 항목 | 내용                                   |
-| ---- | -------------------------------------- |
-| 대상 | 매니저 이상                            |
-| 금액 | 50,000원                               |
-| 조건 | 사무실 보유 + 빔/TV 보유 + 세미나 진행 |
-
-#### 조건 체크 항목
-
-- [ ] 사무실(지점) 등록 여부
-- [ ] 세미나 장비(빔 프로젝터 or TV) 보유 여부
-- [ ] 해당 주 세미나 진행 여부
+> **알려진 이슈** (Stage 4 STAGE3-007): `sales.createRecognizedSale()`과 `recognized-sales.create()` 두 경로가 이중 구현되어 있음. 통합 검증 부재.
 
 ---
 
-## 4. 보너스 정산 시스템
+## 4. 제품별 수당 매트릭스 (★ 이미지 Source of Truth)
 
-### 4.1 정산 주기
+이미지 원본 기반 5×4 매트릭스. `ProductCommissionRate` 테이블 + `compensation-plan.controller.ts` 하드코딩 commissionTable(line 86~132)에 동일 반영.
 
-| 항목      | 내용                        |
-| --------- | --------------------------- |
-| 마감 기간 | 일요일 00:00 ~ 월요일 23:59 |
-| 정산 처리 | 화요일                      |
-| 지급일    | 익주 수요일                 |
+### 4.1 금액 매트릭스
 
-### 4.2 정산 프로세스
+| 제품 | 카테고리 | 판매원 (SALES_COMMISSION) | 팀장 (SALES_COMMISSION) | 지사장 (EDUCATION_MANAGEMENT) | 센터 (EDUCATION_MANAGEMENT) | 판매가 |
+|------|----------|--------------------------|------------------------|------------------------------|----------------------------|-------|
+| 고주파(온 체) | 의료기기 | 500,000원 | 1,000,000원 | 200,000원 | 50,000원 | **3,300,000원** |
+| 펄스온(저주파) | 의료기기 | 400,000원 | 800,000원 | 150,000원 | 50,000원 | 2,490,000원 |
+| 제트5(초음파) | 의료기기 | 250,000원 | 500,000원 | 50,000원 | 50,000원 | 1,500,000원 |
+| 통증 패치 | 소모품 | **0 (미지급)** | 20,000원 | 4,800원 | 2,400원 | 48,000원 |
+| 전용젤 | 소모품 | **0 (미지급)** | 15,000원 | 3,000원 | 1,500원 | 30,000원 |
 
-```
-[1단계] 실적 집계 (화요일 자동)
-    ├── 일요일~월요일 판매 실적 집계
-    ├── 승급 조건 재계산
-    └── 보너스 자동 계산
+### 4.2 "미지급" 구현 방식
 
-[2단계] 검증 (화요일)
-    ├── 자동 계산 결과 검토
-    ├── 이상 데이터 확인
-    └── 최고관리자 승인
+통증 패치/전용젤의 판매원 row는 **두 가지 중 하나**로 저장:
+- ① `ProductCommissionRate.amount = 0` 로 row 존재 (정식 저장, "명시적 0" 케이스)
+- ② Row 자체가 없음 (`findUnique()` 가 null 반환)
 
-[3단계] 확정 (화요일 저녁)
-    └── 정산 데이터 확정 (수정 불가)
+`BonusCalculatorService.processSaleBonusesInTx()`의 가드:
 
-[4단계] 지급 (수요일)
-    ├── 지급 데이터 생성
-    ├── 계좌 이체 처리
-    └── 지급 완료 알림
+```ts
+if (rate && rate.amount > 0) {
+  // Bonus.create(...)
+}
 ```
 
-### 4.3 보너스 계산 플로우
+→ 두 케이스 모두 Bonus row 미생성. 즉 통증패치/전용젤을 판매원이 팔면 **본인 수당 0원**. 상위 라인(팀장/지사장/센터)에게만 수당 발생.
 
-```
-판매 발생 시 자동 계산:
+### 4.3 미해결 nuance (Stage 4 이관 2건)
 
-1. 판매 보너스 계산
-   ├── 판매자: +250,000원
-   └── 추천 상위 에이전트: +250,000원
+이미지에는 있지만 현재 schema가 표현 못 하는 미묘한 차이 2건. Stage 4에서 처리.
 
-2. 판매 관리 보너스 계산
-   └── 직접 추천인: +150,000원
+#### nuance #1: 온 체 팀장 "100만원 / 지점 120만원"
 
-3. 판권 보너스 계산 (매니저 이상)
-   └── 판매자 등급에 따른 금액 지급
+- 이미지 원본: 온 체(고주파) 팀장 column에 "100만원 / 지점 120만원" 표기
+- 현재 코드: 100만원 단일
+- "지점"의 정확한 의미 미정:
+  - 가설 A: 일반 팀장 100만원, "지점장 직속 팀장" 차등 120만원 (계층 차등)
+  - 가설 B: 자가 판매 vs 라인 판매 차이
+  - 가설 C: 지점(법인 사무실 보유) 팀장 차등
+- **현재 처리**: 100만원 단일 유지. 사용자 도메인 지식 필요.
+- **Stage 4 항목 ID**: `BONUS-NUANCE-001` (P2 Medium)
+- **확장 방향** (결정 시): `ProductCommissionRate`에 `branchBonusAmount` 필드 추가 + 마이그레이션 + 데이터 백필 + 코드 분기 + UI 반영
 
-4. 판권 관리 보너스 계산
-   └── 동급 상위자: 등급별 금액 지급
+#### nuance #2: 온 체 지사장 "20만원 (소계 5만)"
 
-5. 공유 보너스 계산
-   └── 라인 상위 지부장/본부장 전원: 각 +20,000원
+- 이미지 원본: 온 체 지사장 column에 "20만원 (소계 5만)" 표기
+- 현재 코드: 지사장 20만원 + 센터 5만원 독립 row (합계 25만)
+- 해석: "(소계 5만)"은 센터 5만원이 별도 존재함을 알리는 메모로 해석 (v2.0 공식 결정)
+- **현재 처리**: 지사장 20만원 단일 row + 센터 5만원 단일 row. 변경 없음.
+- 이유: 데이터 정확성 측면에서 지사장/센터 분리 유지가 명확. 합산은 표시 단계에서 가능.
+- **Stage 4 항목 없음** (v2.0 확정 해석)
 
-6. 지점 운영 보너스 (조건 충족 시)
-   └── 세미나 진행자: +50,000원
-```
+### 4.4 제품별 수당율 관리 UI
+
+`/admin/commission-rates` (프론트엔드) → `/admin/product-commission-rates` API → `ProductCommissionRate` 테이블.
+
+구 `commission-rates` 모듈(`CommissionRate` + `CommissionRateTier` + `CommissionQualification`)은 **유령 모듈**. UI 일부에서 여전히 참조되나 실제 수당 계산은 `ProductCommissionRate`만 사용. Stage 4 STAGE3-006에서 폐기 예정.
 
 ---
 
-## 5. 데이터베이스 설계
+## 5. 자격 조건 (승급 로직)
 
-### 5.1 핵심 테이블
+`PromotionService` (`apps/backend/src/members/promotion.service.ts`) 구현.
 
-#### members (회원)
+### 5.1 승급 조건표
 
-```sql
-CREATE TABLE members (
-    id              BIGINT PRIMARY KEY AUTO_INCREMENT,
-    member_code     VARCHAR(20) UNIQUE NOT NULL,     -- 회원코드
-    name            VARCHAR(100) NOT NULL,            -- 이름
-    phone           VARCHAR(20),                      -- 연락처
-    email           VARCHAR(100),                     -- 이메일
-    grade           ENUM('MEMBER', 'AGENT', 'MANAGER', 'BRANCH_CHIEF', 'DIVISION_CHIEF', 'ADMIN'),
-    total_pv        DECIMAL(15,2) DEFAULT 0,          -- 누적 PV
-    recommender_id  BIGINT,                           -- 추천인 (추천계보)
-    sponsor_id      BIGINT,                           -- 후원인 (후원계보)
-    team_line       INT,                              -- 팀 라인 번호 (1,2,3)
-    bank_name       VARCHAR(50),                      -- 은행명
-    bank_account    VARCHAR(50),                      -- 계좌번호
-    has_office      BOOLEAN DEFAULT FALSE,            -- 사무실 보유
-    has_seminar_equip BOOLEAN DEFAULT FALSE,          -- 세미나 장비 보유
-    status          ENUM('ACTIVE', 'INACTIVE', 'WITHDRAWN'),
-    created_at      TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    updated_at      TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+| 현재 등급 | 목표 등급 | 조건 | 정상 | 한시적 | SystemConfig key |
+|----------|----------|------|------|------|------------------|
+| SALESPERSON | TEAM_LEADER | 직속 후원 판매원 N명 달성 | 10 | 3 | `SALESPERSON_TO_TEAM_LEADER_COUNT` |
+| TEAM_LEADER | BRANCH_MANAGER | 직속 후원 팀장 N명 달성 | 10 | 3 | `TEAM_LEADER_TO_BRANCH_MANAGER_COUNT` |
+| BRANCH_MANAGER | CENTER | 관리자 수동 지정 | - | - | (없음) |
+| CENTER | ADMIN | 시스템 관리자 수동 | - | - | (없음) |
 
-    FOREIGN KEY (recommender_id) REFERENCES members(id),
-    FOREIGN KEY (sponsor_id) REFERENCES members(id)
-);
-```
+**"직속 후원"의 정의**: `Member.sponsorId = targetMemberId` 직계 (depth 1). 다단 후원은 집계에 포함하지 않음.
 
-#### sales (판매)
+### 5.2 판매원 → 수당 자격 취득 (이미지 명시)
 
-```sql
-CREATE TABLE sales (
-    id              BIGINT PRIMARY KEY AUTO_INCREMENT,
-    sale_code       VARCHAR(30) UNIQUE NOT NULL,      -- 판매코드
-    seller_id       BIGINT NOT NULL,                  -- 판매자
-    buyer_name      VARCHAR(100),                     -- 구매자명
-    buyer_phone     VARCHAR(20),                      -- 구매자 연락처
-    product_id      BIGINT NOT NULL,                  -- 제품
-    quantity        INT NOT NULL,                     -- 수량
-    total_amount    DECIMAL(15,2) NOT NULL,           -- 총 판매금액
-    total_pv        DECIMAL(15,2) NOT NULL,           -- 총 PV
-    sale_date       DATE NOT NULL,                    -- 판매일
-    settlement_week VARCHAR(10),                      -- 정산주차 (YYYY-WW)
-    status          ENUM('PENDING', 'CONFIRMED', 'CANCELLED'),
-    created_at      TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+- 이미지 원본: "판매원 → 제품 1세트 판매 후 수수료 자격 취득"
+- 현재 코드: **체크 로직 없음**. `BonusCalculatorService`는 판매 발생 즉시 판매원에게 수당 계산.
+- **Stage 4 항목 등록**: `BONUS-QUALIFY-001` (P2 Medium, GAP-001로 개정 가능) — "첫 판매 이전 상태에서 수당 지급 가능 여부" 확정 필요.
 
-    FOREIGN KEY (seller_id) REFERENCES members(id),
-    FOREIGN KEY (product_id) REFERENCES products(id)
-);
-```
+### 5.3 승급 트리거 포인트
 
-#### bonuses (보너스)
-
-```sql
-CREATE TABLE bonuses (
-    id              BIGINT PRIMARY KEY AUTO_INCREMENT,
-    member_id       BIGINT NOT NULL,                  -- 수령 회원
-    sale_id         BIGINT,                           -- 관련 판매
-    bonus_type      ENUM(
-        'SALES',              -- 판매 보너스
-        'SALES_REFERRAL',     -- 판매 보너스 (추천 상위)
-        'SALES_MGMT',         -- 판매 관리 보너스
-        'LICENSE',            -- 판권 보너스
-        'LICENSE_MGMT',       -- 판권 관리 보너스
-        'SHARING',            -- 공유 보너스
-        'BRANCH_OPERATION'    -- 지점 운영 보너스
-    ),
-    amount          DECIMAL(15,2) NOT NULL,           -- 금액
-    settlement_week VARCHAR(10) NOT NULL,             -- 정산주차
-    status          ENUM('CALCULATED', 'CONFIRMED', 'PAID'),
-    paid_at         TIMESTAMP,                        -- 지급일시
-    created_at      TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-
-    FOREIGN KEY (member_id) REFERENCES members(id),
-    FOREIGN KEY (sale_id) REFERENCES sales(id)
-);
-```
-
-#### settlements (정산)
-
-```sql
-CREATE TABLE settlements (
-    id              BIGINT PRIMARY KEY AUTO_INCREMENT,
-    settlement_week VARCHAR(10) UNIQUE NOT NULL,      -- 정산주차 (YYYY-WW)
-    period_start    DATE NOT NULL,                    -- 시작일 (일요일)
-    period_end      DATE NOT NULL,                    -- 종료일 (월요일)
-    total_sales     DECIMAL(15,2),                    -- 총 판매액
-    total_bonus     DECIMAL(15,2),                    -- 총 보너스액
-    status          ENUM('OPEN', 'CALCULATING', 'REVIEWING', 'CONFIRMED', 'PAID'),
-    confirmed_by    BIGINT,                           -- 확정자
-    confirmed_at    TIMESTAMP,                        -- 확정일시
-    paid_at         TIMESTAMP,                        -- 지급일시
-    created_at      TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-);
-```
-
-### 5.2 계보 조회 쿼리 예시
-
-#### 추천계보 상위 에이전트 찾기
-
-```sql
-WITH RECURSIVE recommender_tree AS (
-    -- 시작점: 판매자
-    SELECT id, recommender_id, grade, 1 as depth
-    FROM members
-    WHERE id = :seller_id
-
-    UNION ALL
-
-    -- 재귀: 추천인 따라 올라가기
-    SELECT m.id, m.recommender_id, m.grade, rt.depth + 1
-    FROM members m
-    INNER JOIN recommender_tree rt ON m.id = rt.recommender_id
-    WHERE rt.grade NOT IN ('AGENT', 'MANAGER', 'BRANCH_CHIEF', 'DIVISION_CHIEF')
-)
-SELECT id FROM recommender_tree
-WHERE grade IN ('AGENT', 'MANAGER', 'BRANCH_CHIEF', 'DIVISION_CHIEF')
-ORDER BY depth ASC
-LIMIT 1;
-```
-
-#### 후원계보 하위 에이전트 수 계산
-
-```sql
-WITH RECURSIVE sponsor_tree AS (
-    SELECT id, sponsor_id, grade, team_line
-    FROM members
-    WHERE sponsor_id = :manager_id
-
-    UNION ALL
-
-    SELECT m.id, m.sponsor_id, m.grade, m.team_line
-    FROM members m
-    INNER JOIN sponsor_tree st ON m.sponsor_id = st.id
-)
-SELECT
-    team_line,
-    COUNT(CASE WHEN grade IN ('AGENT', 'MANAGER', 'BRANCH_CHIEF', 'DIVISION_CHIEF') THEN 1 END) as agent_count
-FROM sponsor_tree
-GROUP BY team_line;
-```
+| 트리거 | 위치 | 설명 |
+|-------|------|------|
+| 판매 발생 시 | `SalesService.createSale()` → `PromotionService.checkPromotionEligibility(sponsorId)` | 하위 판매가 발생하면 상위 후원자의 승급 조건 재평가 |
+| 수동 호출 | `POST /api/admin/members/:id/check-promotion` | 관리자가 수동으로 승급 조건 재계산 |
+| 크론 배치 | 미구현 | 승급 조건 주기적 스윕은 현재 부재 (Stage 4 후보) |
 
 ---
 
-## 6. 기능 명세
+## 6. 정산 시스템 (자동정산)
 
-### 6.1 회원관리 기능
+### 6.1 주요 모델
 
-| 기능           | 설명                               | 접근 권한         |
-| -------------- | ---------------------------------- | ----------------- |
-| 회원 등록      | 신규 회원 등록, 추천인/후원인 지정 | 매니저 이상       |
-| 회원 정보 수정 | 기본 정보 변경                     | 본인, 상위 관리자 |
-| 계보 조회      | 추천계보/후원계보 트리 시각화      | 본인 하위만       |
-| 승급 현황      | 승급 조건 달성률 확인              | 본인              |
-| 등급 변경      | 수동 승급/강등                     | 최고관리자        |
+- `Settlement` (정산 단위, weekCode unique)
+- `SettlementSchedule` (자동정산 스케줄, cycleType 기반)
+- `SettlementStatus` enum: `OPEN | CALCULATING | CALCULATED | CONFIRMED | PAID | CLOSED`
 
-### 6.2 제품관리 기능
+### 6.2 정산 주기 (SettlementSchedule)
 
-| 기능          | 설명                | 접근 권한  |
-| ------------- | ------------------- | ---------- |
-| 제품 등록     | 제품 정보 + PV 설정 | 최고관리자 |
-| 제품 수정     | 가격/PV 변경        | 최고관리자 |
-| 카테고리 관리 | 대분류/소분류 관리  | 최고관리자 |
-| 제품 조회     | 전체 제품 목록      | 전체       |
+`SettlementCycleType` enum: `DAILY | WEEKLY | MONTHLY`
 
-### 6.3 판매관리 기능
+| 필드 | 설명 | WEEKLY 예시 | MONTHLY 예시 |
+|------|------|-------------|-------------|
+| `cycleType` | 주기 타입 | `WEEKLY` | `MONTHLY` |
+| `dayOfWeek` | 0-6 (일-토) | 3 (수요일) | null |
+| `dayOfMonth` | 1-31 | null | 15 |
+| `hour` | 0-23 | 2 (새벽 2시) | 9 |
+| `minute` | 0-59 | 0 | 0 |
+| `isActive` | 활성 여부 | true | true |
+| `lastRunAt` | 마지막 실행 시각 | - | - |
+| `nextRunAt` | 다음 실행 예정 | - | - |
 
-| 기능      | 설명                | 접근 권한               |
-| --------- | ------------------- | ----------------------- |
-| 판매 등록 | 판매 실적 입력      | 에이전트 이상           |
-| 판매 확정 | 판매 실적 확정 처리 | 지부장 이상, 최고관리자 |
-| 판매 취소 | 판매 취소 (정산 전) | 최고관리자              |
-| 판매 현황 | 본인/하위 판매 조회 | 전체 (본인 하위만)      |
+> 시스템에 하나의 `isActive=true` 스케줄만 활성화 가능 (schema 주석).
 
-### 6.4 수당관리 기능
-
-| 기능        | 설명                | 접근 권한   |
-| ----------- | ------------------- | ----------- |
-| 수당 현황   | 본인 수당 내역 조회 | 전체        |
-| 정산 실행   | 주간 정산 계산 실행 | 최고관리자  |
-| 정산 검토   | 계산 결과 검토/수정 | 최고관리자  |
-| 정산 확정   | 정산 확정 처리      | 최고관리자  |
-| 지급 처리   | 지급 완료 처리      | 최고관리자  |
-| 수당 리포트 | 엑셀 다운로드, 통계 | 지부장 이상 |
-
-### 6.5 세미나 관리 기능
-
-| 기능                  | 설명              | 접근 권한   |
-| --------------------- | ----------------- | ----------- |
-| 세미나 등록           | 세미나 개최 등록  | 매니저 이상 |
-| 세미나 승인           | 세미나 진행 확인  | 최고관리자  |
-| 지점 운영 보너스 신청 | 조건 충족 시 신청 | 매니저 이상 |
-
----
-
-## 7. 화면 설계
-
-### 7.1 등급별 대시보드
-
-#### 회원/에이전트 대시보드
-
-- 개인 실적 요약 (누적 PV, 이번 주 판매)
-- 승급 진행률 (에이전트 승급 조건)
-- 내 수당 현황
-- 추천 회원 목록
-
-#### 매니저 대시보드
-
-- 팀 실적 요약 (3팀 각각)
-- 에이전트 육성 현황 (15명 중 N명)
-- 판권 보너스 현황
-- 지점 운영 보너스 신청
-
-#### 지부장 대시보드
-
-- 매니저 육성 현황 (4명 조건)
-- 3팀별 매니저 분포
-- 공유 보너스 현황
-- 조직 실적 통계
-
-#### 본부장 대시보드
-
-- 지부장 육성 현황 (5명 조건)
-- 3팀별 지부장 분포
-- 전체 조직 실적
-- 리더십 보너스 현황
-
-#### 최고관리자 대시보드
-
-- 전체 회원 현황 (등급별)
-- 주간 정산 현황
-- 총 판매/수당 통계
-- 시스템 설정
-
-### 7.2 핵심 화면 목록
-
-| 화면        | 기능           | 우선순위 |
-| ----------- | -------------- | -------- |
-| 로그인      | 인증           | 필수     |
-| 대시보드    | 등급별 메인    | 필수     |
-| 회원 등록   | 신규 가입      | 필수     |
-| 조직도      | 계보 시각화    | 필수     |
-| 판매 등록   | 실적 입력      | 필수     |
-| 판매 현황   | 실적 조회      | 필수     |
-| 수당 현황   | 내 수당 조회   | 필수     |
-| 정산 관리   | 주간 정산      | 필수     |
-| 제품 관리   | 제품 CRUD      | 필수     |
-| 회원 관리   | 회원 검색/수정 | 필수     |
-| 세미나 관리 | 세미나 등록    | 중요     |
-| 리포트      | 통계/엑셀      | 중요     |
-| 시스템 설정 | 수당률 등      | 중요     |
-
----
-
-## 8. 기술 요구사항
-
-### 8.1 보너스 계산 엔진
-
-#### 요구사항
-
-- 실시간 보너스 미리보기 (판매 등록 시)
-- 배치 정산 (화요일 자동 실행)
-- 재계산 기능 (오류 발생 시)
-- 계산 로그 저장 (추적 가능)
-
-#### 성능 요구사항
-
-- 1,000명 회원 기준 정산 5분 이내 완료
-- 계보 탐색 최적화 (인덱싱)
-
-### 8.2 계보 관리 엔진
-
-#### 요구사항
-
-- 추천계보/후원계보 분리 관리
-- 3팀 라인 구조 지원
-- 무한 depth 계보 탐색
-- 승급 조건 자동 체크
-
-### 8.3 정산 스케줄러
+### 6.3 정산 상태 머신
 
 ```
-┌─────────────────────────────────────────────────┐
-│ 일요일 00:00  : 이전 주차 마감, 신규 주차 시작   │
-│ 월요일 23:59  : 판매 실적 마감                   │
-│ 화요일 02:00  : 자동 정산 계산 실행              │
-│ 화요일 09:00  : 검토 알림 발송                   │
-│ 화요일 18:00  : 미확정 시 알림                   │
-│ 수요일 00:00  : 미확정 정산 자동 확정            │
-│ 수요일 10:00  : 지급 처리                        │
-└─────────────────────────────────────────────────┘
+OPEN  (신규 생성, 판매 수집 중)
+  ↓  SettlementsService.calculate(id)
+CALCULATING  (계산 진행 중, transient)
+  ↓
+CALCULATED  (Bonus 집계 완료, 검토 대기)
+  ↓  SettlementsService.confirm(id)
+CONFIRMED  (확정, 수정 불가)
+  ↓  SettlementsService.pay(id)
+PAID  (지급 완료, 개별 Bonus도 PAID로 전파)
+  ↓  (선택)
+CLOSED  (마감)
 ```
 
----
+### 6.4 자동정산 흐름
 
-## 9. 비즈니스 규칙 정리
+```
+settlement-scheduler.task.ts @Cron('0 * * * * *')   // 매분
+  ↓
+SettlementScheduleService.getActiveSchedule()
+  → isActive = true 인 row 조회
+  → nextRunAt <= now 조건 확인
+  ↓
+SettlementsService.createAutoSettlement(schedule)
+  → 새 Settlement(status=OPEN) 생성 (해당 weekCode)
+  → SettlementSchedule.lastRunAt = now
+  → SettlementSchedule.nextRunAt = 다음 주기 계산
+  ↓
+(수동 또는 별도 트리거로) SettlementsService.calculate(settlementId)
+  → 해당 weekCode의 Bonus 집계
+  → Settlement.status = CALCULATED
+  → Settlement.totalBonuses, totalSales, totalPv 채움
+  ↓
+SettlementsService.confirm(settlementId)
+  → Settlement.status = CONFIRMED
+  → Bonus.status 전파 CONFIRMED
+  ↓
+SettlementsService.pay(settlementId)
+  → Settlement.status = PAID
+  → Bonus.status 전파 PAID
+```
 
-### 9.1 핵심 규칙
+### 6.5 알려진 이슈 (Stage 4 처리 예정)
 
-| 번호  | 규칙                                                  | 비고       |
-| ----- | ----------------------------------------------------- | ---------- |
-| BR-01 | 판권은 후원계보로 달성                                | 승급 조건  |
-| BR-02 | 판권 보너스는 추천계보로 지급                         | 수당 지급  |
-| BR-03 | 판매 보너스 50만원 중 25만원은 추천 상위 에이전트에게 | 분배 규칙  |
-| BR-04 | 판매 관리 보너스는 판매 보너스 지급에 비례            | 연동 규칙  |
-| BR-05 | 공유 보너스는 중복 지급                               | 다중 수령  |
-| BR-06 | 매니저 승급: 3팀 + 에이전트 15명                      | 후원계보   |
-| BR-07 | 지부장 승급: 3팀 각 1명 이상 매니저 + 총 4명          | 분산 조건  |
-| BR-08 | 본부장 승급: 3팀 각 1명 이상 지부장 + 총 5명          | 분산 조건  |
-| BR-09 | 정산 주기: 일~월 마감, 수요일 지급                    | 주간 정산  |
-| BR-10 | 지점 운영 보너스: 사무실 + 장비 + 세미나              | 3가지 조건 |
-
-### 9.2 예외 처리
-
-| 상황                      | 처리 방안                                |
-| ------------------------- | ---------------------------------------- |
-| 추천 상위에 에이전트 없음 | 회사 귀속 또는 최상위까지 탐색           |
-| 판매 취소                 | 정산 전: 보너스 삭제, 정산 후: 차기 차감 |
-| 회원 탈퇴                 | 계보 유지, 보너스는 상위에게 승계        |
-| 강등                      | 판권 보너스 등급 변경 적용               |
-
----
-
-## 10. 개발 일정
-
-| 단계           | 기간             | 주요 작업                   | 산출물        |
-| -------------- | ---------------- | --------------------------- | ------------- |
-| 1. 기획/설계   | 2주              | PRD 확정, DB 설계, API 설계 | ERD, API 명세 |
-| 2. 회원/계보   | 2주              | 회원 CRUD, 계보 관리        | 회원 모듈     |
-| 3. 제품/판매   | 2주              | 제품 CRUD, 판매 등록        | 판매 모듈     |
-| 4. 수당 엔진   | 3주              | 6종 보너스 계산 로직        | 정산 엔진     |
-| 5. 대시보드    | 2주              | 등급별 대시보드             | 프론트엔드    |
-| 6. 정산/리포트 | 2주              | 정산 프로세스, 리포트       | 정산 모듈     |
-| 7. 테스트      | 2주              | QA, 버그 수정               | 베타 버전     |
-| 8. 배포        | 1주              | 운영 배포, 교육             | 정식 서비스   |
-| **총 기간**    | **16주 (4개월)** |                             |               |
+| 이슈 ID | 심각도 | 설명 |
+|--------|-------|------|
+| `STAGE3-004` | P0 Critical | 자동정산 크론이 `OPEN` 껍데기만 생성하고 calculate/confirm/pay는 수동. 완전 자동화 미구현 |
+| `STAGE3-005` | P0 Critical | `Bonus.settlementId` FK 미연결 — Bonus를 Settlement로 조인할 때 `weekCode` 문자열 매칭만 사용 |
+| `STAGE3-012` | P1 High | weekCode 포맷 3종 독립 (Sale `"2026-04"` vs Bonus/Settlement `"2026-W15"`) → 크로스 조인 실패 |
 
 ---
 
-## 11. 체크리스트
+## 7. 인정매출 / 인정판권 (RecognizedSales)
 
-### 11.1 개발 전 확인 필요 사항
+### 7.1 목적
 
-- [ ] 에이전트 승급 조건 확인 (100만 PV = 100만원?)
-- [ ] 추천 상위에 에이전트가 없을 경우 처리 방안
-- [ ] 판매 보너스 500,000원의 기준 (제품 1개당? PV 기준?)
-- [ ] 공유 보너스 "중복 지급"의 정확한 범위 (몇 단계까지?)
-- [ ] 지점 운영 보너스 조건의 세미나 진행 증빙 방법
-- [ ] 정산 후 판매 취소 시 처리 방안
-- [ ] 세금 처리 (원천징수 등)
+실제 판매가 없더라도 특정 효력(등급/판권)을 임시로 부여하여, 보너스 계산이나 승급 평가에서 해당 등급으로 취급받도록 하는 메커니즘.
 
-### 11.2 시스템 설정 항목
+### 7.2 RecognitionType
 
-- [ ] 판매 보너스 금액 (기본: 500,000원)
-- [ ] 판매 관리 보너스 금액 (기본: 150,000원)
-- [ ] 판권 보너스 금액 (등급별)
-- [ ] 판권 관리 보너스 금액 (등급별)
-- [ ] 공유 보너스 금액 (기본: 20,000원)
-- [ ] 지점 운영 보너스 금액 (기본: 50,000원)
-- [ ] 에이전트 승급 PV (기본: 1,000,000)
-- [ ] 정산 마감 요일/시간
-- [ ] 지급 요일/시간
+`schema.prisma` 429~432:
+
+| enum | 의미 | 사용 |
+|------|------|------|
+| `GRADE` | 등급 인정 | 대상 회원을 보너스 계산/조회 시 `recognizedGrade`로 취급 |
+| `LICENSE` | 판권 인정 | 특정 제품 판권 효력 — 현재 미활성화, 미래 확장 |
+
+### 7.3 RecognizedSalesStatus
+
+| enum | 의미 |
+|------|------|
+| `ACTIVE` | 활성화. `startDate ≤ now ≤ endDate` (또는 `endDate == null`)인 동안 효력 |
+| `EXPIRED` | 만료. `endDate` 경과 시 배치로 전환 |
+| `CANCELLED` | 관리자가 수동 취소. `deactivatedAt`/`deactivatedBy` 기록 |
+
+### 7.4 핵심 메서드
+
+`RecognizedSalesService.getEffectiveGrade(memberId: number): Promise<MemberGrade>` (recognized-sales.service.ts line 346)
+
+```ts
+const member = await prisma.member.findUnique({ where: { id: memberId }, select: { grade: true } });
+const recognition = await getActiveRecognition(memberId);
+if (!recognition) return member.grade;
+
+const actualIndex = GRADE_ORDER.indexOf(member.grade);
+const recognizedIndex = GRADE_ORDER.indexOf(recognition.recognizedGrade);
+return recognizedIndex < actualIndex ? recognition.recognizedGrade : member.grade;
+```
+
+→ 실제 등급과 인정 등급 중 **더 높은 쪽** 반환.
+
+### 7.5 현재 운영상 중요한 갭 (★)
+
+**현재 `BonusCalculatorService`는 `getEffectiveGrade()`를 호출하지 않음**. 대신 `sale.seller.grade` (DB에 저장된 실제 등급)를 직접 사용.
+
+→ 즉, 현재 시점에서 인정매출/인정판권은 **수당 계산에 영향을 주지 않음**. 단지 "해당 회원이 이 등급으로 인정되었다"는 기록용. Stage 4에서 `BonusCalculatorService`가 `getEffectiveGrade()`를 경유하도록 통합 가능성 있음 — 현재는 미연결.
+
+### 7.6 `Sale.isRecognizedSale` vs `RecognizedSales` 모델의 관계
+
+| 구분 | `Sale.isRecognizedSale=true` | `RecognizedSales` 테이블 |
+|------|------------------------------|-------------------------|
+| 저장 위치 | `sales` 테이블의 boolean 필드 | 독립 `recognized_sales` 테이블 |
+| 효과 | 수당 계산에서 제외 (bonus-calculator line 86) | `getEffectiveGrade()` 반환 변경 (단, 계산기에서는 미호출) |
+| 생성 경로 | `SalesService.createRecognizedSale()` | `RecognizedSalesService.create()` |
+| 감사 | `Sale.recognizedBy`, `recognizedAt`, `recognizedGrade` | `RecognizedSales.createdBy`, `deactivatedBy` 등 |
+
+**두 경로의 이중성**은 Stage 4 `STAGE3-007`에서 정합화 예정.
+
+---
+
+## 8. 시스템 설정 (SystemConfig)
+
+런타임 동적 변경 가능한 설정 저장소. `SystemConfig` 테이블 (`key` unique).
+
+### 8.1 보상플랜 관련 주요 key
+
+| key | 기본값 | 용도 | 담당 모듈 |
+|-----|-------|------|----------|
+| `PROMOTION_TEMPORARY_CONDITION_ACTIVE` | `'false'` | 한시적 승급 조건 on/off | `PromotionService` |
+| `SALESPERSON_TO_TEAM_LEADER_COUNT` | `'3'` | 판매원→팀장 한시적 인원 | `PromotionService` |
+| `TEAM_LEADER_TO_BRANCH_MANAGER_COUNT` | `'3'` | 팀장→지사장 한시적 인원 | `PromotionService` |
+
+(기타 확장 key는 운영 중 추가 가능. 현재 보상플랜에 직접 관여하는 key는 위 3종.)
+
+### 8.2 SystemConfig 변경 경로
+
+- `/admin/system-settings` UI → `/api/admin/system-config` API → `SystemConfig` upsert
+- 관리자만 접근 가능 (가드 필요 — 현재 부분 적용, Stage 4 STAGE3-001 항목에 포함)
+
+---
+
+## 9. 데이터 모델 (Prisma schema 핵심)
+
+이하 모델은 `apps/backend/prisma/schema.prisma` 현재 버전 기준. 보상플랜에 직접 관여하는 10개 모델만 기술.
+
+### 9.1 Member (members)
+
+| 필드 | 타입 | 설명 |
+|------|------|------|
+| `id` | Int (PK, autoincrement) | 회원 고유 ID |
+| `username` | String (unique) | 로그인 ID |
+| `email` | String? | 이메일 |
+| `password` | String | 해시 (bcrypt) |
+| `name` | String | 실명 |
+| `phone` | String? | 연락처 |
+| `birthDate` | DateTime? | 생년월일 |
+| `grade` | MemberGrade (default SALESPERSON) | 4단계 + ADMIN |
+| `recommenderId` | Int? | 추천인 ID (★ `@deprecated` — 런타임 미사용) |
+| `sponsorId` | Int? | **후원인 ID (★ 계보 핵심)** |
+| `teamLine` | Int? (1/2/3) | 팀라인 번호. DB CHECK 제약조건 있음 |
+| `cumulativePv` | Int (default 0) | 누적 PV |
+| `agentPromotedAt` | DateTime? | 등급 승급 시각 (레거시 이름) |
+| `bankName` / `accountNumber` / `accountHolder` | String? | 지급 계좌 정보 |
+| `centerName` | String? | 센터명 (센터 등급 전용) |
+| `isActive` | Boolean (default true) | 활성 여부 |
+| `emailVerified` | Boolean (default false) | 이메일 인증 |
+| `createdAt` / `updatedAt` / `deletedAt` | DateTime | 감사 타임스탬프 |
+
+주요 관계: `bonuses[]`, `sales[]`, `recognizedSales[]`, `hostedSeminars[]`, `confirmedSettlements[]`, `recognizedSalesRecords[]`, `cultivatedMembers[]`, `cultivatedBy[]`
+
+주요 인덱스: `[grade]`, `[sponsorId]`, `[sponsorId, teamLine]`, `[grade, createdAt]`
+
+### 9.2 Sale (sales)
+
+| 필드 | 타입 | 설명 |
+|------|------|------|
+| `id` | Int (PK) | 판매 ID |
+| `saleCode` | String (unique) | 판매 코드 |
+| `sellerId` | Int (FK Member) | 판매자 |
+| `productId` | Int (FK Product) | 제품 |
+| `quantity` | Int (default 1) | 수량 |
+| `unitPrice` / `totalPrice` | Int | 단가 / 총 금액 |
+| `unitPv` / `totalPv` | Int | 단위 PV / 총 PV |
+| `soldAt` | DateTime | 판매 일시 |
+| `weekCode` | String | 주차 코드 (포맷 불일치 이슈 — §3.4) |
+| `status` | SaleStatus (PENDING/CONFIRMED/SETTLED/CANCELLED) | 상태 |
+| `settlementId` | Int? (FK Settlement) | 소속 정산 |
+| **인정매출** | | |
+| `isRecognizedSale` | Boolean (default false) | 인정매출 플래그 |
+| `recognizedGrade` | MemberGrade? | 인정 등급 |
+| `recognizedBy` | Int? (FK Member) | 인정 처리자 |
+| `recognizedAt` | DateTime? | 인정 처리 시각 |
+| `description` | String? | 메모 |
+| `createdAt` / `updatedAt` | DateTime | 감사 |
+
+주요 관계: `bonuses[]`, `product`, `seller`, `settlement?`, `recognizer?`
+
+주요 인덱스: `[sellerId]`, `[weekCode]`, `[sellerId, weekCode]`, `[weekCode, status]`, `[isRecognizedSale]`
+
+### 9.3 Bonus (bonuses)
+
+| 필드 | 타입 | 설명 |
+|------|------|------|
+| `id` | Int (PK) | 보너스 ID |
+| `memberId` | Int (FK Member) | 수령자 |
+| `saleId` | Int? (FK Sale) | 관련 판매 (nullable — 향후 세미나 보너스 등 대비) |
+| `seminarId` | Int? (FK Seminar) | 관련 세미나 (현재 미사용) |
+| `bonusType` | BonusType | `SALES_COMMISSION` or `EDUCATION_MANAGEMENT` |
+| `amount` | Int | 금액 (원) |
+| `description` | String? | 설명 텍스트 |
+| `calculationBasis` | String? | 계산 근거 JSON (productId, productCode, sellerGrade 등) |
+| `weekCode` | String | 주차 코드 |
+| `settlementId` | Int? (FK Settlement) | 소속 정산 (★ 실제 FK 연결 부족 — §6.5 STAGE3-005) |
+| `status` | BonusStatus (PENDING/CONFIRMED/PAID/CANCELLED) | 상태 |
+| `createdAt` / `updatedAt` | DateTime | 감사 |
+
+주요 인덱스: `[memberId]`, `[weekCode]`, `[bonusType]`, `[status]`, `[memberId, weekCode]`
+
+### 9.4 Settlement (settlements)
+
+| 필드 | 타입 | 설명 |
+|------|------|------|
+| `id` | Int (PK) | 정산 ID |
+| `weekCode` | String (unique) | 주차 코드 |
+| `startDate` / `endDate` | Date | 정산 기간 |
+| `totalSales` | Int (default 0) | 총 판매액 |
+| `totalPv` | Int (default 0) | 총 PV |
+| `totalBonuses` | Int (default 0) | 총 보너스 금액 |
+| `status` | SettlementStatus | OPEN / CALCULATING / CALCULATED / CONFIRMED / PAID / CLOSED |
+| `calculatedAt` / `confirmedAt` / `paidAt` | DateTime? | 각 단계 전환 시각 |
+| `confirmedBy` | Int? (FK Member) | 확정자 |
+| `createdAt` / `updatedAt` | DateTime | 감사 |
+
+주요 관계: `bonuses[]`, `sales[]`, `confirmer`
+
+### 9.5 ProductCommissionRate (product_commission_rates)
+
+| 필드 | 타입 | 설명 |
+|------|------|------|
+| `id` | Int (PK) | 수당율 row ID |
+| `productId` | Int (FK Product) | 제품 |
+| `recipientGrade` | MemberGrade | 수령 등급 |
+| `amount` | Int | 고정 금액 (원). 0 저장 가능 (§4.2 미지급 케이스) |
+| `isActive` | Boolean (default true) | 활성 여부 |
+| `createdAt` / `updatedAt` | DateTime | 감사 |
+
+**unique constraint**: `[productId, recipientGrade]` — 한 제품/등급 조합당 1개 row.
+
+주요 인덱스: `[productId]`, `[recipientGrade]`, `[isActive]`
+
+### 9.6 RecognizedSales (recognized_sales)
+
+| 필드 | 타입 | 설명 |
+|------|------|------|
+| `id` | Int (PK) | - |
+| `memberId` | Int (FK Member) | 대상 회원 |
+| `recognizedGrade` | MemberGrade | 인정 등급 |
+| `recognitionType` | RecognitionType (default GRADE) | GRADE / LICENSE |
+| `status` | RecognizedSalesStatus (default ACTIVE) | ACTIVE / EXPIRED / CANCELLED |
+| `reason` | String? | 사유 |
+| `startDate` / `endDate` | Date | 효력 기간 (endDate null = 무기한) |
+| `createdBy` | Int (FK Member) | 생성자 (관리자) |
+| `createdAt` / `updatedAt` / `deactivatedAt` | DateTime | 감사 |
+| `deactivatedBy` | Int? (FK Member) | 비활성화 처리자 |
+
+**unique constraint**: `[memberId, recognizedGrade, recognitionType, status]` — 동일 회원/등급/타입/상태 중복 방지.
+
+주요 인덱스: `[memberId]`, `[status]`, `[recognitionType]`, `[startDate, endDate]`
+
+### 9.7 Seminar (seminars)
+
+구 체계의 "지점 운영 보너스"는 폐기되었지만 `Seminar` 모델 자체는 schema에 존속. 향후 EDUCATION_MANAGEMENT 하위로 세미나 보상 확장 가능성 보유.
+
+| 필드 | 타입 | 설명 |
+|------|------|------|
+| `id` | Int (PK) | - |
+| `hostId` | Int (FK Member) | 주최자 |
+| `title` / `description` / `location` | String | 세미나 정보 |
+| `hasOffice` / `hasEquipment` | Boolean | 사무실/장비 보유 |
+| `participantsCount` | Int (default 0) | 참석자 수 |
+| `heldAt` | DateTime | 개최 일시 |
+| `isApproved` / `approvedAt` | Boolean / DateTime? | 승인 여부 |
+| `createdAt` / `updatedAt` | DateTime | 감사 |
+
+관계: `host`, `bonuses[]` (seminarId를 가진 Bonus들 — 현재 사용처 없음)
+
+### 9.8 SettlementSchedule (settlement_schedules)
+
+| 필드 | 타입 | 설명 |
+|------|------|------|
+| `id` | Int (PK) | - |
+| `name` | String | 스케줄 이름 |
+| `cycleType` | SettlementCycleType | DAILY / WEEKLY / MONTHLY |
+| `dayOfWeek` | Int? | 0-6 (일-토, WEEKLY 시) |
+| `dayOfMonth` | Int? | 1-31 (MONTHLY 시) |
+| `hour` / `minute` | Int | 실행 시각 |
+| `isActive` | Boolean (default true) | 활성 여부 (시스템에 1개만 권장) |
+| `lastRunAt` / `nextRunAt` | DateTime? | 실행 추적 |
+| `createdAt` / `updatedAt` | DateTime | 감사 |
+
+### 9.9 CultivationRecord (cultivation_records)
+
+승급 조건(판매원 N명, 팀장 N명 육성) 평가의 보조 기록. 누가 누구를 어떤 등급까지 육성했는지의 이력.
+
+| 필드 | 타입 | 설명 |
+|------|------|------|
+| `id` | Int (PK) | - |
+| `cultivatorId` | Int (FK Member) | 육성자 (상위) |
+| `cultivatedMemberId` | Int (FK Member) | 피육성자 (하위) |
+| `achievedGrade` | MemberGrade | 달성한 등급 |
+| `treeType` | TreeType (RECOMMENDER / SPONSOR) | 어느 계보의 육성인지 |
+| `qualificationCount` | Int (default 1) | 조건에 카운트될 수 |
+| `achievedAt` | DateTime | 달성 시각 |
+| `teamNumber` | Int? | 팀 라인 번호 |
+| `createdAt` / `updatedAt` | DateTime | 감사 |
+
+**unique constraint**: `[cultivatorId, cultivatedMemberId, achievedGrade, treeType]`
+
+### 9.10 SystemConfig (system_configs)
+
+§8 참조. 한시적 승급 등 런타임 설정 저장.
+
+| 필드 | 타입 | 설명 |
+|------|------|------|
+| `id` | Int (PK) | - |
+| `key` | String (unique) | 설정 키 |
+| `value` | String (Text) | 설정 값 (문자열로 저장, 파싱은 호출자 책임) |
+| `description` | String? | 설명 |
+| `createdAt` / `updatedAt` | DateTime | 감사 |
+
+---
+
+## 10. 폐기된 v1.0 개념 (참고용)
+
+v1.0 `commission-prd.md`에서 정의되었으나 v2.0에서 폐기된 개념. 구 코드/문서 잔재를 찾을 때 참고.
+
+| 폐기 항목 | v1.0 정의 요약 | 폐기 사유 / v2.0 대응 |
+|----------|--------------|---------------------|
+| **SALES 판매 보너스 50만원** | 판매자 25만 + 추천 상위 에이전트 25만 | 제품별 매트릭스로 교체. 온 체의 경우 판매원 50만 / 팀장 100만 / 지사장 20만 / 센터 5만 → 단일 판매당 최대 175만원 지급. |
+| **SALES_MGMT 판매 관리 보너스 15만원** | 직접 추천인에게 고정 지급 | v2.0 BonusType에 부재. 제품별 매트릭스에 흡수됨 (관리 수당 개념은 EDUCATION_MANAGEMENT로 재정의). |
+| **LICENSE 판권 보너스 (매니저 10만, 지부장 18만, 본부장 24만)** | 직접 판매 시 등급별 판권 보너스 추가 지급 | v2.0 BonusType에 부재. 제품별 × 등급별 매트릭스에 단일 체계로 통합. |
+| **LICENSE_MGMT 판권 관리 보너스 (3만~5만)** | 동급 상위자 판매 시 지급 | v2.0 BonusType에 부재. "동급 상위자" 개념 자체가 폐기. |
+| **SHARING 공유 보너스 (지부장/본부장 각 2만, 중복 지급)** | 라인 상위 지부장/본부장 전원에 중복 지급 | v2.0 BonusType에 부재. `RecognizedSales`의 `RecognitionType.GRADE`가 이전 SHARING 역할을 일부 대체. |
+| **BRANCH_OPERATION 지점 운영 보너스 (매니저 이상 5만, 세미나 진행)** | 사무실 + 장비 + 세미나 진행 조건 | v2.0 BonusType에 부재. `Seminar` 모델은 schema에 존속 but 보너스 연결 없음. 미래 확장 여지. |
+| **5단계 등급 체계 (MEMBER/AGENT/MANAGER/BRANCH_CHIEF/DIVISION_CHIEF)** | 5단계 + ADMIN | **4단계 영업 + ADMIN**으로 축소. AGENT는 SALESPERSON에 흡수, MANAGER→TEAM_LEADER, BRANCH_CHIEF+DIVISION_CHIEF→BRANCH_MANAGER, CENTER 신설. |
+| **이중 계보 (추천계보 + 후원계보)** | 추천계보 = 수당, 후원계보 = 승급 | **후원계보 단일**. `recommenderId`는 `@deprecated` — schema에 존재만 함. |
+| **PV 기반 승급 (에이전트 100만 PV)** | 누적 100만 PV 이상 에이전트 승급 | v2.0은 **인원수 기반 승급** (10명 소개). PV는 `cumulativePv` 필드로 schema에 존속 but 승급 조건에서 제거. |
+| **매니저 3팀 + 15명 육성 / 지부장 3팀 각 1명 매니저 + 4명 / 본부장 3팀 각 1명 지부장 + 5명** | 구 분산 조건 | 단순 인원 조건(10명 / 한시적 3명)으로 교체. `CultivationRecord`는 감사용으로 존속. |
+| **정산: 일~월 마감, 화요일 계산, 수요일 지급** | 주간 고정 스케줄 | **SettlementSchedule로 동적 관리** (DAILY/WEEKLY/MONTHLY). 주기/시각을 DB 값으로 제어. |
+| **BR-03 판매 보너스 25만+25만 분배 규칙** | 판매자 25만, 상위 에이전트 25만 | 제품별 매트릭스로 완전 교체. |
+| **BR-05 공유 보너스 중복 지급** | 라인 상위 모든 지부장/본부장에 중복 | v2.0에서 정당한 "중복 지급"은 후원 라인 상위의 **각 등급별 1회씩 지급** (BRANCH_MANAGER 1명 + CENTER 1명)이며, 동일 등급이 라인에 여러 명 있어도 `processSaleBonusesInTx` 루프로 각각 수당 발생. 의미 자체는 남아 있으나 BonusType은 EDUCATION_MANAGEMENT로 통합. |
+
+### 10.1 v1.0 문서 구조 vs v2.0 섹션 대응
+
+| v1.0 섹션 | v2.0 섹션 | 변경 요약 |
+|-----------|----------|----------|
+| §1 프로젝트 개요 | §1 | 브랜드 컬러 #7CB342 → #E53935 |
+| §2 회원 등급 체계 (5단계) | §2 (4단계 + ADMIN) | 재작성 |
+| §3 보너스 시스템 (6종) | §3 (2종) + §4 (매트릭스) | 완전 교체 |
+| §4 보너스 정산 | §6 자동정산 | SettlementSchedule 반영 |
+| §5 데이터베이스 설계 (MySQL ENUM) | §9 Prisma 모델 | Postgres + Prisma schema로 재작성 |
+| §6 기능 명세 | (생략, 세부 기능은 각 팀 README와 `prd.md`로 위임) | - |
+| §7 화면 설계 | (생략, 화면은 `prd.md` 및 디자인팀 문서) | - |
+| §8 기술 요구사항 | §3.3 계산 흐름 + §6 정산 | 통합 |
+| §9 비즈니스 규칙 | §10 폐기 항목 (구 규칙) + §3/§5 (신 규칙) | 교체 |
+| §10 개발 일정 | (생략) | Stage 4 Task Master에서 관리 |
+| §11 체크리스트 | `prd2/` 폴더로 이관 | Stage 3 산출물 |
+
+---
+
+## 부록 A. 주요 파일 위치
+
+### 백엔드 (수당 관련)
+
+- **계산 엔진**: `apps/backend/src/compensation-plan/services/bonus-calculator.service.ts`
+- **시뮬레이터**: `apps/backend/src/compensation-plan/services/bonus-simulator.service.ts` (★ Stage 2.7에서 `sponsor` 전환)
+- **수당율 API**: `apps/backend/src/products/product-commission-rates.{service,controller}.ts`
+- **보너스 조회**: `apps/backend/src/bonuses/bonuses.{service,controller}.ts`
+- **정산 상태머신**: `apps/backend/src/settlements/settlements.service.ts`
+- **정산 스케줄**: `apps/backend/src/settlements/settlement-schedule.service.ts`
+- **자동정산 크론**: `apps/backend/src/tasks/settlement-scheduler.task.ts`
+- **승급 평가**: `apps/backend/src/members/promotion.service.ts`
+- **후원 라인 탐색**: `apps/backend/src/members/genealogy.service.ts` + `genealogy-raw-queries.ts` (★ raw SQL — 리팩터 금지)
+- **인정매출**: `apps/backend/src/recognized-sales/recognized-sales.service.ts`
+- **판매 진입점**: `apps/backend/src/sales/sales.service.ts`
+- **Prisma schema**: `apps/backend/prisma/schema.prisma`
+
+### 프론트엔드 (수당 화면)
+
+- `/admin/sales`, `/admin/sales/stats`
+- `/admin/bonuses`, `/admin/bonuses/history`
+- `/admin/bonus-simulator` (★ 매트릭스 검증 도구)
+- `/admin/commission-rates`
+- `/admin/compensation-plan`
+- `/admin/settlements`
+- 사용자측: `/sales`, `/bonuses`, `/commissions`, `/organization`
+
+### 레거시 잔재 (Stage 4 폐기 대상)
+
+- `apps/backend/src/commission-rates/` 전체 모듈 (CommissionRate/Tier/Qualification — 유령 상태)
+- `apps/backend/src/bonuses/bonus-calculator.service.ts.legacy-old-system` (.bak에서 rename 완료)
+- `apps/backend/src/compensation-plan/services/bonus-calculator.recognized.spec.ts.legacy-old-system` (.bak에서 rename 완료)
+- `apps/backend/src/recognized-sales/recognized-sales.service.spec.ts.bak` (★ enum rename 후 복원 예정 — Stage 4 BAK-RESTORE-001)
+- `apps/backend/src/recognized-sales/recognized-sales.controller.spec.ts.bak` (★ enum rename 후 복원 예정)
+
+---
+
+## 부록 B. Stage 4 대기 항목 (보상플랜 관련)
+
+본 PRD 재작성 시점에 남아 있는 보상플랜 관련 Stage 4 이슈. 상세는 `prd2/{팀}_검증체크리스트.md` 참조.
+
+| ID | 우선순위 | 영역 | 설명 |
+|----|---------|------|------|
+| STAGE3-003 | P0 Critical | seed | `seed-commission-rates.ts`가 구 enum 참조 → 컴파일 불가 |
+| STAGE3-004 | P0 Critical | 정산 | 자동정산 크론이 OPEN 껍데기만 생성, calculate/confirm/pay 수동 |
+| STAGE3-005 | P0 Critical | 정산 | `Bonus.settlementId` FK 미연결, weekCode 문자열 매칭만 |
+| STAGE3-006 | P1 High | commission-rates | 구 6종 enum 참조 유령 모듈 → 런타임 실패 가능 |
+| STAGE3-007 | P1 High | 인정매출 | sales.createRecognizedSale vs recognized-sales.create 이중 구현 |
+| STAGE3-012 | P1 High | weekCode | 포맷 3종 독립 (Sale/Bonus/Settlement) |
+| BONUS-NUANCE-001 | P2 Medium | 매트릭스 | "지점 120만" 의미 확정 + schema 확장 (§4.3) |
+| BONUS-QUALIFY-001 | P2 Medium | 자격 | 판매원 첫 판매 이전 수당 지급 가능 여부 확정 (§5.2) |
+| BONUS-PRICE-001 | P1 High | 시드 | `20260120_grade_restructure` migration의 온 체 판매가 286만 → 330만 정정 마이그레이션 추가 |
+| BAK-RESTORE-001 | P1 High | 테스트 | `recognized-sales.*.spec.ts.bak` 2개 enum rename 후 복원 |
+| BONUS-BRAND-001 | P3 Low | 브랜드 | Swagger topbar `#7CB342` → `#E53935` 정렬 |
+| STAGE3-008 | P1 High | 프론트 | 프론트엔드 구 6종 보너스 잔재 5+ 곳 (admin/compensation-plan 등) |
+| STAGE3-014 | P0 Critical | 테스트 | 테스트 커버리지 0건 |
 
 ---
 
 _— 문서 끝 —_
+
+**작성**: 기획설계팀 (PM팀 강민호 주관) | **검토 대상**: 강민호, 박준혁, 정대훈, 유진호
+**v1.0 → v2.0 전면 재작성 사유**: 구 6종 보너스 체계 → 신 2종 체계 전환 (`b6ca264 자동정산기능`, `420e7a4 수당률수정` 커밋이 분기점). 이미지 + 현재 schema를 source of truth로 확정.
