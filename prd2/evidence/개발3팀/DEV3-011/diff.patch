@@ -1,0 +1,13 @@
+diff --git a/apps/backend/package.json b/apps/backend/package.json
+index 1e5a945..0f332dd 100644
+--- a/apps/backend/package.json
++++ b/apps/backend/package.json
+@@ -10,7 +10,7 @@
+     "build": "nest build",
+     "start": "node dist/main",
+     "start:prod": "node dist/main",
+-    "lint": "eslint \"{src,test}/**/*.ts\" --fix",
++    "lint": "eslint \"{src,test}/**/*.ts\" --fix --max-warnings 0",
+     "test": "jest",
+     "test:watch": "jest --watch",
+     "test:cov": "jest --coverage",

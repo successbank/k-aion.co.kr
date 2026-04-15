@@ -30,6 +30,10 @@ services:
       - ./pnpm-workspace.yaml:/app/pnpm-workspace.yaml
       - backend_node_modules:/app/node_modules
       - backend_app_node_modules:/app/apps/backend/node_modules
+      # Stage 4 MON-007 (2026-04-15): Winston 로그 호스트 마운트.
+      # 이전엔 logs/가 컨테이너 내부에만 존재 → 재시작 시 증발.
+      # 이제 호스트 ./apps/backend/logs/ 에 영구 보관.
+      - ./apps/backend/logs:/app/apps/backend/logs
     networks:
       - app-network
     depends_on:
