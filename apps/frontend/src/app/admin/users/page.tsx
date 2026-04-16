@@ -43,6 +43,7 @@ import DeleteMemberModal from '@/components/DeleteMemberModal';
 import AddMemberModal from '@/components/AddMemberModal';
 import MemberMyPagePreviewDrawer from '@/components/MemberMyPagePreview';
 import RollbackMemberModal from '@/components/RollbackMemberModal';
+import BulkPasswordResetModal from '@/components/BulkPasswordResetModal';
 
 const { Title, Text } = Typography;
 
@@ -78,6 +79,7 @@ export default function UsersPage() {
   const [deletingMemberId, setDeletingMemberId] = useState<number | null>(null);
   const [rollbackModalVisible, setRollbackModalVisible] = useState(false);
   const [rollbackMemberId, setRollbackMemberId] = useState<number | null>(null);
+  const [bulkPasswordResetModalVisible, setBulkPasswordResetModalVisible] = useState(false);
   const [selectedMember, setSelectedMember] = useState<MemberDetailResponse | null>(null);
   const [centerOptions, setCenterOptions] = useState<string[]>([]);
   const [centerLoading, setCenterLoading] = useState(false);
@@ -342,7 +344,10 @@ export default function UsersPage() {
       key: 'name',
       width: 120,
       render: (text: string, record: Member) => (
-        <Button type="link" onClick={() => viewMemberDetail(record.id)}>
+        <Button
+          type="link"
+          onClick={() => window.open(`/admin/member-view/${record.id}`, '_blank')}
+        >
           {text}
         </Button>
       ),
@@ -504,6 +509,14 @@ export default function UsersPage() {
           <Text type="secondary">전체 회원 목록 조회 및 관리</Text>
         </div>
         <Space>
+          <Button
+            danger
+            icon={<LockOutlined />}
+            size="large"
+            onClick={() => setBulkPasswordResetModalVisible(true)}
+          >
+            전체 PW 초기화
+          </Button>
           <Link href="/admin/users/rollback-history">
             <Button
               icon={<HistoryOutlined />}
@@ -913,6 +926,16 @@ export default function UsersPage() {
         memberId={rollbackMemberId}
         onCancel={handleRollbackCancel}
         onSuccess={handleRollbackSuccess}
+      />
+
+      {/* 전체 비밀번호 초기화 모달 */}
+      <BulkPasswordResetModal
+        visible={bulkPasswordResetModalVisible}
+        onCancel={() => setBulkPasswordResetModalVisible(false)}
+        onSuccess={() => {
+          setBulkPasswordResetModalVisible(false);
+          fetchMembers(pagination.current);
+        }}
       />
     </div>
   );

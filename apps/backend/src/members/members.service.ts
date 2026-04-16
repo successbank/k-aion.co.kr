@@ -2305,6 +2305,125 @@ export class MembersService {
     });
   }
 
+  // ============================================
+  // 전체 회원 비밀번호 일괄 초기화 API
+  // ============================================
+
+  /**
+   * 전체 회원 비밀번호 일괄 초기화 (ADMIN 전용)
+   * ADMIN을 제외한 모든 활성 회원의 비밀번호를 "12341234"로 초기화
+   */
+  async bulkResetPasswords(confirmationText: string, adminId: number, reason?: string) {
+    // 확인 문자열 검증
+    if (confirmationText !== 'RESET_ALL_PASSWORDS') {
+      throw new BadRequestException(
+        '확인 문자열이 일치하지 않습니다. RESET_ALL_PASSWORDS를 입력해주세요.',
+      );
+    }
+
+    // 새 비밀번호 해시 생성 (트랜잭션 외부에서 수행 - CPU 집약적 작업)
+    const newPassword = '12341234';
+    const hashedPassword = await bcrypt.hash(newPassword, 10);
+
+    return this.prisma.$transaction(async (tx) => {
+      // 1. 초기화 대상 회원 수 조회 (ADMIN 제외)
+      const targetMembers = await tx.member.findMany({
+        where: {
+          isActive: true,
+          grade: { not: MemberGrade.ADMIN },
+        },
+        select: { id: true, name: true, username: true, grade: true },
+      });
+
+      // 2. ADMIN 회원 수 조회
+      const adminCount = await tx.member.count({
+        where: {
+          isActive: true,
+          grade: MemberGrade.ADMIN,
+        },
+      });
+
+      if (targetMembers.length === 0) {
+        throw new BadRequestException('초기화 대상 회원이 없습니다');
+      }
+
+      // 3. 일괄 비밀번호 업데이트
+      const updateResult = await tx.member.updateMany({
+        where: {
+          isActive: true,
+          grade: { not: MemberGrade.ADMIN },
+        },
+        data: { password: hashedPassword },
+      });
+
+      // 4. Activity Log 기록
+      const executedAt = new Date();
+      await tx.activityLog.create({
+        data: {
+          memberId: adminId,
+          action: 'BULK_PASSWORD_RESET',
+          targetType: 'MEMBER',
+          targetId: adminId, // 관리자 ID (전체 대상이므로)
+          details: {
+            action: 'BULK_PASSWORD_RESET',
+            resetCount: updateResult.count,
+            excludedAdminCount: adminCount,
+            newPassword,
+            reason: reason || '사유 없음',
+            affectedMembers: targetMembers.map((m) => ({
+              id: m.id,
+              name: m.name,
+              username: m.username,
+              grade: m.grade,
+            })),
+            executedAt: executedAt.toISOString(),
+            executedBy: adminId,
+          },
+        },
+      });
+
+      this.logger.warn(
+        `전체 회원 비밀번호 초기화 실행: ${updateResult.count}명 | ` +
+          `제외된 ADMIN: ${adminCount}명 | 사유: ${reason || '없음'} | 관리자: ${adminId}`,
+      );
+
+      return {
+        success: true,
+        message: `${updateResult.count}명의 회원 비밀번호가 초기화되었습니다`,
+        resetCount: updateResult.count,
+        excludedAdminCount: adminCount,
+        newPassword,
+        executedAt: executedAt.toISOString(),
+      };
+    });
+  }
+
+  /**
+   * 비밀번호 초기화 대상 회원 수 조회 (ADMIN 제외)
+   * 모달에서 영향 범위를 표시하기 위해 사용
+   */
+  async getBulkResetTargetCount(): Promise<{
+    targetCount: number;
+    adminCount: number;
+  }> {
+    const [targetCount, adminCount] = await Promise.all([
+      this.prisma.member.count({
+        where: {
+          isActive: true,
+          grade: { not: MemberGrade.ADMIN },
+        },
+      }),
+      this.prisma.member.count({
+        where: {
+          isActive: true,
+          grade: MemberGrade.ADMIN,
+        },
+      }),
+    ]);
+
+    return { targetCount, adminCount };
+  }
+
   /**
    * 회원의 센터 해제 (개별)
    * 특정 회원의 centerName을 null로 설정

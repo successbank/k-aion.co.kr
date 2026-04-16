@@ -299,6 +299,26 @@ export interface UnassignCenterResponse {
   previousCenter: string;
 }
 
+// 전체 비밀번호 일괄 초기화 관련 인터페이스
+export interface BulkPasswordResetDto {
+  confirmationText: string;
+  reason?: string;
+}
+
+export interface BulkPasswordResetResponse {
+  success: boolean;
+  message: string;
+  resetCount: number;
+  excludedAdminCount: number;
+  newPassword: string;
+  executedAt: string;
+}
+
+export interface BulkResetTargetCountResponse {
+  targetCount: number;
+  adminCount: number;
+}
+
 // 회원 검색 결과 인터페이스
 export interface SearchMemberResult {
   id: number;
@@ -520,6 +540,26 @@ class MembersService {
    */
   async unassignCenter(memberId: number): Promise<UnassignCenterResponse> {
     return apiClient.patch<UnassignCenterResponse>(`/v1/members/${memberId}/unassign-center`, {});
+  }
+
+  // ============================================
+  // 전체 회원 비밀번호 일괄 초기화 API
+  // ============================================
+
+  /**
+   * 비밀번호 초기화 대상 회원 수 조회 (ADMIN 전용)
+   * 초기화 대상 회원 수와 제외되는 ADMIN 회원 수 반환
+   */
+  async getBulkResetTargetCount(): Promise<BulkResetTargetCountResponse> {
+    return apiClient.get<BulkResetTargetCountResponse>('/v1/members/bulk-reset-password/count');
+  }
+
+  /**
+   * 전체 회원 비밀번호 일괄 초기화 (ADMIN 전용)
+   * ADMIN을 제외한 모든 활성 회원의 비밀번호를 "1234"로 초기화
+   */
+  async bulkResetPasswords(dto: BulkPasswordResetDto): Promise<BulkPasswordResetResponse> {
+    return apiClient.post<BulkPasswordResetResponse>('/v1/members/bulk-reset-password', dto);
   }
 }
 
