@@ -1,0 +1,16 @@
+{
+    "timestamp": "2026-04-16 01:12:19.166756+00",
+    "members_total": 17,
+    "members_by_grade": {
+        "TEAM_LEADER": 2,
+        "CENTER": 1,
+        "BRANCH_MANAGER": 1,
+        "SALESPERSON": 12,
+        "ADMIN": 1
+    },
+    "sales_count": 0,
+    "sales_total_amount": 0,
+    "bonuses_count": 0,
+    "bonuses_total_amount": 0,
+    "settlements_count": 0
+}

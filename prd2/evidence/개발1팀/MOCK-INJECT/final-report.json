@@ -1,0 +1,30 @@
+{
+    "timestamp": "2026-04-16 01:30:12.21106+00",
+    "members_total": 77,
+    "members_by_grade": {
+        "TEAM_LEADER": 2,
+        "CENTER": 21,
+        "BRANCH_MANAGER": 41,
+        "SALESPERSON": 12,
+        "ADMIN": 1
+    },
+    "sales_count": 8826,
+    "sales_total_amount": 5183208000,
+    "bonuses_count": 19396,
+    "bonuses_by_type": {
+        "SALES_COMMISSION": 10570,
+        "EDUCATION_MANAGEMENT": 8826
+    },
+    "settlements_count": 3,
+    "settlements_paid": 3,
+    "min_daily_sales": 20464000,
+    "total_days": 251,
+    "verification": {
+        "V1_total_sales": "5,183,208,000 (target 5B, +3.7%)",
+        "V2_min_daily": "20,464,000 >= 20,000,000 PASS",
+        "V3_bonus_ratio": "2.20 >= 1.5 PASS",
+        "V4_recipients": "15 >= 5 PASS",
+        "V5_neg_stock": "0 PASS",
+        "V6_weeks": "38"
+    }
+}
