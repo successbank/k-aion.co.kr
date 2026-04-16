@@ -1,0 +1,124 @@
+diff --git a/apps/backend/src/members/members.controller.ts b/apps/backend/src/members/members.controller.ts
+index 7f64ecf..9df550a 100644
+--- a/apps/backend/src/members/members.controller.ts
++++ b/apps/backend/src/members/members.controller.ts
+@@ -42,6 +42,10 @@ import {
+   AssignCenterResponseDto,
+   CenterStatsResponseDto,
+ } from './dto/assign-center.dto';
++import {
++  BulkPasswordResetDto,
++  BulkPasswordResetResponseDto,
++} from './dto/bulk-password-reset.dto';
+ import {
+   IntegrityReport,
+   IntegrityCheckHistoryResponse,
+@@ -201,6 +205,60 @@ export class MembersController {
+     });
+   }
+ 
++  // ============================================
++  // 전체 회원 비밀번호 일괄 초기화 API
++  // ============================================
++
++  /**
++   * 비밀번호 초기화 대상 회원 수 조회 (GET /api/v1/members/bulk-reset-password/count)
++   * ADMIN 전용: 초기화 대상 회원 수 사전 조회
++   */
++  @Get('bulk-reset-password/count')
++  @UseGuards(JwtAuthGuard, RolesGuard)
++  @Roles(MemberGrade.ADMIN)
++  @ApiBearerAuth('access-token')
++  @ApiOperation({ summary: '비밀번호 초기화 대상 회원 수 조회 (ADMIN 전용)' })
++  @ApiResponse({
++    status: 200,
++    description: '대상 회원 수 조회 성공',
++    schema: {
++      example: {
++        targetCount: 243,
++        adminCount: 1,
++      },
++    },
++  })
++  @ApiResponse({ status: 401, description: '인증 실패' })
++  @ApiResponse({ status: 403, description: '권한 없음 (ADMIN만 접근 가능)' })
++  async getBulkResetTargetCount() {
++    return this.membersService.getBulkResetTargetCount();
++  }
++
++  /**
++   * 전체 회원 비밀번호 일괄 초기화 (POST /api/v1/members/bulk-reset-password)
++   * ADMIN 전용: ADMIN을 제외한 모든 활성 회원의 비밀번호를 "1234"로 초기화
++   */
++  @Post('bulk-reset-password')
++  @UseGuards(JwtAuthGuard, RolesGuard)
++  @Roles(MemberGrade.ADMIN)
++  @ApiBearerAuth('access-token')
++  @ApiOperation({ summary: '전체 회원 비밀번호 일괄 초기화 (ADMIN 전용)' })
++  @ApiBody({ type: BulkPasswordResetDto })
++  @ApiResponse({
++    status: 200,
++    description: '비밀번호 초기화 성공',
++    type: BulkPasswordResetResponseDto,
++  })
++  @ApiResponse({ status: 400, description: '잘못된 요청 (확인 문자열 불일치)' })
++  @ApiResponse({ status: 401, description: '인증 실패' })
++  @ApiResponse({ status: 403, description: '권한 없음 (ADMIN만 접근 가능)' })
++  async bulkResetPasswords(
++    @Body() dto: BulkPasswordResetDto,
++    @CurrentUser('id') adminId: number,
++  ): Promise<BulkPasswordResetResponseDto> {
++    return this.membersService.bulkResetPasswords(dto.confirmationText, adminId, dto.reason);
++  }
++
+   // ============================================
+   // 회원 데이터 무결성 검사 API
+   // ============================================
+@@ -688,9 +746,13 @@ export class MembersController {
+    * 승급 처리 (POST /api/v1/members/:id/promote)
+    */
+   @Post(':id/promote')
+-  @ApiOperation({ summary: '승급 조건 확인 및 자동 승급 처리' })
++  @UseGuards(JwtAuthGuard, RolesGuard)
++  @Roles(MemberGrade.ADMIN)
++  @ApiBearerAuth('access-token')
++  @ApiOperation({ summary: '승급 조건 확인 및 자동 승급 처리 (ADMIN 전용)' })
+   @ApiResponse({ status: 200, description: '승급 처리 완료' })
+   @ApiResponse({ status: 400, description: '승급 조건 미달' })
++  @ApiResponse({ status: 403, description: '권한 없음' })
+   @ApiResponse({ status: 404, description: '회원을 찾을 수 없음' })
+   async promoteIfEligible(@Param('id', ParseIntPipe) id: number) {
+     return this.promotionService.promoteIfEligible(id);
+@@ -770,7 +832,9 @@ export class MembersController {
+    * ADMIN 전용: 전체 조직 계보 조회 (GET /api/v1/members/genealogy/all-trees)
+    */
+   @Get('genealogy/all-trees')
++  @UseGuards(JwtAuthGuard, RolesGuard)
+   @Roles(MemberGrade.ADMIN)
++  @ApiBearerAuth('access-token')
+   @ApiOperation({ summary: 'ADMIN 전용: 전체 조직 계보 조회' })
+   @ApiQuery({
+     name: 'type',
+@@ -815,8 +879,12 @@ export class MembersController {
+    * 팀 라인 추천 (POST /api/v1/members/:id/suggest-team-line)
+    */
+   @Post(':id/suggest-team-line')
+-  @ApiOperation({ summary: '후원인의 최적 팀 라인 추천' })
++  @UseGuards(JwtAuthGuard, RolesGuard)
++  @Roles(MemberGrade.ADMIN)
++  @ApiBearerAuth('access-token')
++  @ApiOperation({ summary: '후원인의 최적 팀 라인 추천 (ADMIN 전용)' })
+   @ApiResponse({ status: 200, description: '성공' })
++  @ApiResponse({ status: 403, description: '권한 없음' })
+   async suggestTeamLine(@Param('id', ParseIntPipe) sponsorId: number) {
+     const teamLine = await this.genealogyService.suggestTeamLine(sponsorId);
+     return { sponsorId, suggestedTeamLine: teamLine };
+@@ -863,7 +931,7 @@ export class MembersController {
+    * ADMIN 전용: 회원의 비밀번호를 임시 비밀번호로 초기화
+    */
+   @Patch(':id/reset-password')
+-  @UseGuards(JwtAuthGuard)
++  @UseGuards(JwtAuthGuard, RolesGuard)
+   @ApiBearerAuth('access-token')
+   @Roles(MemberGrade.ADMIN)
+   @ApiOperation({ summary: '회원 비밀번호 초기화 (ADMIN 전용)' })
